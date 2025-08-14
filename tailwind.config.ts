@@ -61,6 +61,12 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				vintage: {
+					'brown': '#D4A574',
+					'dark-brown': '#8B4513', 
+					'cream': '#F5E6D3',
+					'warm': '#2F1B14'
 				}
 			},
 			borderRadius: {
