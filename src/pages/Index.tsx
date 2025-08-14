@@ -1,20 +1,53 @@
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import Icon from '@/components/ui/icon';
+
+interface CartItem {
+  id: string;
+  title: string;
+  type: 'track' | 'album';
+  price: number;
+  quantity: number;
+}
 
 const Index = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const tracks = [
-    { title: "Vintage Dreams", duration: "3:42", file: "" },
-    { title: "Golden Memories", duration: "4:15", file: "" },
-    { title: "Sunset Boulevard", duration: "3:28", file: "" },
-    { title: "Old Soul", duration: "4:03", file: "" }
+    { id: "1", title: "Vintage Dreams", duration: "3:42", file: "", price: 129 },
+    { id: "2", title: "Golden Memories", duration: "4:15", file: "", price: 129 },
+    { id: "3", title: "Sunset Boulevard", duration: "3:28", file: "", price: 129 },
+    { id: "4", title: "Old Soul", duration: "4:03", file: "", price: 129 }
+  ];
+
+  const albums = [
+    { 
+      id: "album1", 
+      title: "Винтажные Мелодии", 
+      artist: "Vintage Soul",
+      tracks: 12, 
+      price: 899, 
+      cover: "/img/d10a9c15-7d7f-41eb-b586-bff4324f107a.jpg",
+      description: "Полный альбом атмосферной винтажной музыки"
+    },
+    { 
+      id: "album2", 
+      title: "Золотые Годы", 
+      artist: "Vintage Soul",
+      tracks: 10, 
+      price: 749, 
+      cover: "/img/d10a9c15-7d7f-41eb-b586-bff4324f107a.jpg",
+      description: "Коллекция лучших ретро композиций" 
+    }
   ];
 
   const concerts = [
@@ -38,6 +71,50 @@ const Index = () => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const addToCart = (item: { id: string; title: string; price: number }, type: 'track' | 'album') => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
+      if (existingItem) {
+        return prevCart.map(cartItem =>
+          cartItem.id === item.id 
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        );
+      }
+      return [...prevCart, { 
+        id: item.id, 
+        title: item.title, 
+        type, 
+        price: item.price, 
+        quantity: 1 
+      }];
+    });
+  };
+
+  const removeFromCart = (id: string) => {
+    setCart(prevCart => prevCart.filter(item => item.id !== id));
+  };
+
+  const updateQuantity = (id: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(id);
+      return;
+    }
+    setCart(prevCart => 
+      prevCart.map(item => 
+        item.id === id ? { ...item, quantity } : item
+      )
+    );
+  };
+
+  const getTotalPrice = () => {
+    return cart.reduce((total, item) => total + item.price * item.quantity, 0);
+  };
+
+  const getTotalItems = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
   useEffect(() => {
@@ -66,12 +143,84 @@ const Index = () => {
             <div className="hidden md:flex space-x-8">
               <a href="#home" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Главная</a>
               <a href="#music" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Музыка</a>
+              <a href="#shop" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Магазин</a>
               <a href="#concerts" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Концерты</a>
               <a href="#contact" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Контакты</a>
             </div>
-            <Button variant="ghost" className="md:hidden">
-              <Icon name="Menu" size={24} />
-            </Button>
+            <div className="flex items-center gap-4">
+              <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" className="relative">
+                    <Icon name="ShoppingCart" size={24} />
+                    {getTotalItems() > 0 && (
+                      <Badge className="absolute -top-2 -right-2 bg-vintage-dark-brown text-vintage-cream min-w-[20px] h-5 rounded-full flex items-center justify-center text-xs">
+                        {getTotalItems()}
+                      </Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="bg-vintage-cream border-vintage-brown/20">
+                  <SheetHeader>
+                    <SheetTitle className="text-vintage-warm">Корзина</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6 space-y-4">
+                    {cart.length === 0 ? (
+                      <p className="text-vintage-warm/70 text-center py-8">Корзина пуста</p>
+                    ) : (
+                      <>
+                        {cart.map((item) => (
+                          <div key={item.id} className="flex items-center justify-between p-3 bg-vintage-brown/10 rounded-lg">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-vintage-warm">{item.title}</h4>
+                              <p className="text-sm text-vintage-warm/60 capitalize">{item.type}</p>
+                              <p className="text-sm font-bold text-vintage-dark-brown">{item.price} ₽</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              >
+                                <Icon name="Minus" size={16} />
+                              </Button>
+                              <span className="w-8 text-center text-vintage-warm">{item.quantity}</span>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              >
+                                <Icon name="Plus" size={16} />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => removeFromCart(item.id)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <Icon name="X" size={16} />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                        <div className="border-t border-vintage-brown/20 pt-4">
+                          <div className="flex justify-between items-center mb-4">
+                            <span className="text-lg font-bold text-vintage-warm">Итого:</span>
+                            <span className="text-lg font-bold text-vintage-dark-brown">{getTotalPrice()} ₽</span>
+                          </div>
+                          <Button className="w-full bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream">
+                            <Icon name="CreditCard" size={20} className="mr-2" />
+                            Оформить заказ
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+              <Button variant="ghost" className="md:hidden">
+                <Icon name="Menu" size={24} />
+              </Button>
+            </div>
           </div>
         </div>
       </nav>
@@ -195,6 +344,112 @@ const Index = () => {
           </Card>
 
           <audio ref={audioRef} />
+        </div>
+      </section>
+
+      {/* Магазин */}
+      <section id="shop" className="py-16 px-6 bg-vintage-warm/5">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h3 className="text-4xl font-bold text-vintage-warm mb-4">Магазин</h3>
+            <p className="text-vintage-warm/70 text-lg">Приобретите треки и альбомы</p>
+          </div>
+
+          {/* Альбомы */}
+          <div className="mb-16">
+            <h4 className="text-2xl font-bold text-vintage-warm mb-8">Альбомы</h4>
+            <div className="grid md:grid-cols-2 gap-8">
+              {albums.map((album) => (
+                <Card key={album.id} className="bg-vintage-cream/95 border-vintage-brown/20 hover:shadow-xl transition-all">
+                  <CardContent className="p-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="relative">
+                        <img 
+                          src={album.cover} 
+                          alt={album.title}
+                          className="w-full aspect-square object-cover rounded-lg"
+                        />
+                        <div className="absolute top-3 right-3">
+                          <Badge className="bg-vintage-dark-brown text-vintage-cream">
+                            {album.tracks} треков
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <div>
+                          <h5 className="text-xl font-bold text-vintage-warm mb-1">{album.title}</h5>
+                          <p className="text-vintage-warm/70">{album.artist}</p>
+                          <p className="text-sm text-vintage-warm/60 mt-2">{album.description}</p>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-2xl font-bold text-vintage-dark-brown">{album.price} ₽</span>
+                            <Button 
+                              onClick={() => addToCart(album, 'album')}
+                              className="bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
+                            >
+                              <Icon name="ShoppingCart" size={16} className="mr-2" />
+                              Купить
+                            </Button>
+                          </div>
+                          <Button 
+                            variant="outline"
+                            className="w-full border-vintage-dark-brown text-vintage-dark-brown hover:bg-vintage-dark-brown hover:text-vintage-cream"
+                          >
+                            <Icon name="Play" size={16} className="mr-2" />
+                            Прослушать
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Отдельные треки */}
+          <div>
+            <h4 className="text-2xl font-bold text-vintage-warm mb-8">Отдельные треки</h4>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {tracks.map((track) => (
+                <Card key={track.id} className="bg-vintage-cream/95 border-vintage-brown/20 hover:shadow-lg transition-all">
+                  <CardContent className="p-4">
+                    <div className="space-y-4">
+                      <div className="w-full aspect-square bg-gradient-to-br from-vintage-brown to-vintage-dark-brown rounded-lg flex items-center justify-center">
+                        <Icon name="Music" size={32} className="text-vintage-cream" />
+                      </div>
+                      <div>
+                        <h5 className="font-bold text-vintage-warm mb-1">{track.title}</h5>
+                        <p className="text-sm text-vintage-warm/60">{track.duration}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-vintage-dark-brown">{track.price} ₽</span>
+                          <Button 
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setCurrentTrack(tracks.indexOf(track))}
+                            className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
+                          >
+                            <Icon name="Play" size={12} />
+                          </Button>
+                        </div>
+                        <Button 
+                          onClick={() => addToCart(track, 'track')}
+                          className="w-full bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
+                          size="sm"
+                        >
+                          <Icon name="ShoppingCart" size={14} className="mr-1" />
+                          Купить
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
