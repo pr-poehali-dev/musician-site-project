@@ -61,6 +61,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     price: 129
   });
 
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
   const [selectedAlbum, setSelectedAlbum] = useState('');
   const [showAddAlbum, setShowAddAlbum] = useState(false);
   const [showAddTrack, setShowAddTrack] = useState(false);
@@ -95,12 +98,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   const handleAddTrack = () => {
     if (newTrack.title && newTrack.duration && selectedAlbum) {
       onAddTrack(selectedAlbum, newTrack);
-      setNewTrack({
-        title: '',
-        duration: '',
-        file: '',
-        price: 129
-      });
+      resetTrackForm();
       setShowAddTrack(false);
     }
   };
@@ -140,6 +138,48 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     if (window.confirm('Вы уверены, что хотите удалить этот альбом?')) {
       onRemoveAlbum(albumId);
     }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('audio/')) {
+      setUploadedFile(file);
+      setIsUploading(true);
+
+      // Создаем URL для локального воспроизведения
+      const audioUrl = URL.createObjectURL(file);
+      setNewTrack(prev => ({ ...prev, file: audioUrl }));
+
+      // Автоматически определяем длительность трека
+      const audio = new Audio();
+      audio.src = audioUrl;
+      audio.addEventListener('loadedmetadata', () => {
+        const minutes = Math.floor(audio.duration / 60);
+        const seconds = Math.floor(audio.duration % 60);
+        const duration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        setNewTrack(prev => ({ ...prev, duration }));
+        setIsUploading(false);
+      });
+
+      // Если название трека не задано, используем название файла
+      if (!newTrack.title) {
+        const fileName = file.name.replace(/\.[^/.]+$/, ""); // убираем расширение
+        setNewTrack(prev => ({ ...prev, title: fileName }));
+      }
+    } else {
+      alert('Пожалуйста, выберите аудиофайл (MP3, WAV, OGG и т.д.)');
+    }
+  };
+
+  const resetTrackForm = () => {
+    setNewTrack({
+      title: '',
+      duration: '',
+      file: '',
+      price: 129
+    });
+    setUploadedFile(null);
+    setIsUploading(false);
   };
 
   return (
@@ -377,14 +417,30 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="track-file" className="text-vintage-warm">Файл (URL)</Label>
-                  <Input
-                    id="track-file"
-                    value={newTrack.file}
-                    onChange={(e) => setNewTrack({...newTrack, file: e.target.value})}
-                    placeholder="Ссылка на аудиофайл"
-                    className="border-vintage-brown/30 focus:border-vintage-dark-brown"
-                  />
+                  <Label className="text-vintage-warm">Аудиофайл</Label>
+                  <div className="space-y-2">
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      onChange={handleFileUpload}
+                      className="w-full px-3 py-2 border border-vintage-brown/30 rounded-md focus:border-vintage-dark-brown bg-vintage-cream file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:bg-vintage-dark-brown file:text-vintage-cream hover:file:bg-vintage-warm"
+                    />
+                    {uploadedFile && (
+                      <div className="flex items-center gap-2 p-2 bg-vintage-brown/10 rounded">
+                        <Icon name="Music" size={16} className="text-vintage-dark-brown" />
+                        <span className="text-sm text-vintage-warm">{uploadedFile.name}</span>
+                        {isUploading && (
+                          <span className="text-xs text-vintage-warm/60">Обработка...</span>
+                        )}
+                      </div>
+                    )}
+                    {newTrack.file && (
+                      <div className="flex items-center gap-2">
+                        <Icon name="Volume2" size={16} className="text-vintage-dark-brown" />
+                        <span className="text-sm text-vintage-warm">Файл загружен</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="track-price" className="text-vintage-warm">Цена (₽)</Label>

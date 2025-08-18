@@ -63,6 +63,16 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     }
   }, [setCurrentTime, setDuration]);
 
+  // Обновляем источник аудио при смене трека
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio && tracks[currentTrack]?.file) {
+      audio.src = tracks[currentTrack].file;
+      audio.load(); // Перезагружаем аудио с новым источником
+      setIsPlaying(false); // Останавливаем воспроизведение при смене трека
+    }
+  }, [currentTrack, tracks]);
+
   return (
     <section id="music" className="py-16 px-6">
       <div className="max-w-4xl mx-auto">
@@ -143,7 +153,11 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
             </div>
 
             {/* Скрытый аудио элемент */}
-            <audio ref={audioRef} />
+            <audio 
+              ref={audioRef} 
+              preload="metadata"
+              onError={() => console.warn('Ошибка загрузки аудиофайла')}
+            />
           </CardContent>
         </Card>
       </div>
