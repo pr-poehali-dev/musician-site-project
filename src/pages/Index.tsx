@@ -3,7 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import Icon from '@/components/ui/icon';
+import AdminPanel from '@/components/AdminPanel';
 
 interface CartItem {
   id: string;
@@ -13,6 +18,25 @@ interface CartItem {
   quantity: number;
 }
 
+interface Track {
+  id: string;
+  title: string;
+  duration: string;
+  file: string;
+  price: number;
+}
+
+interface Album {
+  id: string;
+  title: string;
+  artist: string;
+  cover: string;
+  price: number;
+  tracks: number;
+  description: string;
+  trackList: Track[];
+}
+
 const Index = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState(0);
@@ -20,16 +44,20 @@ const Index = () => {
   const [duration, setDuration] = useState(0);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const tracks = [
+  const [tracks, setTracks] = useState<Track[]>([
     { id: "1", title: "Vintage Dreams", duration: "3:42", file: "", price: 129 },
     { id: "2", title: "Golden Memories", duration: "4:15", file: "", price: 129 },
     { id: "3", title: "Sunset Boulevard", duration: "3:28", file: "", price: 129 },
     { id: "4", title: "Old Soul", duration: "4:03", file: "", price: 129 }
-  ];
+  ]);
 
-  const albums = [
+  const [albums, setAlbums] = useState<Album[]>([
     { 
       id: "album1", 
       title: "Винтажные Мелодии", 
@@ -37,7 +65,8 @@ const Index = () => {
       tracks: 12, 
       price: 899, 
       cover: "/img/d10a9c15-7d7f-41eb-b586-bff4324f107a.jpg",
-      description: "Полный альбом атмосферной винтажной музыки"
+      description: "Полный альбом атмосферной винтажной музыки",
+      trackList: []
     },
     { 
       id: "album2", 
@@ -46,9 +75,10 @@ const Index = () => {
       tracks: 10, 
       price: 749, 
       cover: "/img/d10a9c15-7d7f-41eb-b586-bff4324f107a.jpg",
-      description: "Коллекция лучших ретро композиций" 
+      description: "Коллекция лучших ретро композиций",
+      trackList: []
     }
-  ];
+  ]);
 
   const concerts = [
     { date: "15 сентября", venue: "Клуб «Джаз Кафе»", city: "Москва" },
@@ -117,6 +147,59 @@ const Index = () => {
     return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
+  const handleAdminLogin = () => {
+    if (adminPassword === 'admin123') {
+      setIsAdmin(true);
+      setShowAdminLogin(false);
+      setShowAdminPanel(true);
+      setAdminPassword('');
+    } else {
+      alert('Неверный пароль');
+    }
+  };
+
+  const handleAdminLogout = () => {
+    setIsAdmin(false);
+    setShowAdminPanel(false);
+  };
+
+  const addNewAlbum = (albumData: Omit<Album, 'id'>) => {
+    const newAlbum: Album = {
+      ...albumData,
+      id: Date.now().toString()
+    };
+    setAlbums([...albums, newAlbum]);
+  };
+
+  const addTrackToAlbum = (albumId: string, trackData: Omit<Track, 'id'>) => {
+    const newTrack: Track = {
+      ...trackData,
+      id: Date.now().toString()
+    };
+    
+    setAlbums(albums.map(album => 
+      album.id === albumId 
+        ? { 
+            ...album, 
+            trackList: [...album.trackList, newTrack],
+            tracks: album.trackList.length + 1
+          } 
+        : album
+    ));
+    
+    setTracks([...tracks, newTrack]);
+  };
+
+  const removeTrack = (trackId: string) => {
+    setTracks(tracks.filter(track => track.id !== trackId));
+    
+    setAlbums(albums.map(album => ({
+      ...album,
+      trackList: album.trackList.filter(track => track.id !== trackId),
+      tracks: album.trackList.filter(track => track.id !== trackId).length
+    })));
+  };
+
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
@@ -148,6 +231,39 @@ const Index = () => {
               <a href="#contact" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Контакты</a>
             </div>
             <div className="flex items-center gap-4">
+              {/* Кнопка входа в админ панель */}
+              <Dialog open={showAdminLogin} onOpenChange={setShowAdminLogin}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <Icon name="Settings" size={20} />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-vintage-cream border-vintage-brown/20">
+                  <DialogHeader>
+                    <DialogTitle className="text-vintage-warm">Вход в админ панель</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="password" className="text-vintage-warm">Пароль</Label>
+                      <Input 
+                        id="password"
+                        type="password"
+                        value={adminPassword}
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        className="mt-1 border-vintage-brown/30 focus:border-vintage-dark-brown"
+                        placeholder="Введите пароль"
+                      />
+                    </div>
+                    <Button 
+                      onClick={handleAdminLogin}
+                      className="w-full bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
+                    >
+                      Войти
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
               <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" className="relative">
@@ -532,6 +648,35 @@ const Index = () => {
       </section>
 
       {/* Футер */}
+      {/* Админ панель */}
+      {isAdmin && (
+        <Dialog open={showAdminPanel} onOpenChange={setShowAdminPanel}>
+          <DialogContent className="bg-vintage-cream border-vintage-brown/20 max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-vintage-warm flex items-center justify-between">
+                Админ панель
+                <Button 
+                  onClick={handleAdminLogout}
+                  variant="outline"
+                  size="sm"
+                  className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
+                >
+                  Выйти
+                </Button>
+              </DialogTitle>
+            </DialogHeader>
+            
+            <AdminPanel 
+              albums={albums}
+              tracks={tracks}
+              onAddAlbum={addNewAlbum}
+              onAddTrack={addTrackToAlbum}
+              onRemoveTrack={removeTrack}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
       <footer className="bg-vintage-warm text-vintage-cream py-8 px-6">
         <div className="max-w-6xl mx-auto text-center">
           <p className="mb-4">&copy; 2024 Vintage Music. Все права защищены.</p>
