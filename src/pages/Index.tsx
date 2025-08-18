@@ -153,6 +153,24 @@ const Index = () => {
     })));
   };
 
+  const editAlbum = (albumId: string, albumData: Omit<Album, 'id'>) => {
+    setAlbums(albums.map(album => 
+      album.id === albumId 
+        ? { ...album, ...albumData } 
+        : album
+    ));
+  };
+
+  const removeAlbum = (albumId: string) => {
+    const albumTracks = albums.find(album => album.id === albumId)?.trackList || [];
+    
+    setAlbums(albums.filter(album => album.id !== albumId));
+    
+    setTracks(tracks.filter(track => 
+      !albumTracks.some(albumTrack => albumTrack.id === track.id)
+    ));
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-brown to-vintage-dark-brown">
       {/* Навигация */}
@@ -246,6 +264,8 @@ const Index = () => {
         tracks={tracks}
         handleAdminLogout={handleAdminLogout}
         addNewAlbum={addNewAlbum}
+        editAlbum={editAlbum}
+        removeAlbum={removeAlbum}
         addTrackToAlbum={addTrackToAlbum}
         removeTrack={removeTrack}
       />

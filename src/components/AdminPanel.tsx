@@ -31,6 +31,8 @@ interface AdminPanelProps {
   albums: Album[];
   tracks: Track[];
   onAddAlbum: (album: Omit<Album, 'id'>) => void;
+  onEditAlbum: (albumId: string, albumData: Omit<Album, 'id'>) => void;
+  onRemoveAlbum: (albumId: string) => void;
   onAddTrack: (albumId: string, track: Omit<Track, 'id'>) => void;
   onRemoveTrack: (trackId: string) => void;
 }
@@ -39,6 +41,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   albums,
   tracks,
   onAddAlbum,
+  onEditAlbum,
+  onRemoveAlbum,
   onAddTrack,
   onRemoveTrack
 }) => {
@@ -60,6 +64,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   const [selectedAlbum, setSelectedAlbum] = useState('');
   const [showAddAlbum, setShowAddAlbum] = useState(false);
   const [showAddTrack, setShowAddTrack] = useState(false);
+  const [showEditAlbum, setShowEditAlbum] = useState(false);
+  const [editingAlbum, setEditingAlbum] = useState<Album | null>(null);
+  const [editAlbumData, setEditAlbumData] = useState({
+    title: '',
+    artist: '',
+    cover: '',
+    price: 0,
+    description: ''
+  });
 
   const handleAddAlbum = () => {
     if (newAlbum.title && newAlbum.artist) {
@@ -89,6 +102,43 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
         price: 129
       });
       setShowAddTrack(false);
+    }
+  };
+
+  const handleEditAlbum = (album: Album) => {
+    setEditingAlbum(album);
+    setEditAlbumData({
+      title: album.title,
+      artist: album.artist,
+      cover: album.cover,
+      price: album.price,
+      description: album.description
+    });
+    setShowEditAlbum(true);
+  };
+
+  const handleSaveEditAlbum = () => {
+    if (editingAlbum && editAlbumData.title && editAlbumData.artist) {
+      onEditAlbum(editingAlbum.id, {
+        ...editAlbumData,
+        tracks: editingAlbum.tracks,
+        trackList: editingAlbum.trackList
+      });
+      setShowEditAlbum(false);
+      setEditingAlbum(null);
+      setEditAlbumData({
+        title: '',
+        artist: '',
+        cover: '',
+        price: 0,
+        description: ''
+      });
+    }
+  };
+
+  const handleDeleteAlbum = (albumId: string) => {
+    if (window.confirm('Вы уверены, что хотите удалить этот альбом?')) {
+      onRemoveAlbum(albumId);
     }
   };
 
@@ -172,6 +222,83 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
           </Dialog>
         </div>
 
+        {/* Диалог редактирования альбома */}
+        <Dialog open={showEditAlbum} onOpenChange={setShowEditAlbum}>
+          <DialogContent className="bg-vintage-cream border-vintage-brown/20">
+            <DialogHeader>
+              <DialogTitle className="text-vintage-warm">Редактировать альбом</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-album-title" className="text-vintage-warm">Название</Label>
+                <Input
+                  id="edit-album-title"
+                  value={editAlbumData.title}
+                  onChange={(e) => setEditAlbumData({...editAlbumData, title: e.target.value})}
+                  placeholder="Название альбома"
+                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-album-artist" className="text-vintage-warm">Исполнитель</Label>
+                <Input
+                  id="edit-album-artist"
+                  value={editAlbumData.artist}
+                  onChange={(e) => setEditAlbumData({...editAlbumData, artist: e.target.value})}
+                  placeholder="Имя исполнителя"
+                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-album-cover" className="text-vintage-warm">Обложка (URL)</Label>
+                <Input
+                  id="edit-album-cover"
+                  value={editAlbumData.cover}
+                  onChange={(e) => setEditAlbumData({...editAlbumData, cover: e.target.value})}
+                  placeholder="Ссылка на обложку"
+                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-album-price" className="text-vintage-warm">Цена (₽)</Label>
+                <Input
+                  id="edit-album-price"
+                  type="number"
+                  value={editAlbumData.price}
+                  onChange={(e) => setEditAlbumData({...editAlbumData, price: Number(e.target.value)})}
+                  placeholder="Цена альбома"
+                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-album-description" className="text-vintage-warm">Описание</Label>
+                <Textarea
+                  id="edit-album-description"
+                  value={editAlbumData.description}
+                  onChange={(e) => setEditAlbumData({...editAlbumData, description: e.target.value})}
+                  placeholder="Описание альбома"
+                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleSaveEditAlbum}
+                  className="flex-1 bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
+                >
+                  Сохранить изменения
+                </Button>
+                <Button 
+                  onClick={() => setShowEditAlbum(false)}
+                  variant="outline"
+                  className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
+                >
+                  Отмена
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <div className="grid md:grid-cols-2 gap-4">
           {albums.map((album) => (
             <Card key={album.id} className="bg-vintage-cream/95 border-vintage-brown/20">
@@ -186,7 +313,27 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                   </Badge>
                 </div>
                 <p className="text-sm text-vintage-warm/60 mb-2">{album.description}</p>
-                <p className="font-bold text-vintage-dark-brown">{album.price} ₽</p>
+                <div className="flex items-center justify-between">
+                  <p className="font-bold text-vintage-dark-brown">{album.price} ₽</p>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => handleEditAlbum(album)}
+                      variant="outline"
+                      size="sm"
+                      className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
+                    >
+                      <Icon name="Edit" size={14} />
+                    </Button>
+                    <Button 
+                      onClick={() => handleDeleteAlbum(album.id)}
+                      variant="outline"
+                      size="sm"
+                      className="text-red-500 border-red-300 hover:bg-red-50"
+                    >
+                      <Icon name="Trash2" size={14} />
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           ))}
