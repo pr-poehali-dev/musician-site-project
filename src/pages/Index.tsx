@@ -30,21 +30,30 @@ const Index = () => {
       id: "album1", 
       title: "Винтажные Мелодии", 
       artist: "Vintage Soul",
-      tracks: 12, 
+      tracks: 4, 
       price: 899, 
       cover: "/img/d10a9c15-7d7f-41eb-b586-bff4324f107a.jpg",
       description: "Полный альбом атмосферной винтажной музыки",
-      trackList: []
+      trackList: [
+        { id: "1", title: "Vintage Dreams", duration: "3:42", file: "", price: 129 },
+        { id: "2", title: "Golden Memories", duration: "4:15", file: "", price: 129 },
+        { id: "3", title: "Sunset Boulevard", duration: "3:28", file: "", price: 129 },
+        { id: "4", title: "Old Soul", duration: "4:03", file: "", price: 129 }
+      ]
     },
     { 
       id: "album2", 
       title: "Золотые Годы", 
       artist: "Vintage Soul",
-      tracks: 10, 
+      tracks: 3, 
       price: 749, 
       cover: "/img/d10a9c15-7d7f-41eb-b586-bff4324f107a.jpg",
       description: "Коллекция лучших ретро композиций",
-      trackList: []
+      trackList: [
+        { id: "5", title: "Jazz Cafe Nights", duration: "5:12", file: "", price: 149 },
+        { id: "6", title: "Midnight Train", duration: "4:33", file: "", price: 149 },
+        { id: "7", title: "Blue Moon Rising", duration: "3:55", file: "", price: 149 }
+      ]
     }
   ]);
 
