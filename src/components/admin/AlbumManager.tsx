@@ -1,0 +1,297 @@
+import React, { useState } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import Icon from '@/components/ui/icon';
+import { Track, Album } from '@/types';
+
+interface AlbumManagerProps {
+  albums: Album[];
+  onAddAlbum: (album: Omit<Album, 'id'>) => void;
+  onEditAlbum: (albumId: string, albumData: Omit<Album, 'id'>) => void;
+  onRemoveAlbum: (albumId: string) => void;
+}
+
+const AlbumManager: React.FC<AlbumManagerProps> = ({
+  albums,
+  onAddAlbum,
+  onEditAlbum,
+  onRemoveAlbum
+}) => {
+  const [newAlbum, setNewAlbum] = useState({
+    title: '',
+    artist: '',
+    cover: '',
+    price: 0,
+    description: ''
+  });
+
+  const [showAddAlbum, setShowAddAlbum] = useState(false);
+  const [showEditAlbum, setShowEditAlbum] = useState(false);
+  const [editingAlbum, setEditingAlbum] = useState<Album | null>(null);
+  const [editAlbumData, setEditAlbumData] = useState({
+    title: '',
+    artist: '',
+    cover: '',
+    price: 0,
+    description: ''
+  });
+
+  const handleAddAlbum = () => {
+    if (newAlbum.title && newAlbum.artist) {
+      onAddAlbum({
+        ...newAlbum,
+        tracks: 0,
+        trackList: []
+      });
+      setNewAlbum({
+        title: '',
+        artist: '',
+        cover: '',
+        price: 0,
+        description: ''
+      });
+      setShowAddAlbum(false);
+    }
+  };
+
+  const handleEditAlbum = (album: Album) => {
+    setEditingAlbum(album);
+    setEditAlbumData({
+      title: album.title,
+      artist: album.artist,
+      cover: album.cover,
+      price: album.price,
+      description: album.description
+    });
+    setShowEditAlbum(true);
+  };
+
+  const handleSaveEditAlbum = () => {
+    if (editingAlbum && editAlbumData.title && editAlbumData.artist) {
+      onEditAlbum(editingAlbum.id, {
+        ...editAlbumData,
+        tracks: editingAlbum.tracks,
+        trackList: editingAlbum.trackList
+      });
+      setShowEditAlbum(false);
+      setEditingAlbum(null);
+      setEditAlbumData({
+        title: '',
+        artist: '',
+        cover: '',
+        price: 0,
+        description: ''
+      });
+    }
+  };
+
+  const handleDeleteAlbum = (albumId: string) => {
+    if (window.confirm('Вы уверены, что хотите удалить этот альбом?')) {
+      onRemoveAlbum(albumId);
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold text-vintage-warm">Альбомы</h3>
+        <Dialog open={showAddAlbum} onOpenChange={setShowAddAlbum}>
+          <DialogTrigger asChild>
+            <Button className="bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream">
+              <Icon name="Plus" size={16} className="mr-2" />
+              Добавить альбом
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-vintage-cream border-vintage-brown/20">
+            <DialogHeader>
+              <DialogTitle className="text-vintage-warm">Новый альбом</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="album-title" className="text-vintage-warm">Название</Label>
+                <Input
+                  id="album-title"
+                  value={newAlbum.title}
+                  onChange={(e) => setNewAlbum({...newAlbum, title: e.target.value})}
+                  placeholder="Название альбома"
+                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+                />
+              </div>
+              <div>
+                <Label htmlFor="album-artist" className="text-vintage-warm">Исполнитель</Label>
+                <Input
+                  id="album-artist"
+                  value={newAlbum.artist}
+                  onChange={(e) => setNewAlbum({...newAlbum, artist: e.target.value})}
+                  placeholder="Имя исполнителя"
+                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+                />
+              </div>
+              <div>
+                <Label htmlFor="album-cover" className="text-vintage-warm">Обложка (URL)</Label>
+                <Input
+                  id="album-cover"
+                  value={newAlbum.cover}
+                  onChange={(e) => setNewAlbum({...newAlbum, cover: e.target.value})}
+                  placeholder="Ссылка на обложку"
+                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+                />
+              </div>
+              <div>
+                <Label htmlFor="album-price" className="text-vintage-warm">Цена (₽)</Label>
+                <Input
+                  id="album-price"
+                  type="number"
+                  value={newAlbum.price}
+                  onChange={(e) => setNewAlbum({...newAlbum, price: Number(e.target.value)})}
+                  placeholder="Цена альбома"
+                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+                />
+              </div>
+              <div>
+                <Label htmlFor="album-description" className="text-vintage-warm">Описание</Label>
+                <Textarea
+                  id="album-description"
+                  value={newAlbum.description}
+                  onChange={(e) => setNewAlbum({...newAlbum, description: e.target.value})}
+                  placeholder="Описание альбома"
+                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+                />
+              </div>
+              <Button 
+                onClick={handleAddAlbum}
+                className="w-full bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
+              >
+                Создать альбом
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Диалог редактирования альбома */}
+      <Dialog open={showEditAlbum} onOpenChange={setShowEditAlbum}>
+        <DialogContent className="bg-vintage-cream border-vintage-brown/20">
+          <DialogHeader>
+            <DialogTitle className="text-vintage-warm">Редактировать альбом</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-album-title" className="text-vintage-warm">Название</Label>
+              <Input
+                id="edit-album-title"
+                value={editAlbumData.title}
+                onChange={(e) => setEditAlbumData({...editAlbumData, title: e.target.value})}
+                placeholder="Название альбома"
+                className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-album-artist" className="text-vintage-warm">Исполнитель</Label>
+              <Input
+                id="edit-album-artist"
+                value={editAlbumData.artist}
+                onChange={(e) => setEditAlbumData({...editAlbumData, artist: e.target.value})}
+                placeholder="Имя исполнителя"
+                className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-album-cover" className="text-vintage-warm">Обложка (URL)</Label>
+              <Input
+                id="edit-album-cover"
+                value={editAlbumData.cover}
+                onChange={(e) => setEditAlbumData({...editAlbumData, cover: e.target.value})}
+                placeholder="Ссылка на обложку"
+                className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-album-price" className="text-vintage-warm">Цена (₽)</Label>
+              <Input
+                id="edit-album-price"
+                type="number"
+                value={editAlbumData.price}
+                onChange={(e) => setEditAlbumData({...editAlbumData, price: Number(e.target.value)})}
+                placeholder="Цена альбома"
+                className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-album-description" className="text-vintage-warm">Описание</Label>
+              <Textarea
+                id="edit-album-description"
+                value={editAlbumData.description}
+                onChange={(e) => setEditAlbumData({...editAlbumData, description: e.target.value})}
+                placeholder="Описание альбома"
+                className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleSaveEditAlbum}
+                className="flex-1 bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
+              >
+                Сохранить изменения
+              </Button>
+              <Button 
+                onClick={() => setShowEditAlbum(false)}
+                variant="outline"
+                className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
+              >
+                Отмена
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        {albums.map((album) => (
+          <Card key={album.id} className="bg-vintage-cream/95 border-vintage-brown/20">
+            <CardContent className="p-4">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h4 className="font-bold text-vintage-warm">{album.title}</h4>
+                  <p className="text-sm text-vintage-warm/70">{album.artist}</p>
+                </div>
+                <Badge className="bg-vintage-dark-brown text-vintage-cream">
+                  {album.tracks} треков
+                </Badge>
+              </div>
+              <p className="text-sm text-vintage-warm/60 mb-2">{album.description}</p>
+              <div className="flex items-center justify-between">
+                <p className="font-bold text-vintage-dark-brown">{album.price} ₽</p>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => handleEditAlbum(album)}
+                    variant="outline"
+                    size="sm"
+                    className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
+                  >
+                    <Icon name="Edit" size={14} />
+                  </Button>
+                  <Button 
+                    onClick={() => handleDeleteAlbum(album.id)}
+                    variant="outline"
+                    size="sm"
+                    className="text-red-500 border-red-300 hover:bg-red-50"
+                  >
+                    <Icon name="Trash2" size={14} />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default AlbumManager;
