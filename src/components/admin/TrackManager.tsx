@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import Icon from '@/components/ui/icon';
 import { Track, Album } from '@/types';
+import { saveAudioFile, generateAudioFilename, validateAudioFile } from '@/utils/fileUtils';
 
 interface TrackManagerProps {
   albums: Album[];
@@ -28,37 +29,48 @@ const TrackManager: React.FC<TrackManagerProps> = ({
 
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState('');
   const [showAddTrack, setShowAddTrack] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [savedFilePath, setSavedFilePath] = useState<string | null>(null);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.type.startsWith('audio/')) {
-      setUploadedFile(file);
-      setIsUploading(true);
+    setFileError(null);
+    setSavedFilePath(null);
+    
+    if (!file) return;
+    
+    // Валидация файла
+    const validation = validateAudioFile(file);
+    if (!validation.isValid) {
+      setFileError(validation.error || 'Неподдерживаемый файл');
+      return;
+    }
+    
+    setUploadedFile(file);
+    setIsUploading(true);
 
-      // Создаем URL для локального воспроизведения
-      const audioUrl = URL.createObjectURL(file);
-      setNewTrack(prev => ({ ...prev, file: audioUrl }));
+    // Создаем URL для локального воспроизведения
+    const audioUrl = URL.createObjectURL(file);
+    setNewTrack(prev => ({ ...prev, file: audioUrl }));
 
-      // Автоматически определяем длительность трека
-      const audio = new Audio();
-      audio.src = audioUrl;
-      audio.addEventListener('loadedmetadata', () => {
-        const minutes = Math.floor(audio.duration / 60);
-        const seconds = Math.floor(audio.duration % 60);
-        const duration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        setNewTrack(prev => ({ ...prev, duration }));
-        setIsUploading(false);
-      });
+    // Автоматически определяем длительность трека
+    const audio = new Audio();
+    audio.src = audioUrl;
+    audio.addEventListener('loadedmetadata', () => {
+      const minutes = Math.floor(audio.duration / 60);
+      const seconds = Math.floor(audio.duration % 60);
+      const duration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      setNewTrack(prev => ({ ...prev, duration }));
+      setIsUploading(false);
+    });
 
-      // Если название трека не задано, используем название файла
-      if (!newTrack.title) {
-        const fileName = file.name.replace(/\.[^/.]+$/, ""); // убираем расширение
-        setNewTrack(prev => ({ ...prev, title: fileName }));
-      }
-    } else {
-      alert('Пожалуйста, выберите аудиофайл (MP3, WAV, OGG и т.д.)');
+    // Если название трека не задано, используем название файла
+    if (!newTrack.title) {
+      const fileName = file.name.replace(/\.[^/.]+$/, ""); // убираем расширение
+      setNewTrack(prev => ({ ...prev, title: fileName }));
     }
   };
 
@@ -71,13 +83,50 @@ const TrackManager: React.FC<TrackManagerProps> = ({
     });
     setUploadedFile(null);
     setIsUploading(false);
+    setIsSaving(false);
+    setFileError(null);
+    setSavedFilePath(null);
+  };
+  
+  const handleSaveAudioFile = async () => {
+    if (!uploadedFile || !newTrack.title.trim()) {
+      setFileError('Необходимо загрузить файл и указать название трека');
+      return;
+    }
+    
+    setIsSaving(true);
+    setFileError(null);
+    
+    try {
+      const filename = generateAudioFilename(uploadedFile.name, newTrack.title);
+      const savedPath = await saveAudioFile(uploadedFile, filename);
+      
+      // Обновляем путь к файлу в треке
+      setNewTrack(prev => ({ ...prev, file: savedPath }));
+      setSavedFilePath(savedPath);
+      
+      alert('Трек успешно сохранен в папку audio!');
+    } catch (error) {
+      console.error('Ошибка сохранения файла:', error);
+      setFileError('Ошибка сохранения файла');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleAddTrack = () => {
-    if (newTrack.title && newTrack.duration && selectedAlbum) {
+    if (newTrack.title && newTrack.duration && newTrack.file && selectedAlbum) {
+      // Проверяем, что файл сохранен
+      if (!savedFilePath && uploadedFile) {
+        setFileError('Необходимо сохранить аудиофайл перед добавлением трека');
+        return;
+      }
+      
       onAddTrack(selectedAlbum, newTrack);
       resetTrackForm();
       setShowAddTrack(false);
+    } else {
+      setFileError('Заполните все обязательные поля и загрузите аудиофайл');
     }
   };
 
@@ -129,16 +178,42 @@ const TrackManager: React.FC<TrackManagerProps> = ({
                   {uploadedFile && (
                     <div className="flex items-center gap-2 p-2 bg-vintage-brown/10 rounded">
                       <Icon name="Music" size={16} className="text-vintage-dark-brown" />
-                      <span className="text-sm text-vintage-warm">{uploadedFile.name}</span>
-                      {isUploading && (
-                        <span className="text-xs text-vintage-warm/60">Обработка...</span>
-                      )}
-                    </div>
-                  )}
-                  {newTrack.file && (
-                    <div className="flex items-center gap-2">
-                      <Icon name="Volume2" size={16} className="text-vintage-dark-brown" />
-                      <span className="text-sm text-vintage-warm">Файл загружен</span>
+                      <div className="flex-1">
+                        <span className="text-sm text-vintage-warm block">{uploadedFile.name}</span>
+                        {isUploading && (
+                          <span className="text-xs text-vintage-warm/60">Обработка...</span>
+                        )}
+                        {savedFilePath && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <Icon name="CheckCircle" size={12} className="text-green-600" />
+                            <span className="text-xs text-green-600">Сохранено: {savedFilePath}</span>
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        onClick={handleSaveAudioFile}
+                        disabled={!uploadedFile || !newTrack.title.trim() || isSaving || savedFilePath !== null}
+                        variant="outline"
+                        size="sm"
+                        className="border-vintage-dark-brown text-vintage-dark-brown hover:bg-vintage-dark-brown hover:text-vintage-cream"
+                      >
+                        {isSaving ? (
+                          <>
+                            <Icon name="Loader2" size={14} className="mr-1 animate-spin" />
+                            Сохраняем
+                          </>
+                        ) : savedFilePath ? (
+                          <>
+                            <Icon name="CheckCircle" size={14} className="mr-1" />
+                            Сохранено
+                          </>
+                        ) : (
+                          <>
+                            <Icon name="Save" size={14} className="mr-1" />
+                            Сохранить
+                          </>
+                        )}
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -170,9 +245,19 @@ const TrackManager: React.FC<TrackManagerProps> = ({
                   ))}
                 </select>
               </div>
+              
+              {/* Ошибки валидации */}
+              {fileError && (
+                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                  <Icon name="AlertCircle" size={16} className="text-red-600" />
+                  <span className="text-sm text-red-600">{fileError}</span>
+                </div>
+              )}
+              
               <Button 
                 onClick={handleAddTrack}
-                className="w-full bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
+                disabled={!newTrack.title || !newTrack.duration || !newTrack.file || !selectedAlbum}
+                className="w-full bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Добавить трек
               </Button>
