@@ -211,7 +211,7 @@ const Index = () => {
             <button className="bg-vintage-warm hover:bg-vintage-cream text-vintage-dark-brown px-8 py-3 rounded-full font-semibold transition-all transform hover:scale-105">
               Послушать
             </button>
-            <button className="border-2 border-vintage-cream text-vintage-cream hover:bg-vintage-cream hover:text-vintage-dark-brown px-8 py-3 rounded-full font-semibold transition-all">
+            <button className="">
               О музыканте
             </button>
           </div>
