@@ -41,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({
     <nav className="sticky top-0 z-50 backdrop-blur-sm bg-vintage-cream/80 border-b border-vintage-brown/20">
       <div className="max-w-6xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-vintage-warm">MUSICIAN</h1>
+          <h1 className="text-2xl font-bold text-vintage-warm">Дмитрий Шмелидзэ</h1>
           <div className="hidden md:flex space-x-8">
             <a href="#home" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Главная</a>
             <a href="#music" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Песни и альбомы</a>
