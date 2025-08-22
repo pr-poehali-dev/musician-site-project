@@ -1,4 +1,4 @@
-export const saveAudioFile = async (file: File, filename: string): Promise<string> => {
+export const saveAudioFile = async (file: File, filename: string, trackData: { title: string; duration: string }): Promise<string> => {
   return new Promise((resolve, reject) => {
     try {
       const reader = new FileReader();
@@ -18,8 +18,25 @@ export const saveAudioFile = async (file: File, filename: string): Promise<strin
         link.click();
         document.body.removeChild(link);
         
-        // Очищаем URL после использования
-        URL.revokeObjectURL(url);
+        // Сохраняем трек в localStorage для отображения на главной странице
+        const trackInfo = {
+          id: Date.now().toString(),
+          title: trackData.title,
+          duration: trackData.duration,
+          file: url, // Используем blob URL для воспроизведения
+          price: 129
+        };
+
+        const savedTracks = localStorage.getItem('uploadedTracks');
+        let uploadedTracks = [];
+        if (savedTracks) {
+          uploadedTracks = JSON.parse(savedTracks);
+        }
+        uploadedTracks.push(trackInfo);
+        localStorage.setItem('uploadedTracks', JSON.stringify(uploadedTracks));
+
+        // Отправляем событие для обновления компонентов
+        window.dispatchEvent(new CustomEvent('tracksUpdated'));
         
         // В реальном приложении здесь был бы API вызов для загрузки на сервер
         // const savedPath = await uploadToServer(file, filename);

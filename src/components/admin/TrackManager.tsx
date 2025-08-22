@@ -99,7 +99,7 @@ const TrackManager: React.FC<TrackManagerProps> = ({
     
     try {
       const filename = generateAudioFilename(uploadedFile.name, newTrack.title);
-      const savedPath = await saveAudioFile(uploadedFile, filename);
+      const savedPath = await saveAudioFile(uploadedFile, filename, { title: newTrack.title, duration: newTrack.duration });
       
       // Обновляем путь к файлу в треке
       setNewTrack(prev => ({ ...prev, file: savedPath }));

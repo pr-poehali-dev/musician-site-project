@@ -7,13 +7,14 @@ import { Track } from '@/types';
 interface MusicPlayerProps {
   tracks: Track[];
   isPlaying: boolean;
-  currentTrack: number;
+  currentTrack: Track | null;
   currentTime: number;
   duration: number;
   setIsPlaying: (playing: boolean) => void;
-  setCurrentTrack: (track: number) => void;
+  setCurrentTrack: (track: Track) => void;
   setCurrentTime: (time: number) => void;
   setDuration: (duration: number) => void;
+  onTrackEnd?: () => void;
 }
 
 const MusicPlayer: React.FC<MusicPlayerProps> = ({
@@ -25,18 +26,35 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   setIsPlaying,
   setCurrentTrack,
   setCurrentTime,
-  setDuration
+  setDuration,
+  onTrackEnd
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const togglePlay = () => {
-    if (audioRef.current) {
+    if (audioRef.current && currentTrack) {
       if (isPlaying) {
         audioRef.current.pause();
       } else {
-        audioRef.current.play();
+        audioRef.current.play().catch(error => {
+          console.warn('Ошибка воспроизведения:', error);
+        });
       }
       setIsPlaying(!isPlaying);
+    }
+  };
+
+  const playNext = () => {
+    const currentIndex = tracks.findIndex(track => track.id === currentTrack?.id);
+    if (currentIndex < tracks.length - 1) {
+      setCurrentTrack(tracks[currentIndex + 1]);
+    }
+  };
+
+  const playPrevious = () => {
+    const currentIndex = tracks.findIndex(track => track.id === currentTrack?.id);
+    if (currentIndex > 0) {
+      setCurrentTrack(tracks[currentIndex - 1]);
     }
   };
 
@@ -52,26 +70,45 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     if (audio) {
       const updateTime = () => setCurrentTime(audio.currentTime);
       const updateDuration = () => setDuration(audio.duration);
+      const handleEnded = () => {
+        setIsPlaying(false);
+        if (onTrackEnd) {
+          onTrackEnd();
+        } else {
+          playNext();
+        }
+      };
       
       audio.addEventListener('timeupdate', updateTime);
       audio.addEventListener('loadedmetadata', updateDuration);
+      audio.addEventListener('ended', handleEnded);
       
       return () => {
         audio.removeEventListener('timeupdate', updateTime);
         audio.removeEventListener('loadedmetadata', updateDuration);
+        audio.removeEventListener('ended', handleEnded);
       };
     }
-  }, [setCurrentTime, setDuration]);
+  }, [setCurrentTime, setDuration, onTrackEnd, playNext]);
 
   // Обновляем источник аудио при смене трека
   useEffect(() => {
     const audio = audioRef.current;
-    if (audio && tracks[currentTrack]?.file) {
-      audio.src = tracks[currentTrack].file;
-      audio.load(); // Перезагружаем аудио с новым источником
-      setIsPlaying(false); // Останавливаем воспроизведение при смене трека
+    if (audio && currentTrack?.file) {
+      audio.src = currentTrack.file;
+      audio.load();
+      setCurrentTime(0);
+      setDuration(0);
+      
+      // Автоматически начинаем воспроизведение нового трека
+      if (isPlaying) {
+        audio.play().catch(error => {
+          console.warn('Ошибка автовоспроизведения:', error);
+          setIsPlaying(false);
+        });
+      }
     }
-  }, [currentTrack, tracks]);
+  }, [currentTrack, isPlaying, setCurrentTime, setDuration]);
 
   return (
     <section id="music" className="py-16 px-6">
@@ -89,23 +126,34 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
                 <Icon name="Music" size={64} className="text-vintage-cream" />
               </div>
               <h4 className="text-2xl font-bold text-vintage-warm mb-2">
-                {tracks[currentTrack]?.title || 'Выберите трек'}
+                {currentTrack?.title || 'Выберите трек'}
               </h4>
               <p className="text-vintage-warm/60">Vintage Soul</p>
             </div>
 
             {/* Управление воспроизведением */}
             <div className="flex items-center justify-center gap-4 mb-8">
-              <Button variant="ghost" size="sm">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={playPrevious}
+                disabled={!currentTrack || tracks.findIndex(track => track.id === currentTrack?.id) === 0}
+              >
                 <Icon name="SkipBack" size={20} className="text-vintage-dark-brown" />
               </Button>
               <Button 
                 onClick={togglePlay}
-                className="bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream w-16 h-16 rounded-full"
+                disabled={!currentTrack}
+                className="bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream w-16 h-16 rounded-full disabled:opacity-50"
               >
                 <Icon name={isPlaying ? "Pause" : "Play"} size={24} />
               </Button>
-              <Button variant="ghost" size="sm">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={playNext}
+                disabled={!currentTrack || tracks.findIndex(track => track.id === currentTrack?.id) === tracks.length - 1}
+              >
                 <Icon name="SkipForward" size={20} className="text-vintage-dark-brown" />
               </Button>
             </div>
@@ -114,7 +162,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between text-sm text-vintage-warm/70">
                 <span>{formatTime(currentTime)}</span>
-                <span>{tracks[currentTrack]?.duration || '0:00'}</span>
+                <span>{formatTime(duration) || currentTrack?.duration || '0:00'}</span>
               </div>
               <div className="w-full bg-vintage-brown/20 rounded-full h-2">
                 <div 
@@ -125,32 +173,46 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
             </div>
 
             {/* Список треков */}
-            <div className="space-y-3">
-              {tracks.map((track, index) => (
-                <div 
-                  key={index}
-                  className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all ${
-                    currentTrack === index 
-                      ? 'bg-vintage-dark-brown/10 border border-vintage-dark-brown/20' 
-                      : 'hover:bg-vintage-brown/10'
-                  }`}
-                  onClick={() => setCurrentTrack(index)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-vintage-dark-brown rounded-full flex items-center justify-center">
-                      <Icon name="Music" size={16} className="text-vintage-cream" />
+            {tracks.length > 0 && (
+              <div className="mt-8">
+                <h5 className="text-lg font-semibold text-vintage-warm mb-4">Playlist</h5>
+                <div className="space-y-3 max-h-60 overflow-y-auto">
+                  {tracks.map((track) => (
+                    <div 
+                      key={track.id}
+                      className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all ${
+                        currentTrack?.id === track.id
+                          ? 'bg-vintage-dark-brown/10 border border-vintage-dark-brown/20' 
+                          : 'hover:bg-vintage-brown/10'
+                      }`}
+                      onClick={() => setCurrentTrack(track)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-vintage-dark-brown rounded-full flex items-center justify-center">
+                          {currentTrack?.id === track.id && isPlaying ? (
+                            <Icon name="Pause" size={16} className="text-vintage-cream" />
+                          ) : (
+                            <Icon name="Play" size={16} className="text-vintage-cream" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-vintage-warm">{track.title}</p>
+                          <p className="text-sm text-vintage-warm/60">{track.duration}</p>
+                        </div>
+                      </div>
+                      
+                      {currentTrack?.id === track.id && (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-1 h-3 bg-vintage-warm animate-pulse rounded-full"></div>
+                          <div className="w-1 h-4 bg-vintage-warm animate-pulse rounded-full" style={{animationDelay: '0.1s'}}></div>
+                          <div className="w-1 h-3 bg-vintage-warm animate-pulse rounded-full" style={{animationDelay: '0.2s'}}></div>
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      <p className="font-medium text-vintage-warm">{track.title}</p>
-                      <p className="text-sm text-vintage-warm/60">{track.duration}</p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    <Icon name="Play" size={16} className="text-vintage-dark-brown" />
-                  </Button>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
 
             {/* Скрытый аудио элемент */}
             <audio 

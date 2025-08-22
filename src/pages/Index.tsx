@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Header from '@/components/Header';
 import MusicPlayer from '@/components/MusicPlayer';
+import TrackList from '@/components/TrackList';
 import Shop from '@/components/Shop';
 import ConcertsSection from '@/components/ConcertsSection';
 import AdminLogin from '@/components/AdminLogin';
@@ -8,7 +9,7 @@ import { CartItem, Track, Album } from '@/types';
 
 const Index = () => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState(0);
+  const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -150,6 +151,21 @@ const Index = () => {
     ));
     
     setTracks([...tracks, newTrack]);
+    
+    // Обновляем localStorage и генерируем событие
+    const savedTracks = localStorage.getItem('uploadedTracks');
+    let uploadedTracks = [];
+    if (savedTracks) {
+      uploadedTracks = JSON.parse(savedTracks);
+    }
+    uploadedTracks.push(newTrack);
+    localStorage.setItem('uploadedTracks', JSON.stringify(uploadedTracks));
+    window.dispatchEvent(new CustomEvent('tracksUpdated'));
+  };
+
+  const handleTrackSelect = (track: Track) => {
+    setCurrentTrack(track);
+    setIsPlaying(true);
   };
 
   const removeTrack = (trackId: string) => {
@@ -218,6 +234,13 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Список загруженных треков */}
+      <TrackList
+        onTrackSelect={handleTrackSelect}
+        currentTrack={currentTrack}
+        isPlaying={isPlaying}
+      />
+
       {/* Музыкальный плеер */}
       <MusicPlayer
         tracks={tracks}
@@ -235,8 +258,8 @@ const Index = () => {
       <Shop
         albums={albums}
         tracks={tracks}
-        currentTrack={currentTrack}
-        setCurrentTrack={setCurrentTrack}
+        currentTrack={currentTrack ? tracks.findIndex(track => track.id === currentTrack.id) : 0}
+        setCurrentTrack={(index: number) => setCurrentTrack(tracks[index])}
         addToCart={addToCart}
       />
 
