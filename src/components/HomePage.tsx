@@ -13,9 +13,7 @@ const HomePage: React.FC = () => {
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-black/20" />
         <div className="relative z-10 max-w-4xl mx-auto px-4 py-20 text-center">
-          <Badge className="mb-6 px-4 py-2 bg-green-600 text-white hover:bg-green-700">
-            🎵 Винтажная музыка
-          </Badge>
+          <Badge className="mb-6 px-4 py-2 bg-green-600 text-white hover:bg-green-700">🎵 Авторские песни</Badge>
           
           <h1 className="md:text-8xl text-white bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent font-extrabold text-4xl my-1.5 py-[29px] px-0 mx-0 text-center">
             Музыка слов от сердца к клавишам
