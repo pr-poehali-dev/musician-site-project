@@ -37,6 +37,31 @@ const Header: React.FC<HeaderProps> = ({
   getTotalItems,
   handleAdminLogin
 }) => {
+  
+  const handleCheckout = () => {
+    if (cart.length === 0) return;
+    
+    const totalAmount = getTotalPrice();
+    const orderDescription = cart.map(item => `${item.title} (x${item.quantity})`).join(', ');
+    
+    // Генерируем ссылку для оплаты через СБП
+    // Это стандартный формат для QR-кода СБП
+    const sbpUrl = `https://qr.nspk.ru/AS10009Q6U8LDU2STC9QMRR0EIM2QH20?amount=${totalAmount}&payeeId=123456789&purpose=${encodeURIComponent(orderDescription)}`;
+    
+    // Альтернативно можно открыть модальное окно с QR-кодом или форму оплаты
+    const confirmed = confirm(`Оформить заказ на сумму ${totalAmount} ₽?\n\n${orderDescription}\n\nВы будете перенаправлены на оплату через СБП.`);
+    
+    if (confirmed) {
+      // Открываем страницу оплаты или мобильное приложение банка
+      window.open(sbpUrl, '_blank');
+      
+      // Очищаем корзину после успешного оформления
+      cart.forEach(item => removeFromCart(item.id));
+      setIsCartOpen(false);
+      
+      alert('Заказ оформлен! Проверьте уведомления в приложении банка для завершения оплаты.');
+    }
+  };
   return (
     <nav className="sticky top-0 z-50 backdrop-blur-sm bg-vintage-cream/80 border-b border-vintage-brown/20">
       <div className="max-w-6xl mx-auto px-6 py-4">
@@ -142,7 +167,10 @@ const Header: React.FC<HeaderProps> = ({
                           <span className="text-lg font-bold text-vintage-warm">Итого:</span>
                           <span className="text-lg font-bold text-vintage-dark-brown">{getTotalPrice()} ₽</span>
                         </div>
-                        <Button className="w-full bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream">
+                        <Button 
+                          onClick={handleCheckout}
+                          className="w-full bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
+                        >
                           <Icon name="CreditCard" size={20} className="mr-2" />
                           Оформить заказ
                         </Button>
