@@ -17,8 +17,9 @@ const HomePage: React.FC = () => {
             🎵 Винтажная музыка
           </Badge>
           
-          <h1 className="md:text-8xl text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-extrabold text-4xl my-1.5 py-[29px] px-0 mx-0 text-center">Музыка слов 
- от сердца к клавишам</h1>
+          <h1 className="md:text-8xl text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-extrabold text-4xl my-1.5 py-[29px] px-0 mx-0 text-center">
+            Музыка слов от сердца к клавишам
+          </h1>
           
           <h2 className="md:text-4xl font-bold text-white my-[19px] text-xl"></h2>
           
