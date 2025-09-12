@@ -8,16 +8,16 @@ const HomePage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-green-900 to-gray-900">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-black/20" />
         <div className="relative z-10 max-w-4xl mx-auto px-4 py-20 text-center">
-          <Badge className="mb-6 px-4 py-2 bg-purple-600 text-white hover:bg-purple-700">
+          <Badge className="mb-6 px-4 py-2 bg-green-600 text-white hover:bg-green-700">
             🎵 Винтажная музыка
           </Badge>
           
-          <h1 className="md:text-8xl text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-extrabold text-4xl my-1.5 py-[29px] px-0 mx-0 text-center">
+          <h1 className="md:text-8xl text-white bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent font-extrabold text-4xl my-1.5 py-[29px] px-0 mx-0 text-center">
             Музыка слов от сердца к клавишам
           </h1>
           
@@ -28,7 +28,7 @@ const HomePage: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 text-lg"
+              className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg"
               onClick={() => navigate('/music')}
             >
               <Icon name="Music" size={20} className="mr-2" />
@@ -38,7 +38,7 @@ const HomePage: React.FC = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white px-8 py-4 text-lg"
+              className="border-green-400 text-green-400 hover:bg-green-400 hover:text-white px-8 py-4 text-lg"
               onClick={() => navigate('/about')}
             >
               <Icon name="User" size={20} className="mr-2" />
@@ -56,8 +56,8 @@ const HomePage: React.FC = () => {
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-8 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-purple-500/20">
-              <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="text-center p-8 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-green-500/20">
+              <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Icon name="Headphones" size={32} className="text-white" />
               </div>
               <h4 className="text-xl font-bold text-white mb-4">Высокое качество</h4>
@@ -66,8 +66,8 @@ const HomePage: React.FC = () => {
               </p>
             </div>
             
-            <div className="text-center p-8 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-purple-500/20">
-              <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="text-center p-8 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-green-500/20">
+              <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Icon name="Heart" size={32} className="text-white" />
               </div>
               <h4 className="text-xl font-bold text-white mb-4">С душой</h4>
@@ -76,8 +76,8 @@ const HomePage: React.FC = () => {
               </p>
             </div>
             
-            <div className="text-center p-8 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-purple-500/20">
-              <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="text-center p-8 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-green-500/20">
+              <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Icon name="Clock" size={32} className="text-white" />
               </div>
               <h4 className="text-xl font-bold text-white mb-4">Винтажный стиль</h4>
@@ -90,7 +90,7 @@ const HomePage: React.FC = () => {
       </div>
 
       {/* CTA Section */}
-      <div className="py-20 px-4 bg-gradient-to-r from-purple-800/30 to-pink-800/30">
+      <div className="py-20 px-4 bg-gradient-to-r from-green-800/30 to-emerald-800/30">
         <div className="max-w-4xl mx-auto text-center">
           <h3 className="text-4xl font-bold text-white mb-6">
             Готовы окунуться в мир музыки?
@@ -100,7 +100,7 @@ const HomePage: React.FC = () => {
           </p>
           <Button 
             size="lg" 
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-12 py-4 text-lg"
+            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-12 py-4 text-lg"
             onClick={() => navigate('/music')}
           >
             <Icon name="Play" size={20} className="mr-2" />
