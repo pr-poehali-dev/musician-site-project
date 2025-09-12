@@ -51,16 +51,14 @@ const HomePage: React.FC = () => {
       {/* Features Section */}
       <div className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <h3 className="text-3xl font-bold text-center text-white mb-16">
-            Почему выбирают нашу музыку
-          </h3>
+          <h3 className="text-3xl font-bold text-center text-white mb-16">Почему выбирают мои песни</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center p-8 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-green-500/20">
               <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Icon name="Headphones" size={32} className="text-white" />
               </div>
-              <h4 className="text-xl font-bold text-white mb-4">Высокое качество</h4>
+              <h4 className="text-xl font-bold text-white mb-4">Эксклюзивные треки</h4>
               <p className="text-gray-300">
                 Все треки записаны и обработаны в студийном качестве для максимального погружения
               </p>
@@ -71,19 +69,15 @@ const HomePage: React.FC = () => {
                 <Icon name="Heart" size={32} className="text-white" />
               </div>
               <h4 className="text-xl font-bold text-white mb-4">С душой</h4>
-              <p className="text-gray-300">
-                Каждая композиция создана с любовью и передает глубокие эмоции автора
-              </p>
+              <p className="text-gray-300">Каждая песня не просто набор звуков, а откровенный разговор с вами о том, что действительно важно.</p>
             </div>
             
             <div className="text-center p-8 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-green-500/20">
               <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Icon name="Clock" size={32} className="text-white" />
               </div>
-              <h4 className="text-xl font-bold text-white mb-4">Винтажный стиль</h4>
-              <p className="text-gray-300">
-                Уникальное звучание, вдохновленное лучшими традициями прошлых десятилетий
-              </p>
+              <h4 className="text-xl font-bold text-white mb-4">Глубокий смысл</h4>
+              <p className="text-gray-300">В моих текстах нет пустых слов. Каждая строчка наполнена смыслом и отражает реальные жизненные истории.</p>
             </div>
           </div>
         </div>
