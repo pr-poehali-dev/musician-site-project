@@ -220,7 +220,7 @@ const Index = () => {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Текст */}
             <div className="text-center md:text-left">
-              <h2 className="font-bold text-vintage-cream tracking-tight my-3 text-5xl">Слова в нотах - от сердца к клавишам</h2>
+              <h2 className="font-bold tracking-tight my-3 text-5xl text-[#ce8dba]">Слова в нотах - от сердца к клавишам</h2>
               <p className="text-xl mb-8 leading-relaxed text-[#a47017f5]">Официальный сайт Дмитрия Шмелидзэ</p>
               <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                 <button 
