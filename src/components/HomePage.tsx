@@ -20,9 +20,7 @@ const HomePage: React.FC = () => {
           <h1 className="md:text-8xl text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-extrabold text-4xl my-1.5 py-[29px] px-0 mx-0 text-center">Музыка слов 
  от сердца к клавишам</h1>
           
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">
-            Дмитрия Шмелидзэ
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">Официальный сайт Дмитрия Шмелидзэ</h2>
           
           <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
             Исследуйте мир винтажной музыки. Коллекция уникальных треков с душой прошлых эпох,
