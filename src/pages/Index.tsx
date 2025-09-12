@@ -217,12 +217,8 @@ const Index = () => {
       {/* Герой секция */}
       <section id="home" className="py-24 px-6 text-center">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-6xl font-bold text-vintage-cream mb-6 tracking-tight">
-            Vintage Soul
-          </h2>
-          <p className="text-xl text-vintage-cream/80 mb-8 leading-relaxed">
-            Музыка, которая переносит в эпоху винтажного звука
-          </p>
+          <h2 className="text-6xl font-bold text-vintage-cream mb-6 tracking-tight">Слова в нотах</h2>
+          <p className="text-xl mb-8 leading-relaxed text-[#a47017f5]">Официальный сайт Дмитрия Шмелидзэ</p>
           <div className="flex flex-wrap gap-4 justify-center">
             <button className="bg-vintage-warm hover:bg-vintage-cream text-vintage-dark-brown px-8 py-3 rounded-full font-semibold transition-all transform hover:scale-105">
               Послушать
