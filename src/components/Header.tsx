@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useNavigate, useLocation } from 'react-router-dom';
 import Icon from '@/components/ui/icon';
 import QRPayment from './QRPayment';
 import { CartItem } from '@/types';
@@ -39,6 +40,8 @@ const Header: React.FC<HeaderProps> = ({
   handleAdminLogin
 }) => {
   const [isQRPaymentOpen, setIsQRPaymentOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
   
   const handleCheckout = () => {
     if (cart.length === 0) return;
@@ -53,13 +56,34 @@ const Header: React.FC<HeaderProps> = ({
     <nav className="sticky top-0 z-50 backdrop-blur-sm bg-vintage-cream/80 border-b border-vintage-brown/20">
       <div className="max-w-6xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-vintage-warm">Дмитрий Шмелидзэ</h1>
+          <h1 
+            className="text-2xl font-bold text-vintage-warm cursor-pointer hover:text-vintage-dark-brown transition-colors"
+            onClick={() => navigate('/')}
+          >
+            Дмитрий Шмелидзэ
+          </h1>
           <div className="hidden md:flex space-x-8">
-            <a href="#home" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Главная</a>
-            <a href="#music" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Песни и альбомы</a>
-            <a href="#shop" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Магазин</a>
-            <a href="#concerts" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors"></a>
-            <a href="#contact" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Контакты</a>
+            <button 
+              onClick={() => navigate('/')} 
+              className={`text-vintage-warm hover:text-vintage-dark-brown transition-colors ${location.pathname === '/' ? 'font-semibold' : ''}`}
+            >
+              Главная
+            </button>
+            {location.pathname === '/music' ? (
+              <>
+                <a href="#music" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Песни и альбомы</a>
+                <a href="#shop" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Магазин</a>
+                <a href="#concerts" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Концерты</a>
+                <a href="#contact" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Контакты</a>
+              </>
+            ) : (
+              <button 
+                onClick={() => navigate('/music')} 
+                className="text-vintage-warm hover:text-vintage-dark-brown transition-colors"
+              >
+                Музыка
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-4">
             {/* Кнопка входа в админ панель */}
