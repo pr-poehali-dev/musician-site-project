@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Icon from '@/components/ui/icon';
+import QRPayment from './QRPayment';
 import { CartItem } from '@/types';
 
 interface HeaderProps {
@@ -37,30 +38,16 @@ const Header: React.FC<HeaderProps> = ({
   getTotalItems,
   handleAdminLogin
 }) => {
+  const [isQRPaymentOpen, setIsQRPaymentOpen] = useState(false);
   
   const handleCheckout = () => {
     if (cart.length === 0) return;
-    
-    const totalAmount = getTotalPrice();
-    const orderDescription = cart.map(item => `${item.title} (x${item.quantity})`).join(', ');
-    
-    // Генерируем ссылку для оплаты через СБП
-    // Это стандартный формат для QR-кода СБП
-    const sbpUrl = `https://qr.nspk.ru/AS10009Q6U8LDU2STC9QMRR0EIM2QH20?amount=${totalAmount}&payeeId=123456789&purpose=${encodeURIComponent(orderDescription)}`;
-    
-    // Альтернативно можно открыть модальное окно с QR-кодом или форму оплаты
-    const confirmed = confirm(`Оформить заказ на сумму ${totalAmount} ₽?\n\n${orderDescription}\n\nВы будете перенаправлены на оплату через СБП.`);
-    
-    if (confirmed) {
-      // Открываем страницу оплаты или мобильное приложение банка
-      window.open(sbpUrl, '_blank');
-      
-      // Очищаем корзину после успешного оформления
-      cart.forEach(item => removeFromCart(item.id));
-      setIsCartOpen(false);
-      
-      alert('Заказ оформлен! Проверьте уведомления в приложении банка для завершения оплаты.');
-    }
+    setIsQRPaymentOpen(true);
+  };
+
+  const handlePaymentComplete = () => {
+    cart.forEach(item => removeFromCart(item.id));
+    setIsCartOpen(false);
   };
   return (
     <nav className="sticky top-0 z-50 backdrop-blur-sm bg-vintage-cream/80 border-b border-vintage-brown/20">
@@ -186,6 +173,15 @@ const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
       </div>
+
+      {/* QR Payment Modal */}
+      <QRPayment
+        isOpen={isQRPaymentOpen}
+        onClose={() => setIsQRPaymentOpen(false)}
+        cart={cart}
+        totalPrice={getTotalPrice()}
+        onPaymentComplete={handlePaymentComplete}
+      />
     </nav>
   );
 };
