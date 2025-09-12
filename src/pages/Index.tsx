@@ -215,23 +215,40 @@ const Index = () => {
       />
 
       {/* Герой секция */}
-      <section id="home" className="py-24 px-6 text-center">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="font-bold text-vintage-cream tracking-tight my-3 text-5xl">Слова в нотах - от сердца к клавишам</h2>
-          <p className="text-xl mb-8 leading-relaxed text-[#a47017f5]">Официальный сайт Дмитрия Шмелидзэ</p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <button 
-              onClick={() => {
-                const shopSection = document.getElementById('shop');
-                shopSection?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="bg-vintage-warm hover:bg-vintage-cream text-vintage-dark-brown px-8 py-3 rounded-full font-semibold transition-all transform hover:scale-105"
-            >
-              Послушать
-            </button>
-            <button className="">
-              О музыканте
-            </button>
+      <section id="home" className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Текст */}
+            <div className="text-center md:text-left">
+              <h2 className="font-bold text-vintage-cream tracking-tight my-3 text-5xl">Слова в нотах - от сердца к клавишам</h2>
+              <p className="text-xl mb-8 leading-relaxed text-[#a47017f5]">Официальный сайт Дмитрия Шмелидзэ</p>
+              <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+                <button 
+                  onClick={() => {
+                    const shopSection = document.getElementById('shop');
+                    shopSection?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="bg-vintage-warm hover:bg-vintage-cream text-vintage-dark-brown px-8 py-3 rounded-full font-semibold transition-all transform hover:scale-105"
+                >
+                  Послушать
+                </button>
+                <button className="">
+                  О музыканте
+                </button>
+              </div>
+            </div>
+            
+            {/* Фотография музыканта */}
+            <div className="flex justify-center">
+              <div className="relative">
+                <img 
+                  src="/img/7fa09eda-4272-4772-b123-f46dd3566acd.jpg" 
+                  alt="Дмитрий Шмелидзэ - музыкант"
+                  className="w-80 h-80 object-cover rounded-full shadow-2xl border-4 border-vintage-warm/30"
+                />
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-vintage-warm/10 to-vintage-dark-brown/20"></div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
