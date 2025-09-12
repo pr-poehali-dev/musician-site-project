@@ -73,7 +73,6 @@ const Header: React.FC<HeaderProps> = ({
               <>
                 <a href="#music" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Песни и альбомы</a>
                 <a href="#shop" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Магазин</a>
-                <a href="#concerts" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Концерты</a>
                 <a href="#contact" className="text-vintage-warm hover:text-vintage-dark-brown transition-colors">Контакты</a>
               </>
             ) : (

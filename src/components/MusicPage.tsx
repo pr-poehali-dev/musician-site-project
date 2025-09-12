@@ -3,7 +3,7 @@ import Header from '@/components/Header';
 import MusicPlayer from '@/components/MusicPlayer';
 import TrackList from '@/components/TrackList';
 import Shop from '@/components/Shop';
-import ConcertsSection from '@/components/ConcertsSection';
+
 import AdminLogin from '@/components/AdminLogin';
 import { CartItem, Track, Album } from '@/types';
 
@@ -58,11 +58,7 @@ const MusicPage = () => {
     }
   ]);
 
-  const concerts = [
-    { date: "15 сентября", venue: "Клуб «Джаз Кафе»", city: "Москва" },
-    { date: "22 октября", venue: "Арт-центр «Винил»", city: "СПб" },
-    { date: "10 ноября", venue: "Ретро Холл", city: "Казань" }
-  ];
+
 
   const addToCart = (item: Track | Album, type: 'track' | 'album') => {
     const cartItem: CartItem = {
@@ -241,9 +237,6 @@ const MusicPage = () => {
         setCurrentTrack={(index: number) => setCurrentTrack(tracks[index])}
         addToCart={addToCart}
       />
-
-      {/* Концерты */}
-      <ConcertsSection concerts={concerts} />
 
       {/* Контакты */}
       <section id="contact" className="py-16 px-6 bg-vintage-dark-brown">
