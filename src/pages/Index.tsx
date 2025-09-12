@@ -220,7 +220,13 @@ const Index = () => {
           <h2 className="font-bold text-vintage-cream tracking-tight my-3 text-5xl">Слова в нотах - от сердца к клавишам</h2>
           <p className="text-xl mb-8 leading-relaxed text-[#a47017f5]">Официальный сайт Дмитрия Шмелидзэ</p>
           <div className="flex flex-wrap gap-4 justify-center">
-            <button className="bg-vintage-warm hover:bg-vintage-cream text-vintage-dark-brown px-8 py-3 rounded-full font-semibold transition-all transform hover:scale-105">
+            <button 
+              onClick={() => {
+                const shopSection = document.getElementById('shop');
+                shopSection?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="bg-vintage-warm hover:bg-vintage-cream text-vintage-dark-brown px-8 py-3 rounded-full font-semibold transition-all transform hover:scale-105"
+            >
               Послушать
             </button>
             <button className="">
