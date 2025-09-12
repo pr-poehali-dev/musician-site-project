@@ -51,7 +51,7 @@ const HomePage: React.FC = () => {
               <div className="relative">
                 <div className="w-80 h-80 rounded-full overflow-hidden shadow-2xl border-4 border-emerald-400/40 bg-gradient-to-br from-emerald-900/30 to-indigo-900/30 backdrop-blur-sm">
                   <img 
-                    src="/img/7fa09eda-4272-4772-b123-f46dd3566acd.jpg" 
+                    src="https://cdn.poehali.dev/files/57940c73-7a29-4c84-8c4b-d402f03adc4a.png" 
                     alt="Дмитрий Шмелидзэ - музыкант"
                     className="w-full h-full object-cover"
                   />
