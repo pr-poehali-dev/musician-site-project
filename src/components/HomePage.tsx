@@ -37,10 +37,10 @@ const HomePage: React.FC = () => {
               size="lg" 
               variant="outline" 
               className="border-green-400 text-green-400 hover:bg-green-400 hover:text-white px-8 py-4 text-lg"
-              onClick={() => navigate('/about')}
+              onClick={() => navigate('/music')}
             >
-              <Icon name="User" size={20} className="mr-2" />
-              Об исполнителе
+              <Icon name="Music2" size={20} className="mr-2" />
+              Авторские песни
             </Button>
           </div>
         </div>
