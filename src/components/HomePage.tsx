@@ -12,36 +12,56 @@ const HomePage: React.FC = () => {
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-black/20" />
-        <div className="relative z-10 max-w-4xl mx-auto px-4 py-20 text-center">
-          <Badge className="mb-6 px-4 py-2 bg-green-600 text-white hover:bg-green-700">🎵 Авторские песни</Badge>
-          
-          <h1 className="md:text-8xl text-white bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent font-extrabold text-4xl my-1.5 py-[29px] px-0 mx-0 text-center">
-            Музыка слов от сердца к клавишам
-          </h1>
-          
-          <h2 className="md:text-4xl font-bold text-white my-[19px] text-xl"></h2>
-          
-          <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">Официальный сайт Дмитрия Шмелидзэ</p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
-              className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg"
-              onClick={() => navigate('/music')}
-            >
-              <Icon name="Music" size={20} className="mr-2" />
-              Слушать музыку
-            </Button>
+        <div className="relative z-10 max-w-6xl mx-auto px-4 py-20">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Текстовая часть */}
+            <div className="text-center md:text-left">
+              <Badge className="mb-6 px-4 py-2 bg-green-600 text-white hover:bg-green-700">🎵 Авторские песни</Badge>
+              
+              <h1 className="text-4xl md:text-6xl text-white bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent font-extrabold mb-6">
+                Музыка слов от сердца к клавишам
+              </h1>
+              
+              <p className="text-xl text-gray-300 mb-8">Официальный сайт Дмитрия Шмелидзэ</p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                <Button 
+                  size="lg" 
+                  className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg"
+                  onClick={() => navigate('/music')}
+                >
+                  <Icon name="Music" size={20} className="mr-2" />
+                  Слушать музыку
+                </Button>
+                
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-green-400 text-green-400 hover:bg-green-400 hover:text-white px-8 py-4 text-lg"
+                  onClick={() => navigate('/music')}
+                >
+                  <Icon name="Music2" size={20} className="mr-2" />
+                  Авторские песни
+                </Button>
+              </div>
+            </div>
             
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="border-green-400 text-green-400 hover:bg-green-400 hover:text-white px-8 py-4 text-lg"
-              onClick={() => navigate('/music')}
-            >
-              <Icon name="Music2" size={20} className="mr-2" />
-              Авторские песни
-            </Button>
+            {/* Фото музыканта */}
+            <div className="flex justify-center">
+              <div className="relative">
+                <div className="w-80 h-80 rounded-full overflow-hidden shadow-2xl border-4 border-green-400/30 bg-gray-800/50 backdrop-blur-sm">
+                  <img 
+                    src="/img/7fa09eda-4272-4772-b123-f46dd3566acd.jpg" 
+                    alt="Дмитрий Шмелидзэ - музыкант"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                {/* Декоративные элементы */}
+                <div className="absolute -top-4 -right-4 w-8 h-8 bg-green-500 rounded-full opacity-60"></div>
+                <div className="absolute -bottom-4 -left-4 w-6 h-6 bg-emerald-400 rounded-full opacity-80"></div>
+                <div className="absolute top-8 -left-8 w-4 h-4 bg-green-300 rounded-full opacity-40"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
