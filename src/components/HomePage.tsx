@@ -43,6 +43,16 @@ const HomePage: React.FC = () => {
                   <Icon name="Music2" size={20} className="mr-2" />
                   Авторские песни
                 </Button>
+                
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-purple-400 text-purple-300 hover:bg-purple-500 hover:text-white px-8 py-4 text-lg"
+                  onClick={() => navigate('/contact')}
+                >
+                  <Icon name="MessageCircle" size={20} className="mr-2" />
+                  Контакты
+                </Button>
               </div>
             </div>
             
@@ -110,14 +120,26 @@ const HomePage: React.FC = () => {
           <p className="text-xl text-emerald-200 mb-8">
             Откройте для себя коллекцию уникальных треков уже сейчас
           </p>
-          <Button 
-            size="lg" 
-            className="bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 hover:from-emerald-700 hover:via-blue-700 hover:to-purple-700 text-white px-12 py-4 text-lg shadow-xl"
-            onClick={() => navigate('/music')}
-          >
-            <Icon name="Play" size={20} className="mr-2" />
-            Начать прослушивание
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 hover:from-emerald-700 hover:via-blue-700 hover:to-purple-700 text-white px-12 py-4 text-lg shadow-xl"
+              onClick={() => navigate('/music')}
+            >
+              <Icon name="Play" size={20} className="mr-2" />
+              Начать прослушивание
+            </Button>
+            
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="border-emerald-400 text-emerald-300 hover:bg-emerald-500 hover:text-white px-12 py-4 text-lg"
+              onClick={() => navigate('/contact')}
+            >
+              <Icon name="MessageCircle" size={20} className="mr-2" />
+              Связаться
+            </Button>
+          </div>
         </div>
       </div>
     </div>
