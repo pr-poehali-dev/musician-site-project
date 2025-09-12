@@ -8,7 +8,7 @@ const HomePage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-950 via-green-900 to-teal-950">
+    <div className="min-h-screen bg-gradient-to-b from-emerald-950 via-green-900 to-indigo-950">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-black/20" />
@@ -16,9 +16,9 @@ const HomePage: React.FC = () => {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Текстовая часть */}
             <div className="text-center md:text-left">
-              <Badge className="mb-6 px-4 py-2 bg-emerald-600 text-white hover:bg-emerald-700">🎵 Авторские песни</Badge>
+              <Badge className="mb-6 px-4 py-2 bg-gradient-to-r from-emerald-600 to-blue-600 text-white hover:from-emerald-700 hover:to-blue-700">🎵 Авторские песни</Badge>
               
-              <h1 className="text-4xl md:text-6xl text-white bg-gradient-to-r from-emerald-300 to-teal-300 bg-clip-text text-transparent font-extrabold mb-6">
+              <h1 className="text-4xl md:text-6xl text-white bg-gradient-to-r from-emerald-300 via-blue-300 to-purple-300 bg-clip-text text-transparent font-extrabold mb-6">
                 Музыка слов от сердца к клавишам
               </h1>
               
@@ -37,7 +37,7 @@ const HomePage: React.FC = () => {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="border-teal-400 text-teal-300 hover:bg-teal-500 hover:text-white px-8 py-4 text-lg"
+                  className="border-blue-400 text-blue-300 hover:bg-blue-500 hover:text-white px-8 py-4 text-lg"
                   onClick={() => navigate('/music')}
                 >
                   <Icon name="Music2" size={20} className="mr-2" />
@@ -49,7 +49,7 @@ const HomePage: React.FC = () => {
             {/* Фото музыканта */}
             <div className="flex justify-center">
               <div className="relative">
-                <div className="w-80 h-80 rounded-full overflow-hidden shadow-2xl border-4 border-emerald-400/40 bg-teal-900/30 backdrop-blur-sm">
+                <div className="w-80 h-80 rounded-full overflow-hidden shadow-2xl border-4 border-emerald-400/40 bg-gradient-to-br from-emerald-900/30 to-indigo-900/30 backdrop-blur-sm">
                   <img 
                     src="/img/7fa09eda-4272-4772-b123-f46dd3566acd.jpg" 
                     alt="Дмитрий Шмелидзэ - музыкант"
@@ -57,8 +57,8 @@ const HomePage: React.FC = () => {
                   />
                 </div>
                 {/* Декоративные элементы */}
-                <div className="absolute -top-4 -right-4 w-8 h-8 bg-emerald-400 rounded-full opacity-70"></div>
-                <div className="absolute -bottom-4 -left-4 w-6 h-6 bg-teal-400 rounded-full opacity-80"></div>
+                <div className="absolute -top-4 -right-4 w-8 h-8 bg-blue-400 rounded-full opacity-70"></div>
+                <div className="absolute -bottom-4 -left-4 w-6 h-6 bg-purple-400 rounded-full opacity-80"></div>
                 <div className="absolute top-8 -left-8 w-4 h-4 bg-emerald-300 rounded-full opacity-60"></div>
               </div>
             </div>
@@ -72,8 +72,8 @@ const HomePage: React.FC = () => {
           <h3 className="text-3xl font-bold text-center text-emerald-100 mb-16">Почему выбирают мои песни</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-8 bg-teal-900/30 rounded-2xl backdrop-blur-sm border border-emerald-500/30">
-              <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="text-center p-8 bg-emerald-900/30 rounded-2xl backdrop-blur-sm border border-emerald-500/30">
+              <div className="w-16 h-16 bg-gradient-to-br from-emerald-600 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Icon name="Headphones" size={32} className="text-white" />
               </div>
               <h4 className="text-xl font-bold text-emerald-100 mb-4">Эксклюзивные треки</h4>
@@ -82,27 +82,27 @@ const HomePage: React.FC = () => {
               </p>
             </div>
             
-            <div className="text-center p-8 bg-teal-900/30 rounded-2xl backdrop-blur-sm border border-emerald-500/30">
-              <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="text-center p-8 bg-blue-900/30 rounded-2xl backdrop-blur-sm border border-blue-500/30">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Icon name="Heart" size={32} className="text-white" />
               </div>
-              <h4 className="text-xl font-bold text-emerald-100 mb-4">С душой</h4>
-              <p className="text-emerald-200">Каждая песня не просто набор звуков, а откровенный разговор с вами о том, что действительно важно.</p>
+              <h4 className="text-xl font-bold text-blue-100 mb-4">С душой</h4>
+              <p className="text-blue-200">Каждая песня не просто набор звуков, а откровенный разговор с вами о том, что действительно важно.</p>
             </div>
             
-            <div className="text-center p-8 bg-teal-900/30 rounded-2xl backdrop-blur-sm border border-emerald-500/30">
-              <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="text-center p-8 bg-purple-900/30 rounded-2xl backdrop-blur-sm border border-purple-500/30">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-violet-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Icon name="Clock" size={32} className="text-white" />
               </div>
-              <h4 className="text-xl font-bold text-emerald-100 mb-4">Глубокий смысл</h4>
-              <p className="text-emerald-200">В моих текстах нет пустых слов. Каждая строчка наполнена смыслом и отражает реальные жизненные истории.</p>
+              <h4 className="text-xl font-bold text-purple-100 mb-4">Глубокий смысл</h4>
+              <p className="text-purple-200">В моих текстах нет пустых слов. Каждая строчка наполнена смыслом и отражает реальные жизненные истории.</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* CTA Section */}
-      <div className="py-20 px-4 bg-gradient-to-r from-emerald-800/40 to-teal-800/40">
+      <div className="py-20 px-4 bg-gradient-to-r from-emerald-800/40 via-blue-800/30 to-purple-800/40">
         <div className="max-w-4xl mx-auto text-center">
           <h3 className="text-4xl font-bold text-emerald-100 mb-6">
             Готовы окунуться в мир музыки?
@@ -112,7 +112,7 @@ const HomePage: React.FC = () => {
           </p>
           <Button 
             size="lg" 
-            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-12 py-4 text-lg shadow-xl"
+            className="bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 hover:from-emerald-700 hover:via-blue-700 hover:to-purple-700 text-white px-12 py-4 text-lg shadow-xl"
             onClick={() => navigate('/music')}
           >
             <Icon name="Play" size={20} className="mr-2" />
