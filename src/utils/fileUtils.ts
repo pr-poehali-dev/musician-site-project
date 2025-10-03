@@ -1,60 +1,34 @@
+import { saveAudioToIndexedDB } from './audioStorage';
+
 export const saveAudioFile = async (file: File, filename: string, trackData: { title: string; duration: string }): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    try {
-      const reader = new FileReader();
-      
-      reader.onload = function(event) {
-        const arrayBuffer = event.target?.result as ArrayBuffer;
-        const blob = new Blob([arrayBuffer], { type: file.type });
-        
-        // Создаем ссылку для скачивания файла
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        
-        // Имитируем клик для сохранения файла
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Сохраняем трек в localStorage для отображения на главной странице
-        const trackInfo = {
-          id: Date.now().toString(),
-          title: trackData.title,
-          duration: trackData.duration,
-          file: url, // Используем blob URL для воспроизведения
-          price: 129
-        };
+  try {
+    // Сохраняем аудиофайл в IndexedDB
+    const fileId = await saveAudioToIndexedDB(file, filename);
+    
+    // Сохраняем информацию о треке в localStorage
+    const trackInfo = {
+      id: Date.now().toString(),
+      title: trackData.title,
+      duration: trackData.duration,
+      file: fileId, // ID файла в IndexedDB
+      price: 129
+    };
 
-        const savedTracks = localStorage.getItem('uploadedTracks');
-        let uploadedTracks = [];
-        if (savedTracks) {
-          uploadedTracks = JSON.parse(savedTracks);
-        }
-        uploadedTracks.push(trackInfo);
-        localStorage.setItem('uploadedTracks', JSON.stringify(uploadedTracks));
-
-        // Отправляем событие для обновления компонентов
-        window.dispatchEvent(new CustomEvent('tracksUpdated'));
-        
-        // В реальном приложении здесь был бы API вызов для загрузки на сервер
-        // const savedPath = await uploadToServer(file, filename);
-        
-        // Возвращаем путь к сохраненному файлу в папке public/audio
-        const savedPath = `/audio/${filename}`;
-        resolve(savedPath);
-      };
-      
-      reader.onerror = function() {
-        reject(new Error('Ошибка чтения файла'));
-      };
-      
-      reader.readAsArrayBuffer(file);
-    } catch (error) {
-      reject(error);
+    const savedTracks = localStorage.getItem('uploadedTracks');
+    let uploadedTracks = [];
+    if (savedTracks) {
+      uploadedTracks = JSON.parse(savedTracks);
     }
-  });
+    uploadedTracks.push(trackInfo);
+    localStorage.setItem('uploadedTracks', JSON.stringify(uploadedTracks));
+
+    // Отправляем событие для обновления компонентов
+    window.dispatchEvent(new CustomEvent('tracksUpdated'));
+    
+    return fileId;
+  } catch (error) {
+    throw new Error(`Ошибка сохранения файла: ${error}`);
+  }
 };
 
 export const generateAudioFilename = (originalName: string, trackTitle: string): string => {

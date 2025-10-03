@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Icon from '@/components/ui/icon';
 import { Album, Track } from '@/types';
+import { getAudioFromIndexedDB } from '@/utils/audioStorage';
 
 interface AlbumViewProps {
   album: Album;
@@ -42,19 +43,35 @@ const AlbumView: React.FC<AlbumViewProps> = ({
   useEffect(() => {
     const audio = audioRef.current;
     if (audio && currentTrack?.file) {
-      audio.src = currentTrack.file;
-      audio.load();
-      setCurrentTime(0);
-      setDuration(0);
-      
-      if (isPlaying) {
-        audio.play().catch(error => {
-          console.warn('Ошибка автовоспроизведения:', error);
+      const loadAudio = async () => {
+        try {
+          let audioUrl = currentTrack.file;
+          
+          // Если это ID из IndexedDB, получаем blob URL
+          if (audioUrl.startsWith('audio_')) {
+            audioUrl = await getAudioFromIndexedDB(audioUrl);
+          }
+          
+          audio.src = audioUrl;
+          audio.load();
+          setCurrentTime(0);
+          setDuration(0);
+          
+          if (isPlaying) {
+            audio.play().catch(error => {
+              console.warn('Ошибка автовоспроизведения:', error);
+              setIsPlaying(false);
+            });
+          }
+        } catch (error) {
+          console.error('Ошибка загрузки аудио:', error);
           setIsPlaying(false);
-        });
-      }
+        }
+      };
+      
+      loadAudio();
     }
-  }, [currentTrack]);
+  }, [currentTrack, isPlaying]);
 
   useEffect(() => {
     const audio = audioRef.current;
