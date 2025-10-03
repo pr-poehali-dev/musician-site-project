@@ -30,6 +30,8 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   onTrackEnd
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [volume, setVolume] = React.useState(1);
+  const [isMuted, setIsMuted] = React.useState(false);
 
   const togglePlay = () => {
     if (audioRef.current && currentTrack) {
@@ -91,6 +93,14 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     }
   }, [setCurrentTime, setDuration, onTrackEnd, playNext]);
 
+  // Обновляем громкость
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.volume = isMuted ? 0 : volume;
+    }
+  }, [volume, isMuted]);
+
   // Обновляем источник аудио при смене трека
   useEffect(() => {
     const audio = audioRef.current;
@@ -109,6 +119,18 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
       }
     }
   }, [currentTrack, isPlaying, setCurrentTime, setDuration]);
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    if (newVolume > 0 && isMuted) {
+      setIsMuted(false);
+    }
+  };
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+  };
 
   return (
     <section id="music" className="py-16 px-6">
@@ -170,6 +192,48 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
                   style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
                 ></div>
               </div>
+            </div>
+
+            {/* Регулятор громкости */}
+            <div className="flex items-center gap-3 mt-6">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleMute}
+                className="text-vintage-dark-brown hover:bg-vintage-brown/10"
+              >
+                <Icon 
+                  name={isMuted || volume === 0 ? "VolumeX" : volume < 0.5 ? "Volume1" : "Volume2"} 
+                  size={20} 
+                />
+              </Button>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={isMuted ? 0 : volume}
+                onChange={handleVolumeChange}
+                className="flex-1 h-2 bg-vintage-brown/20 rounded-full appearance-none cursor-pointer
+                  [&::-webkit-slider-thumb]:appearance-none
+                  [&::-webkit-slider-thumb]:w-4
+                  [&::-webkit-slider-thumb]:h-4
+                  [&::-webkit-slider-thumb]:rounded-full
+                  [&::-webkit-slider-thumb]:bg-vintage-dark-brown
+                  [&::-webkit-slider-thumb]:cursor-pointer
+                  [&::-moz-range-thumb]:w-4
+                  [&::-moz-range-thumb]:h-4
+                  [&::-moz-range-thumb]:rounded-full
+                  [&::-moz-range-thumb]:bg-vintage-dark-brown
+                  [&::-moz-range-thumb]:border-0
+                  [&::-moz-range-thumb]:cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, rgb(var(--vintage-dark-brown)) 0%, rgb(var(--vintage-dark-brown)) ${(isMuted ? 0 : volume) * 100}%, rgb(var(--vintage-brown) / 0.2) ${(isMuted ? 0 : volume) * 100}%, rgb(var(--vintage-brown) / 0.2) 100%)`
+                }}
+              />
+              <span className="text-sm text-vintage-warm/70 w-12 text-right">
+                {Math.round((isMuted ? 0 : volume) * 100)}%
+              </span>
             </div>
 
             {/* Список треков */}
