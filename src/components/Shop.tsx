@@ -82,11 +82,6 @@ const Shop: React.FC<ShopProps> = ({
     <>
       <section id="shop" className="py-16 px-6 bg-vintage-warm/5">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h3 className="text-4xl font-bold text-vintage-warm mb-4">Магазин</h3>
-            <p className="text-vintage-warm/70 text-lg">Приобретите треки и альбомы</p>
-          </div>
-
           {/* Альбомы */}
           <AlbumGrid
             albums={albums}
