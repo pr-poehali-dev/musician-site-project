@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Icon from '@/components/ui/icon';
@@ -11,10 +11,27 @@ interface AlbumGridProps {
 }
 
 const AlbumGrid: React.FC<AlbumGridProps> = ({
-  albums,
+  albums: initialAlbums,
   onAlbumClick,
   onAddToCart
 }) => {
+  const [albums, setAlbums] = useState<Album[]>(initialAlbums);
+
+  useEffect(() => {
+    const loadAlbums = () => {
+      const savedAlbums = localStorage.getItem('albums');
+      if (savedAlbums) {
+        setAlbums(JSON.parse(savedAlbums));
+      } else {
+        setAlbums(initialAlbums);
+      }
+    };
+
+    loadAlbums();
+
+    window.addEventListener('albumsUpdated', loadAlbums);
+    return () => window.removeEventListener('albumsUpdated', loadAlbums);
+  }, [initialAlbums]);
   const handleAddToCart = (album: Album, e: React.MouseEvent) => {
     e.stopPropagation(); // Предотвращаем открытие альбома при клике на кнопку
     onAddToCart({

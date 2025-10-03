@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,13 +16,49 @@ interface ShopProps {
 }
 
 const Shop: React.FC<ShopProps> = ({
-  albums,
-  tracks,
+  albums: initialAlbums,
+  tracks: initialTracks,
   currentTrack,
   setCurrentTrack,
   addToCart
 }) => {
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+  const [albums, setAlbums] = useState<Album[]>(initialAlbums);
+  const [tracks, setTracks] = useState<Track[]>(initialTracks);
+
+  useEffect(() => {
+    const loadAlbums = () => {
+      const savedAlbums = localStorage.getItem('albums');
+      if (savedAlbums) {
+        setAlbums(JSON.parse(savedAlbums));
+      } else {
+        setAlbums(initialAlbums);
+      }
+    };
+
+    const loadTracks = () => {
+      const savedTracks = localStorage.getItem('uploadedTracks');
+      if (savedTracks) {
+        setTracks(JSON.parse(savedTracks));
+      } else {
+        setTracks(initialTracks);
+      }
+    };
+
+    loadAlbums();
+    loadTracks();
+
+    const handleAlbumsUpdate = () => loadAlbums();
+    const handleTracksUpdate = () => loadTracks();
+
+    window.addEventListener('albumsUpdated', handleAlbumsUpdate);
+    window.addEventListener('tracksUpdated', handleTracksUpdate);
+
+    return () => {
+      window.removeEventListener('albumsUpdated', handleAlbumsUpdate);
+      window.removeEventListener('tracksUpdated', handleTracksUpdate);
+    };
+  }, [initialAlbums, initialTracks]);
 
   const handleAddToCart = (item: { id: string; title: string; type: 'track' | 'album'; price: number; quantity: number }) => {
     const fullItem = item.type === 'album' 

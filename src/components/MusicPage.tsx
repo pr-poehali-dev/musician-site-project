@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import MusicPlayer from '@/components/MusicPlayer';
 import TrackList from '@/components/TrackList';
@@ -19,14 +19,14 @@ const MusicPage = () => {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
 
-  const [tracks, setTracks] = useState<Track[]>([
+  const defaultTracks: Track[] = [
     { id: "1", title: "Vintage Dreams", duration: "3:42", file: "", price: 129 },
     { id: "2", title: "Golden Memories", duration: "4:15", file: "", price: 129 },
     { id: "3", title: "Sunset Boulevard", duration: "3:28", file: "", price: 129 },
     { id: "4", title: "Old Soul", duration: "4:03", file: "", price: 129 }
-  ]);
+  ];
 
-  const [albums, setAlbums] = useState<Album[]>([
+  const defaultAlbums: Album[] = [
     { 
       id: "album1", 
       title: "Винтажные Мелодии", 
@@ -56,7 +56,19 @@ const MusicPage = () => {
         { id: "7", title: "Blue Moon Rising", duration: "3:55", file: "", price: 149 }
       ]
     }
-  ]);
+  ];
+
+  const [tracks, setTracks] = useState<Track[]>(defaultTracks);
+  const [albums, setAlbums] = useState<Album[]>(defaultAlbums);
+
+  useEffect(() => {
+    const savedAlbums = localStorage.getItem('albums');
+    if (savedAlbums) {
+      setAlbums(JSON.parse(savedAlbums));
+    } else {
+      localStorage.setItem('albums', JSON.stringify(defaultAlbums));
+    }
+  }, []);
 
 
 
@@ -127,7 +139,10 @@ const MusicPage = () => {
       ...albumData,
       id: Date.now().toString()
     };
-    setAlbums([...albums, newAlbum]);
+    const updatedAlbums = [...albums, newAlbum];
+    setAlbums(updatedAlbums);
+    localStorage.setItem('albums', JSON.stringify(updatedAlbums));
+    window.dispatchEvent(new CustomEvent('albumsUpdated'));
   };
 
   const addTrackToAlbum = (albumId: string, trackData: Omit<Track, 'id'>) => {
@@ -136,7 +151,7 @@ const MusicPage = () => {
       id: Date.now().toString()
     };
     
-    setAlbums(albums.map(album => 
+    const updatedAlbums = albums.map(album => 
       album.id === albumId 
         ? { 
             ...album, 
@@ -144,9 +159,12 @@ const MusicPage = () => {
             tracks: album.trackList.length + 1
           } 
         : album
-    ));
+    );
+    setAlbums(updatedAlbums);
+    localStorage.setItem('albums', JSON.stringify(updatedAlbums));
     
-    setTracks([...tracks, newTrack]);
+    const updatedTracks = [...tracks, newTrack];
+    setTracks(updatedTracks);
     
     const savedTracks = localStorage.getItem('uploadedTracks');
     let uploadedTracks = [];
@@ -155,7 +173,9 @@ const MusicPage = () => {
     }
     uploadedTracks.push(newTrack);
     localStorage.setItem('uploadedTracks', JSON.stringify(uploadedTracks));
+    
     window.dispatchEvent(new CustomEvent('tracksUpdated'));
+    window.dispatchEvent(new CustomEvent('albumsUpdated'));
   };
 
   const handleTrackSelect = (track: Track) => {
@@ -164,31 +184,56 @@ const MusicPage = () => {
   };
 
   const removeTrack = (trackId: string) => {
-    setTracks(tracks.filter(track => track.id !== trackId));
+    const updatedTracks = tracks.filter(track => track.id !== trackId);
+    setTracks(updatedTracks);
     
-    setAlbums(albums.map(album => ({
+    const savedTracks = JSON.parse(localStorage.getItem('uploadedTracks') || '[]');
+    const filteredSavedTracks = savedTracks.filter((track: Track) => track.id !== trackId);
+    localStorage.setItem('uploadedTracks', JSON.stringify(filteredSavedTracks));
+    
+    const updatedAlbums = albums.map(album => ({
       ...album,
       trackList: album.trackList.filter(track => track.id !== trackId),
       tracks: album.trackList.filter(track => track.id !== trackId).length
-    })));
+    }));
+    setAlbums(updatedAlbums);
+    localStorage.setItem('albums', JSON.stringify(updatedAlbums));
+    
+    window.dispatchEvent(new CustomEvent('tracksUpdated'));
+    window.dispatchEvent(new CustomEvent('albumsUpdated'));
   };
 
   const editAlbum = (albumId: string, albumData: Omit<Album, 'id'>) => {
-    setAlbums(albums.map(album => 
+    const updatedAlbums = albums.map(album => 
       album.id === albumId 
         ? { ...album, ...albumData } 
         : album
-    ));
+    );
+    setAlbums(updatedAlbums);
+    localStorage.setItem('albums', JSON.stringify(updatedAlbums));
+    window.dispatchEvent(new CustomEvent('albumsUpdated'));
   };
 
   const removeAlbum = (albumId: string) => {
     const albumTracks = albums.find(album => album.id === albumId)?.trackList || [];
     
-    setAlbums(albums.filter(album => album.id !== albumId));
+    const updatedAlbums = albums.filter(album => album.id !== albumId);
+    setAlbums(updatedAlbums);
+    localStorage.setItem('albums', JSON.stringify(updatedAlbums));
     
-    setTracks(tracks.filter(track => 
+    const updatedTracks = tracks.filter(track => 
       !albumTracks.some(albumTrack => albumTrack.id === track.id)
-    ));
+    );
+    setTracks(updatedTracks);
+    
+    const savedTracks = JSON.parse(localStorage.getItem('uploadedTracks') || '[]');
+    const filteredSavedTracks = savedTracks.filter((track: Track) => 
+      !albumTracks.some(albumTrack => albumTrack.id === track.id)
+    );
+    localStorage.setItem('uploadedTracks', JSON.stringify(filteredSavedTracks));
+    
+    window.dispatchEvent(new CustomEvent('albumsUpdated'));
+    window.dispatchEvent(new CustomEvent('tracksUpdated'));
   };
 
   return (
