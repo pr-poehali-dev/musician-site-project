@@ -254,19 +254,6 @@ const MusicPage = () => {
         handleAdminLogin={handleAdminLogin}
       />
 
-      {/* Музыкальный плеер */}
-      <MusicPlayer
-        tracks={tracks}
-        isPlaying={isPlaying}
-        currentTrack={currentTrack}
-        currentTime={currentTime}
-        duration={duration}
-        setIsPlaying={setIsPlaying}
-        setCurrentTrack={setCurrentTrack}
-        setCurrentTime={setCurrentTime}
-        setDuration={setDuration}
-      />
-
       {/* Магазин */}
       <Shop
         albums={albums}
