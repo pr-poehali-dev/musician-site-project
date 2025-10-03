@@ -20,6 +20,8 @@ const AlbumView: React.FC<AlbumViewProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const handlePlayTrack = (track: Track) => {
@@ -72,6 +74,13 @@ const AlbumView: React.FC<AlbumViewProps> = ({
       loadAudio();
     }
   }, [currentTrack, isPlaying]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.volume = isMuted ? 0 : volume;
+    }
+  }, [volume, isMuted]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -214,7 +223,7 @@ const AlbumView: React.FC<AlbumViewProps> = ({
 
             {/* Мини-плеер */}
             {currentTrack && (
-              <div className="mt-8 p-4 bg-vintage-brown/10 rounded-lg border border-vintage-brown/20">
+              <div className="mt-8 p-4 bg-vintage-brown/10 rounded-lg border border-vintage-brown/20 space-y-3">
                 <div className="flex items-center gap-4">
                   <Button
                     onClick={() => handlePlayTrack(currentTrack)}
@@ -235,7 +244,54 @@ const AlbumView: React.FC<AlbumViewProps> = ({
                       <span className="text-sm text-vintage-warm/60">{currentTrack.duration}</span>
                     </div>
                   </div>
-                  <Icon name="Volume2" size={20} className="text-vintage-dark-brown" />
+                </div>
+
+                {/* Регулятор громкости */}
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsMuted(!isMuted)}
+                    className="text-vintage-dark-brown hover:bg-vintage-brown/10"
+                  >
+                    <Icon 
+                      name={isMuted || volume === 0 ? "VolumeX" : volume < 0.5 ? "Volume1" : "Volume2"} 
+                      size={20} 
+                    />
+                  </Button>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={isMuted ? 0 : volume}
+                    onChange={(e) => {
+                      const newVolume = parseFloat(e.target.value);
+                      setVolume(newVolume);
+                      if (newVolume > 0 && isMuted) {
+                        setIsMuted(false);
+                      }
+                    }}
+                    className="flex-1 h-2 bg-vintage-brown/20 rounded-full appearance-none cursor-pointer
+                      [&::-webkit-slider-thumb]:appearance-none
+                      [&::-webkit-slider-thumb]:w-4
+                      [&::-webkit-slider-thumb]:h-4
+                      [&::-webkit-slider-thumb]:rounded-full
+                      [&::-webkit-slider-thumb]:bg-vintage-dark-brown
+                      [&::-webkit-slider-thumb]:cursor-pointer
+                      [&::-moz-range-thumb]:w-4
+                      [&::-moz-range-thumb]:h-4
+                      [&::-moz-range-thumb]:rounded-full
+                      [&::-moz-range-thumb]:bg-vintage-dark-brown
+                      [&::-moz-range-thumb]:border-0
+                      [&::-moz-range-thumb]:cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, rgb(var(--vintage-dark-brown)) 0%, rgb(var(--vintage-dark-brown)) ${(isMuted ? 0 : volume) * 100}%, rgb(var(--vintage-brown) / 0.2) ${(isMuted ? 0 : volume) * 100}%, rgb(var(--vintage-brown) / 0.2) 100%)`
+                    }}
+                  />
+                  <span className="text-sm text-vintage-warm/70 w-12 text-right">
+                    {Math.round((isMuted ? 0 : volume) * 100)}%
+                  </span>
                 </div>
 
                 {/* Скрытый аудио элемент */}
