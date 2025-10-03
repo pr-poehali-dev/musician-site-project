@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Icon from '@/components/ui/icon';
@@ -19,9 +19,18 @@ const AlbumView: React.FC<AlbumViewProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const handlePlayTrack = (track: Track) => {
     if (currentTrack?.id === track.id) {
+      const audio = audioRef.current;
+      if (audio) {
+        if (isPlaying) {
+          audio.pause();
+        } else {
+          audio.play().catch(error => console.warn('Ошибка воспроизведения:', error));
+        }
+      }
       setIsPlaying(!isPlaying);
     } else {
       setCurrentTrack(track);
@@ -29,6 +38,42 @@ const AlbumView: React.FC<AlbumViewProps> = ({
       setCurrentTime(0);
     }
   };
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio && currentTrack?.file) {
+      audio.src = currentTrack.file;
+      audio.load();
+      setCurrentTime(0);
+      setDuration(0);
+      
+      if (isPlaying) {
+        audio.play().catch(error => {
+          console.warn('Ошибка автовоспроизведения:', error);
+          setIsPlaying(false);
+        });
+      }
+    }
+  }, [currentTrack]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      const updateTime = () => setCurrentTime(audio.currentTime);
+      const updateDuration = () => setDuration(audio.duration);
+      const handleEnded = () => setIsPlaying(false);
+      
+      audio.addEventListener('timeupdate', updateTime);
+      audio.addEventListener('loadedmetadata', updateDuration);
+      audio.addEventListener('ended', handleEnded);
+      
+      return () => {
+        audio.removeEventListener('timeupdate', updateTime);
+        audio.removeEventListener('loadedmetadata', updateDuration);
+        audio.removeEventListener('ended', handleEnded);
+      };
+    }
+  }, []);
 
   const formatTime = (time: number) => {
     if (isNaN(time)) return '0:00';
@@ -178,21 +223,9 @@ const AlbumView: React.FC<AlbumViewProps> = ({
 
                 {/* Скрытый аудио элемент */}
                 <audio
-                  key={currentTrack.id}
-                  src={currentTrack.file}
-                  onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-                  onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-                  onEnded={() => setIsPlaying(false)}
-                  ref={(audio) => {
-                    if (audio) {
-                      if (isPlaying) {
-                        audio.play();
-                      } else {
-                        audio.pause();
-                      }
-                    }
-                  }}
+                  ref={audioRef}
                   preload="metadata"
+                  onError={() => console.warn('Ошибка загрузки аудиофайла')}
                 />
               </div>
             )}
