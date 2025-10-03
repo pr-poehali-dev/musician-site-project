@@ -29,6 +29,8 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
     price: 0,
     description: ''
   });
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
   const [showAddAlbum, setShowAddAlbum] = useState(false);
   const [showEditAlbum, setShowEditAlbum] = useState(false);
@@ -40,11 +42,20 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
     price: 0,
     description: ''
   });
+  const [editCoverFile, setEditCoverFile] = useState<File | null>(null);
+  const [editCoverPreview, setEditCoverPreview] = useState<string | null>(null);
 
-  const handleAddAlbum = () => {
+  const handleAddAlbum = async () => {
     if (newAlbum.title && newAlbum.artist) {
+      let coverUrl = newAlbum.cover;
+      
+      if (coverFile) {
+        coverUrl = await saveCoverImage(coverFile);
+      }
+      
       onAddAlbum({
         ...newAlbum,
+        cover: coverUrl,
         tracks: 0,
         trackList: []
       });
@@ -55,7 +66,32 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
         price: 0,
         description: ''
       });
+      setCoverFile(null);
+      setCoverPreview(null);
       setShowAddAlbum(false);
+    }
+  };
+
+  const saveCoverImage = async (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        resolve(result);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setCoverFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setCoverPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -68,13 +104,33 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
       price: album.price,
       description: album.description
     });
+    setEditCoverPreview(album.cover || null);
     setShowEditAlbum(true);
   };
 
-  const handleSaveEditAlbum = () => {
+  const handleEditCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setEditCoverFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setEditCoverPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveEditAlbum = async () => {
     if (editingAlbum && editAlbumData.title && editAlbumData.artist) {
+      let coverUrl = editAlbumData.cover;
+      
+      if (editCoverFile) {
+        coverUrl = await saveCoverImage(editCoverFile);
+      }
+      
       onEditAlbum(editingAlbum.id, {
         ...editAlbumData,
+        cover: coverUrl,
         tracks: editingAlbum.tracks,
         trackList: editingAlbum.trackList
       });
@@ -87,6 +143,8 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
         price: 0,
         description: ''
       });
+      setEditCoverFile(null);
+      setEditCoverPreview(null);
     }
   };
 
@@ -133,14 +191,28 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="album-cover" className="text-vintage-warm">Обложка (URL)</Label>
-                <Input
-                  id="album-cover"
-                  value={newAlbum.cover}
-                  onChange={(e) => setNewAlbum({...newAlbum, cover: e.target.value})}
-                  placeholder="Ссылка на обложку"
-                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
-                />
+                <Label htmlFor="album-cover" className="text-vintage-warm">Обложка</Label>
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleCoverUpload}
+                    className="w-full px-3 py-2 border border-vintage-brown/30 rounded-md focus:border-vintage-dark-brown bg-vintage-cream file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:bg-vintage-dark-brown file:text-vintage-cream hover:file:bg-vintage-warm"
+                  />
+                  {coverPreview && (
+                    <div className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-vintage-brown/20">
+                      <img src={coverPreview} alt="Предпросмотр" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div className="text-sm text-vintage-warm/60">или</div>
+                  <Input
+                    id="album-cover"
+                    value={newAlbum.cover}
+                    onChange={(e) => setNewAlbum({...newAlbum, cover: e.target.value})}
+                    placeholder="Вставьте ссылку на обложку"
+                    className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+                  />
+                </div>
               </div>
               <div>
                 <Label htmlFor="album-price" className="text-vintage-warm">Цена (₽)</Label>
@@ -202,14 +274,28 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
               />
             </div>
             <div>
-              <Label htmlFor="edit-album-cover" className="text-vintage-warm">Обложка (URL)</Label>
-              <Input
-                id="edit-album-cover"
-                value={editAlbumData.cover}
-                onChange={(e) => setEditAlbumData({...editAlbumData, cover: e.target.value})}
-                placeholder="Ссылка на обложку"
-                className="border-vintage-brown/30 focus:border-vintage-dark-brown"
-              />
+              <Label htmlFor="edit-album-cover" className="text-vintage-warm">Обложка</Label>
+              <div className="space-y-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleEditCoverUpload}
+                  className="w-full px-3 py-2 border border-vintage-brown/30 rounded-md focus:border-vintage-dark-brown bg-vintage-cream file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:bg-vintage-dark-brown file:text-vintage-cream hover:file:bg-vintage-warm"
+                />
+                {editCoverPreview && (
+                  <div className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-vintage-brown/20">
+                    <img src={editCoverPreview} alt="Предпросмотр" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div className="text-sm text-vintage-warm/60">или</div>
+                <Input
+                  id="edit-album-cover"
+                  value={editAlbumData.cover}
+                  onChange={(e) => setEditAlbumData({...editAlbumData, cover: e.target.value})}
+                  placeholder="Вставьте ссылку на обложку"
+                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+                />
+              </div>
             </div>
             <div>
               <Label htmlFor="edit-album-price" className="text-vintage-warm">Цена (₽)</Label>
@@ -255,16 +341,29 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
         {albums.map((album) => (
           <Card key={album.id} className="bg-vintage-cream/95 border-vintage-brown/20">
             <CardContent className="p-4">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h4 className="font-bold text-vintage-warm">{album.title}</h4>
-                  <p className="text-sm text-vintage-warm/70">{album.artist}</p>
+              <div className="flex gap-3 mb-3">
+                {album.cover ? (
+                  <div className="w-20 h-20 rounded overflow-hidden flex-shrink-0">
+                    <img src={album.cover} alt={album.title} className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="w-20 h-20 bg-vintage-dark-brown/20 rounded flex items-center justify-center flex-shrink-0">
+                    <Icon name="Disc" size={32} className="text-vintage-dark-brown" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <div className="flex justify-between items-start mb-1">
+                    <div>
+                      <h4 className="font-bold text-vintage-warm">{album.title}</h4>
+                      <p className="text-sm text-vintage-warm/70">{album.artist}</p>
+                    </div>
+                    <Badge className="bg-vintage-dark-brown text-vintage-cream">
+                      {album.tracks} треков
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-vintage-warm/60 line-clamp-2">{album.description}</p>
                 </div>
-                <Badge className="bg-vintage-dark-brown text-vintage-cream">
-                  {album.tracks} треков
-                </Badge>
               </div>
-              <p className="text-sm text-vintage-warm/60 mb-2">{album.description}</p>
               <div className="flex items-center justify-between">
                 <p className="font-bold text-vintage-dark-brown">{album.price} ₽</p>
                 <div className="flex gap-2">

@@ -102,8 +102,12 @@ const Shop: React.FC<ShopProps> = ({
                 <Card key={track.id} className="bg-vintage-cream/95 border-vintage-brown/20 hover:shadow-lg transition-all">
                   <CardContent className="p-4">
                     <div className="space-y-4">
-                      <div className="w-full aspect-square bg-gradient-to-br from-vintage-brown to-vintage-dark-brown rounded-lg flex items-center justify-center">
-                        <Icon name="Music" size={32} className="text-vintage-cream" />
+                      <div className="w-full aspect-square bg-gradient-to-br from-vintage-brown to-vintage-dark-brown rounded-lg flex items-center justify-center overflow-hidden">
+                        {track.cover ? (
+                          <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <Icon name="Music" size={32} className="text-vintage-cream" />
+                        )}
                       </div>
                       <div>
                         <h5 className="font-bold text-vintage-warm mb-1">{track.title}</h5>

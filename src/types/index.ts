@@ -12,6 +12,7 @@ export interface Track {
   duration: string;
   file: string;
   price: number;
+  cover?: string;
 }
 
 export interface Album {

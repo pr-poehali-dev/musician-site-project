@@ -24,7 +24,8 @@ const TrackManager: React.FC<TrackManagerProps> = ({
     title: '',
     duration: '',
     file: '',
-    price: 129
+    price: 129,
+    cover: ''
   });
 
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -34,6 +35,8 @@ const TrackManager: React.FC<TrackManagerProps> = ({
   const [showAddTrack, setShowAddTrack] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [savedFilePath, setSavedFilePath] = useState<string | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -79,13 +82,16 @@ const TrackManager: React.FC<TrackManagerProps> = ({
       title: '',
       duration: '',
       file: '',
-      price: 129
+      price: 129,
+      cover: ''
     });
     setUploadedFile(null);
     setIsUploading(false);
     setIsSaving(false);
     setFileError(null);
     setSavedFilePath(null);
+    setCoverFile(null);
+    setCoverPreview(null);
   };
   
   const handleSaveAudioFile = async () => {
@@ -114,15 +120,42 @@ const TrackManager: React.FC<TrackManagerProps> = ({
     }
   };
 
-  const handleAddTrack = () => {
+  const saveCoverImage = async (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        resolve(result);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setCoverFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setCoverPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAddTrack = async () => {
     if (newTrack.title && newTrack.duration && newTrack.file && selectedAlbum) {
-      // Проверяем, что файл сохранен
       if (!savedFilePath && uploadedFile) {
         setFileError('Необходимо сохранить аудиофайл перед добавлением трека');
         return;
       }
       
-      onAddTrack(selectedAlbum, newTrack);
+      let coverUrl = newTrack.cover;
+      if (coverFile) {
+        coverUrl = await saveCoverImage(coverFile);
+      }
+      
+      onAddTrack(selectedAlbum, { ...newTrack, cover: coverUrl });
       resetTrackForm();
       setShowAddTrack(false);
     } else {
@@ -219,6 +252,22 @@ const TrackManager: React.FC<TrackManagerProps> = ({
                 </div>
               </div>
               <div>
+                <Label className="text-vintage-warm">Обложка трека (необязательно)</Label>
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleCoverUpload}
+                    className="w-full px-3 py-2 border border-vintage-brown/30 rounded-md focus:border-vintage-dark-brown bg-vintage-cream file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:bg-vintage-dark-brown file:text-vintage-cream hover:file:bg-vintage-warm"
+                  />
+                  {coverPreview && (
+                    <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-vintage-brown/20">
+                      <img src={coverPreview} alt="Обложка" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div>
                 <Label htmlFor="track-price" className="text-vintage-warm">Цена (₽)</Label>
                 <Input
                   id="track-price"
@@ -273,7 +322,15 @@ const TrackManager: React.FC<TrackManagerProps> = ({
             className="flex items-center justify-between p-3 bg-vintage-brown/10 rounded-lg"
           >
             <div className="flex items-center gap-3">
-              <Icon name="Music" size={16} className="text-vintage-dark-brown" />
+              {track.cover ? (
+                <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0">
+                  <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-12 h-12 bg-vintage-dark-brown/20 rounded flex items-center justify-center flex-shrink-0">
+                  <Icon name="Music" size={20} className="text-vintage-dark-brown" />
+                </div>
+              )}
               <div>
                 <p className="font-medium text-vintage-warm">{track.title}</p>
                 <p className="text-sm text-vintage-warm/60">{track.duration}</p>
