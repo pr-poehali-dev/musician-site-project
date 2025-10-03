@@ -48,7 +48,7 @@ const AlbumGrid: React.FC<AlbumGridProps> = ({
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h3 className="text-4xl font-bold text-vintage-warm mb-4">Альбомы</h3>
-          <p className="text-vintage-warm/70 text-lg">Коллекция лучших винтажных альбомов</p>
+          <p className="text-vintage-warm/70 text-lg">Выберите альбом для прослушивания треков</p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
