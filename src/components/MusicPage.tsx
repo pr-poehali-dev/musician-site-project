@@ -254,13 +254,6 @@ const MusicPage = () => {
         handleAdminLogin={handleAdminLogin}
       />
 
-      {/* Список загруженных треков */}
-      <TrackList
-        onTrackSelect={handleTrackSelect}
-        currentTrack={currentTrack}
-        isPlaying={isPlaying}
-      />
-
       {/* Музыкальный плеер */}
       <MusicPlayer
         tracks={tracks}
