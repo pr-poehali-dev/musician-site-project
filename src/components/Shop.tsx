@@ -28,10 +28,14 @@ const Shop: React.FC<ShopProps> = ({
 
   useEffect(() => {
     const loadAlbums = () => {
+      console.log('[Shop] Загрузка альбомов из localStorage');
       const savedAlbums = localStorage.getItem('albums');
       if (savedAlbums) {
-        setAlbums(JSON.parse(savedAlbums));
+        const parsed = JSON.parse(savedAlbums);
+        console.log('[Shop] Альбомы загружены:', parsed.length, 'альбомов');
+        setAlbums(parsed);
       } else {
+        console.log('[Shop] Нет сохраненных альбомов, используем начальные');
         setAlbums(initialAlbums);
       }
     };
@@ -48,7 +52,10 @@ const Shop: React.FC<ShopProps> = ({
     loadAlbums();
     loadTracks();
 
-    const handleAlbumsUpdate = () => loadAlbums();
+    const handleAlbumsUpdate = () => {
+      console.log('[Shop] Получено событие albumsUpdated');
+      loadAlbums();
+    };
     const handleTracksUpdate = () => loadTracks();
 
     window.addEventListener('albumsUpdated', handleAlbumsUpdate);
