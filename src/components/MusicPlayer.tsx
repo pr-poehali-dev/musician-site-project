@@ -33,6 +33,9 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   const audioRef = useRef<HTMLAudioElement>(null);
   const [volume, setVolume] = React.useState(1);
   const [isMuted, setIsMuted] = React.useState(false);
+  const [showTooltip, setShowTooltip] = React.useState(false);
+  const [tooltipPosition, setTooltipPosition] = React.useState(0);
+  const [tooltipTime, setTooltipTime] = React.useState(0);
 
   const togglePlay = () => {
     if (audioRef.current && currentTrack) {
@@ -203,42 +206,63 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration) || currentTrack?.duration || '0:00'}</span>
               </div>
-              <input
-                type="range"
-                min="0"
-                max={duration || 100}
-                value={currentTime}
-                onChange={(e) => {
-                  const newTime = parseFloat(e.target.value);
-                  setCurrentTime(newTime);
-                  if (audioRef.current) {
-                    audioRef.current.currentTime = newTime;
-                  }
-                }}
-                disabled={!currentTrack}
-                className="w-full h-2 bg-vintage-brown/20 rounded-full appearance-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50
-                  [&::-webkit-slider-thumb]:appearance-none
-                  [&::-webkit-slider-thumb]:w-4
-                  [&::-webkit-slider-thumb]:h-4
-                  [&::-webkit-slider-thumb]:rounded-full
-                  [&::-webkit-slider-thumb]:bg-vintage-dark-brown
-                  [&::-webkit-slider-thumb]:cursor-pointer
-                  [&::-webkit-slider-thumb]:shadow-lg
-                  [&::-webkit-slider-thumb]:hover:scale-110
-                  [&::-webkit-slider-thumb]:transition-transform
-                  [&::-moz-range-thumb]:w-4
-                  [&::-moz-range-thumb]:h-4
-                  [&::-moz-range-thumb]:rounded-full
-                  [&::-moz-range-thumb]:bg-vintage-dark-brown
-                  [&::-moz-range-thumb]:border-0
-                  [&::-moz-range-thumb]:cursor-pointer
-                  [&::-moz-range-thumb]:shadow-lg
-                  [&::-moz-range-thumb]:hover:scale-110
-                  [&::-moz-range-thumb]:transition-transform"
-                style={{
-                  background: `linear-gradient(to right, rgb(139 101 82) 0%, rgb(139 101 82) ${(currentTime / (duration || 1)) * 100}%, rgb(139 101 82 / 0.2) ${(currentTime / (duration || 1)) * 100}%, rgb(139 101 82 / 0.2) 100%)`
-                }}
-              />
+              <div className="relative">
+                <input
+                  type="range"
+                  min="0"
+                  max={duration || 100}
+                  value={currentTime}
+                  onChange={(e) => {
+                    const newTime = parseFloat(e.target.value);
+                    setCurrentTime(newTime);
+                    if (audioRef.current) {
+                      audioRef.current.currentTime = newTime;
+                    }
+                  }}
+                  onMouseMove={(e) => {
+                    if (!currentTrack) return;
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const percent = (e.clientX - rect.left) / rect.width;
+                    const time = percent * (duration || 0);
+                    setTooltipTime(time);
+                    setTooltipPosition(e.clientX - rect.left);
+                    setShowTooltip(true);
+                  }}
+                  onMouseEnter={() => setShowTooltip(true)}
+                  onMouseLeave={() => setShowTooltip(false)}
+                  disabled={!currentTrack}
+                  className="w-full h-2 bg-vintage-brown/20 rounded-full appearance-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50
+                    [&::-webkit-slider-thumb]:appearance-none
+                    [&::-webkit-slider-thumb]:w-4
+                    [&::-webkit-slider-thumb]:h-4
+                    [&::-webkit-slider-thumb]:rounded-full
+                    [&::-webkit-slider-thumb]:bg-vintage-dark-brown
+                    [&::-webkit-slider-thumb]:cursor-pointer
+                    [&::-webkit-slider-thumb]:shadow-lg
+                    [&::-webkit-slider-thumb]:hover:scale-110
+                    [&::-webkit-slider-thumb]:transition-transform
+                    [&::-moz-range-thumb]:w-4
+                    [&::-moz-range-thumb]:h-4
+                    [&::-moz-range-thumb]:rounded-full
+                    [&::-moz-range-thumb]:bg-vintage-dark-brown
+                    [&::-moz-range-thumb]:border-0
+                    [&::-moz-range-thumb]:cursor-pointer
+                    [&::-moz-range-thumb]:shadow-lg
+                    [&::-moz-range-thumb]:hover:scale-110
+                    [&::-moz-range-thumb]:transition-transform"
+                  style={{
+                    background: `linear-gradient(to right, rgb(139 101 82) 0%, rgb(139 101 82) ${(currentTime / (duration || 1)) * 100}%, rgb(139 101 82 / 0.2) ${(currentTime / (duration || 1)) * 100}%, rgb(139 101 82 / 0.2) 100%)`
+                  }}
+                />
+                {showTooltip && currentTrack && (
+                  <div 
+                    className="absolute -top-10 transform -translate-x-1/2 bg-vintage-dark-brown text-vintage-cream text-xs px-2 py-1 rounded shadow-lg pointer-events-none"
+                    style={{ left: `${tooltipPosition}px` }}
+                  >
+                    {formatTime(tooltipTime)}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Регулятор громкости */}
