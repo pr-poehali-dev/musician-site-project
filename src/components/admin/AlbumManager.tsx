@@ -15,6 +15,7 @@ interface AlbumManagerProps {
   onEditAlbum: (albumId: string, albumData: Omit<Album, 'id'>) => void;
   onRemoveAlbum: (albumId: string) => void;
   onRemoveTrack?: (trackId: string) => void;
+  onEditTrack?: (trackId: string, trackData: Omit<Track, 'id'>) => void;
 }
 
 const AlbumManager: React.FC<AlbumManagerProps> = ({
@@ -22,9 +23,18 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
   onAddAlbum,
   onEditAlbum,
   onRemoveAlbum,
-  onRemoveTrack
+  onRemoveTrack,
+  onEditTrack
 }) => {
   const [expandedAlbums, setExpandedAlbums] = useState<string[]>([]);
+  const [editingTrack, setEditingTrack] = useState<Track | null>(null);
+  const [showEditTrack, setShowEditTrack] = useState(false);
+  const [editTrackData, setEditTrackData] = useState({
+    title: '',
+    duration: '',
+    price: 0,
+    file: ''
+  });
   const [newAlbum, setNewAlbum] = useState({
     title: '',
     artist: '',
@@ -171,6 +181,31 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
     );
   };
 
+  const handleEditTrack = (track: Track) => {
+    setEditingTrack(track);
+    setEditTrackData({
+      title: track.title,
+      duration: track.duration,
+      price: track.price,
+      file: track.file
+    });
+    setShowEditTrack(true);
+  };
+
+  const handleSaveEditTrack = () => {
+    if (editingTrack && editTrackData.title && editTrackData.duration) {
+      onEditTrack?.(editingTrack.id, editTrackData);
+      setShowEditTrack(false);
+      setEditingTrack(null);
+      setEditTrackData({
+        title: '',
+        duration: '',
+        price: 0,
+        file: ''
+      });
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
@@ -262,6 +297,63 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Диалог редактирования трека */}
+      <Dialog open={showEditTrack} onOpenChange={setShowEditTrack}>
+        <DialogContent className="bg-vintage-cream border-vintage-brown/20">
+          <DialogHeader>
+            <DialogTitle className="text-vintage-warm">Редактировать трек</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-track-title" className="text-vintage-warm">Название</Label>
+              <Input
+                id="edit-track-title"
+                value={editTrackData.title}
+                onChange={(e) => setEditTrackData({...editTrackData, title: e.target.value})}
+                placeholder="Название трека"
+                className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-track-duration" className="text-vintage-warm">Длительность</Label>
+              <Input
+                id="edit-track-duration"
+                value={editTrackData.duration}
+                onChange={(e) => setEditTrackData({...editTrackData, duration: e.target.value})}
+                placeholder="3:42"
+                className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-track-price" className="text-vintage-warm">Цена (₽)</Label>
+              <Input
+                id="edit-track-price"
+                type="number"
+                value={editTrackData.price}
+                onChange={(e) => setEditTrackData({...editTrackData, price: Number(e.target.value)})}
+                placeholder="Цена трека"
+                className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleSaveEditTrack}
+                className="flex-1 bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
+              >
+                Сохранить изменения
+              </Button>
+              <Button 
+                onClick={() => setShowEditTrack(false)}
+                variant="outline"
+                className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
+              >
+                Отмена
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Диалог редактирования альбома */}
       <Dialog open={showEditAlbum} onOpenChange={setShowEditAlbum}>
@@ -433,14 +525,24 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
                             </div>
                           </div>
                         </div>
-                        <Button 
-                          onClick={() => handleDeleteTrack(track.id)}
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-500 hover:bg-red-50 h-7 w-7 p-0 flex-shrink-0"
-                        >
-                          <Icon name="Trash2" size={12} />
-                        </Button>
+                        <div className="flex gap-1 flex-shrink-0">
+                          <Button 
+                            onClick={() => handleEditTrack(track)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-vintage-dark-brown hover:bg-vintage-brown/20 h-7 w-7 p-0"
+                          >
+                            <Icon name="Edit" size={12} />
+                          </Button>
+                          <Button 
+                            onClick={() => handleDeleteTrack(track.id)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-500 hover:bg-red-50 h-7 w-7 p-0"
+                          >
+                            <Icon name="Trash2" size={12} />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

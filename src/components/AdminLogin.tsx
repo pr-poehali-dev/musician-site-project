@@ -16,6 +16,7 @@ interface AdminLoginProps {
   removeAlbum: (albumId: string) => void;
   addTrackToAlbum: (albumId: string, track: Omit<Track, 'id'>) => void;
   removeTrack: (trackId: string) => void;
+  editTrack: (trackId: string, trackData: Omit<Track, 'id'>) => void;
 }
 
 const AdminLogin: React.FC<AdminLoginProps> = ({
@@ -29,7 +30,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({
   editAlbum,
   removeAlbum,
   addTrackToAlbum,
-  removeTrack
+  removeTrack,
+  editTrack
 }) => {
   if (!isAdmin) return null;
 
@@ -58,6 +60,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({
           onRemoveAlbum={removeAlbum}
           onAddTrack={addTrackToAlbum}
           onRemoveTrack={removeTrack}
+          onEditTrack={editTrack}
         />
       </DialogContent>
     </Dialog>

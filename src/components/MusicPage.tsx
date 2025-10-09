@@ -203,6 +203,37 @@ const MusicPage = () => {
     window.dispatchEvent(new CustomEvent('albumsUpdated'));
   };
 
+  const editTrack = (trackId: string, trackData: Omit<Track, 'id'>) => {
+    const updatedTracks = tracks.map(track => 
+      track.id === trackId 
+        ? { ...track, ...trackData } 
+        : track
+    );
+    setTracks(updatedTracks);
+    
+    const savedTracks = JSON.parse(localStorage.getItem('uploadedTracks') || '[]');
+    const updatedSavedTracks = savedTracks.map((track: Track) => 
+      track.id === trackId 
+        ? { ...track, ...trackData } 
+        : track
+    );
+    localStorage.setItem('uploadedTracks', JSON.stringify(updatedSavedTracks));
+    
+    const updatedAlbums = albums.map(album => ({
+      ...album,
+      trackList: album.trackList.map(track => 
+        track.id === trackId 
+          ? { ...track, ...trackData } 
+          : track
+      )
+    }));
+    setAlbums(updatedAlbums);
+    localStorage.setItem('albums', JSON.stringify(updatedAlbums));
+    
+    window.dispatchEvent(new CustomEvent('tracksUpdated'));
+    window.dispatchEvent(new CustomEvent('albumsUpdated'));
+  };
+
   const editAlbum = (albumId: string, albumData: Omit<Album, 'id'>) => {
     const updatedAlbums = albums.map(album => 
       album.id === albumId 
@@ -297,6 +328,7 @@ const MusicPage = () => {
         removeAlbum={removeAlbum}
         addTrackToAlbum={addTrackToAlbum}
         removeTrack={removeTrack}
+        editTrack={editTrack}
       />
 
       <footer className="bg-vintage-warm text-vintage-cream py-8 px-6">
