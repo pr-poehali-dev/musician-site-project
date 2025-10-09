@@ -133,7 +133,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration) || currentTrack?.duration || '0:00'}</span>
               </div>
-              <div className="relative">
+              <div className="relative group">
                 <input
                   type="range"
                   min="0"
@@ -164,19 +164,28 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                     [&::-webkit-slider-thumb]:h-4
                     [&::-webkit-slider-thumb]:rounded-full
                     [&::-webkit-slider-thumb]:bg-vintage-dark-brown
-                    [&::-webkit-slider-thumb]:cursor-pointer
+                    [&::-webkit-slider-thumb]:cursor-grab
+                    [&::-webkit-slider-thumb]:active:cursor-grabbing
                     [&::-webkit-slider-thumb]:shadow-lg
-                    [&::-webkit-slider-thumb]:hover:scale-110
-                    [&::-webkit-slider-thumb]:transition-transform
+                    [&::-webkit-slider-thumb]:hover:scale-125
+                    [&::-webkit-slider-thumb]:active:scale-110
+                    [&::-webkit-slider-thumb]:transition-all
+                    [&::-webkit-slider-thumb]:duration-150
                     [&::-moz-range-thumb]:w-4
                     [&::-moz-range-thumb]:h-4
                     [&::-moz-range-thumb]:rounded-full
                     [&::-moz-range-thumb]:bg-vintage-dark-brown
                     [&::-moz-range-thumb]:border-0
-                    [&::-moz-range-thumb]:cursor-pointer
+                    [&::-moz-range-thumb]:cursor-grab
+                    [&::-moz-range-thumb]:active:cursor-grabbing
                     [&::-moz-range-thumb]:shadow-lg
-                    [&::-moz-range-thumb]:hover:scale-110
-                    [&::-moz-range-thumb]:transition-transform"
+                    [&::-moz-range-thumb]:hover:scale-125
+                    [&::-moz-range-thumb]:active:scale-110
+                    [&::-moz-range-thumb]:transition-all
+                    [&::-moz-range-thumb]:duration-150
+                    hover:h-3
+                    active:h-3
+                    transition-all"
                   style={{
                     background: `linear-gradient(to right, rgb(139 101 82) 0%, rgb(139 101 82) ${(currentTime / (duration || 1)) * 100}%, rgb(139 101 82 / 0.2) ${(currentTime / (duration || 1)) * 100}%, rgb(139 101 82 / 0.2) 100%)`
                   }}

@@ -122,7 +122,7 @@ const FloatingPlayer: React.FC<FloatingPlayerProps> = ({
 
           {/* Прогресс бар */}
           <div className="space-y-2">
-            <div className="relative">
+            <div className="relative group">
               <input
                 type="range"
                 min="0"
@@ -141,16 +141,23 @@ const FloatingPlayer: React.FC<FloatingPlayerProps> = ({
                   [&::-webkit-slider-thumb]:h-4
                   [&::-webkit-slider-thumb]:rounded-full
                   [&::-webkit-slider-thumb]:bg-vintage-cream
-                  [&::-webkit-slider-thumb]:cursor-pointer
+                  [&::-webkit-slider-thumb]:cursor-grab
+                  [&::-webkit-slider-thumb]:active:cursor-grabbing
                   [&::-webkit-slider-thumb]:shadow-lg
-                  [&::-webkit-slider-thumb]:hover:scale-110
-                  [&::-webkit-slider-thumb]:transition-transform
+                  [&::-webkit-slider-thumb]:hover:scale-125
+                  [&::-webkit-slider-thumb]:active:scale-110
+                  [&::-webkit-slider-thumb]:transition-all
+                  [&::-webkit-slider-thumb]:duration-150
                   [&::-moz-range-thumb]:w-4
                   [&::-moz-range-thumb]:h-4
                   [&::-moz-range-thumb]:rounded-full
                   [&::-moz-range-thumb]:bg-vintage-cream
                   [&::-moz-range-thumb]:border-0
-                  [&::-moz-range-thumb]:cursor-pointer"
+                  [&::-moz-range-thumb]:cursor-grab
+                  [&::-moz-range-thumb]:active:cursor-grabbing
+                  hover:h-3
+                  active:h-3
+                  transition-all"
                 style={{
                   background: `linear-gradient(to right, rgb(245 237 224) 0%, rgb(245 237 224) ${(currentTime / (duration || 1)) * 100}%, rgb(194 146 110 / 0.2) ${(currentTime / (duration || 1)) * 100}%, rgb(194 146 110 / 0.2) 100%)`
                 }}
