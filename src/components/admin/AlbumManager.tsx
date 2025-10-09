@@ -6,6 +6,7 @@ import AddAlbumDialog from './album/AddAlbumDialog';
 import EditAlbumDialog from './album/EditAlbumDialog';
 import { EditTrackDialog, MoveTrackDialog, BulkMoveDialog } from './album/TrackDialogs';
 import AlbumCard from './album/AlbumCard';
+import EditTrackTip from './EditTrackTip';
 
 interface AlbumManagerProps {
   albums: Album[];
@@ -399,6 +400,7 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
         editTrackData={editTrackData}
         onTrackDataChange={setEditTrackData}
         onSaveEditTrack={handleSaveEditTrack}
+        currentFileName={editingTrack?.file ? (editingTrack.file.startsWith('audio_') ? 'IndexedDB файл' : editingTrack.file) : undefined}
       />
 
       <EditAlbumDialog
@@ -411,6 +413,8 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
         onSaveEditAlbum={handleSaveEditAlbum}
       />
 
+      <EditTrackTip />
+      
       <div className="grid md:grid-cols-2 gap-4">
         {albums.map((album) => (
           <AlbumCard

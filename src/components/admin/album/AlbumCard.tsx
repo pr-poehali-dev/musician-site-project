@@ -34,6 +34,8 @@ const TrackItem = React.memo<{
   const handleEdit = useCallback(() => onEdit(track), [onEdit, track]);
   const handleDelete = useCallback(() => onDelete(track.id), [onDelete, track.id]);
 
+  const hasAudioFile = track.file && track.file.trim() !== '';
+
   return (
     <div 
       className={`flex items-center justify-between p-2 bg-vintage-brown/10 rounded-lg transition-colors ${
@@ -56,7 +58,14 @@ const TrackItem = React.memo<{
         </button>
         <Icon name="Music" size={14} className="text-vintage-dark-brown flex-shrink-0" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-vintage-warm truncate">{track.title}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium text-vintage-warm truncate">{track.title}</p>
+            {!hasAudioFile && (
+              <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 bg-red-500/10 text-red-700 border-red-300 flex-shrink-0">
+                Нет файла
+              </Badge>
+            )}
+          </div>
           <div className="flex gap-2 text-xs text-vintage-warm/60">
             <span>{track.duration}</span>
             <span>•</span>
