@@ -1,5 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Track, Album } from '@/types';
+import { Button } from '@/components/ui/button';
+import Icon from '@/components/ui/icon';
 import AddAlbumDialog from './album/AddAlbumDialog';
 import EditAlbumDialog from './album/EditAlbumDialog';
 import { EditTrackDialog, MoveTrackDialog, BulkMoveDialog } from './album/TrackDialogs';
@@ -112,8 +114,8 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 800;
-          const MAX_HEIGHT = 800;
+          const MAX_WIDTH = 400;
+          const MAX_HEIGHT = 400;
           let width = img.width;
           let height = img.height;
 
@@ -134,12 +136,18 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(img, 0, 0, width, height);
           
-          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+          const sizeKB = (compressedDataUrl.length / 1024).toFixed(2);
           console.log('Изображение сжато:', {
-            original: e.target?.result?.toString().length,
-            compressed: compressedDataUrl.length,
-            reduction: Math.round((1 - compressedDataUrl.length / (e.target?.result?.toString().length || 1)) * 100) + '%'
+            original: ((e.target?.result?.toString().length || 0) / 1024).toFixed(2) + ' KB',
+            compressed: sizeKB + ' KB',
+            dimensions: `${width}x${height}`
           });
+          
+          if (compressedDataUrl.length > 200000) {
+            console.warn('Изображение все еще большое:', sizeKB, 'KB. Рекомендуется использовать URL.');
+          }
+          
           resolve(compressedDataUrl);
         };
         img.onerror = reject;
@@ -322,19 +330,46 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
     }
   }, [albums, selectedTracks]);
 
+  const checkStorageSize = () => {
+    let totalSize = 0;
+    for (const key in localStorage) {
+      if (localStorage.hasOwnProperty(key)) {
+        totalSize += localStorage[key].length + key.length;
+      }
+    }
+    const sizeKB = (totalSize / 1024).toFixed(2);
+    const limitKB = 5120;
+    const percentUsed = ((totalSize / 1024 / limitKB) * 100).toFixed(1);
+    
+    alert(`📊 Использование хранилища браузера:\n\n` +
+          `Занято: ${sizeKB} KB из ~${limitKB} KB (${percentUsed}%)\n\n` +
+          `Совет: Если места мало, используйте ссылки на изображения вместо загрузки файлов.`);
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold text-vintage-warm">Альбомы</h3>
-        <AddAlbumDialog
-          open={showAddAlbum}
-          onOpenChange={setShowAddAlbum}
-          newAlbum={newAlbum}
-          onAlbumChange={setNewAlbum}
-          coverPreview={coverPreview}
-          onCoverUpload={handleCoverUpload}
-          onAddAlbum={handleAddAlbum}
-        />
+        <div className="flex gap-2">
+          <Button
+            onClick={checkStorageSize}
+            variant="outline"
+            size="sm"
+            className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown/10"
+          >
+            <Icon name="HardDrive" size={16} className="mr-2" />
+            Проверить место
+          </Button>
+          <AddAlbumDialog
+            open={showAddAlbum}
+            onOpenChange={setShowAddAlbum}
+            newAlbum={newAlbum}
+            onAlbumChange={setNewAlbum}
+            coverPreview={coverPreview}
+            onCoverUpload={handleCoverUpload}
+            onAddAlbum={handleAddAlbum}
+          />
+        </div>
       </div>
 
       <BulkMoveDialog

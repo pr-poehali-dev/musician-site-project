@@ -56,16 +56,31 @@ export const useAlbumManagement = () => {
       console.log('Обновленный список альбомов:', updatedAlbums);
       
       const dataToSave = JSON.stringify(updatedAlbums);
-      console.log('Размер данных для сохранения:', (dataToSave.length / 1024).toFixed(2) + ' KB');
+      const dataSizeKB = (dataToSave.length / 1024).toFixed(2);
+      console.log('Размер данных для сохранения:', dataSizeKB + ' KB');
+      
+      let totalSize = 0;
+      for (const key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+          totalSize += localStorage[key].length + key.length;
+        }
+      }
+      console.log('Текущий размер localStorage:', (totalSize / 1024).toFixed(2) + ' KB');
+      console.log('Размер после добавления:', ((totalSize + dataToSave.length) / 1024).toFixed(2) + ' KB');
       
       setAlbums(updatedAlbums);
       localStorage.setItem('albums', dataToSave);
-      console.log('Альбом успешно сохранен в localStorage');
+      console.log('✅ Альбом успешно сохранен в localStorage');
       window.dispatchEvent(new CustomEvent('albumsUpdated'));
     } catch (error) {
-      console.error('Ошибка при сохранении альбома в localStorage:', error);
+      console.error('❌ Ошибка при сохранении альбома в localStorage:', error);
       if (error instanceof Error && error.name === 'QuotaExceededError') {
-        alert('Недостаточно места в хранилище браузера. Удалите старые альбомы или используйте ссылку на изображение вместо загрузки файла.');
+        alert('⚠️ Недостаточно места в хранилище браузера!\n\n' +
+              'Решения:\n' +
+              '1. Удалите старые альбомы через админ-панель\n' +
+              '2. Вместо загрузки файла используйте ссылку на изображение (поле "или вставьте ссылку на обложку")\n' +
+              '3. Используйте изображения меньшего размера (до 500KB)\n\n' +
+              'Рекомендуем загружать обложки на imgur.com или использовать прямые ссылки.');
       } else {
         alert('Ошибка при сохранении альбома: ' + (error as Error).message);
       }
