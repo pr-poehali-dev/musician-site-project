@@ -37,10 +37,18 @@ export const useAlbumManagement = () => {
   const [albums, setAlbums] = useState<Album[]>(defaultAlbums);
 
   useEffect(() => {
-    const savedAlbums = localStorage.getItem('albums');
-    if (savedAlbums) {
-      setAlbums(JSON.parse(savedAlbums));
-    } else {
+    try {
+      const savedAlbums = localStorage.getItem('albums');
+      if (savedAlbums) {
+        const parsed = JSON.parse(savedAlbums);
+        setAlbums(parsed);
+      } else {
+        localStorage.setItem('albums', JSON.stringify(defaultAlbums));
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки альбомов из localStorage:', error);
+      // Если данные повреждены, используем дефолтные и перезаписываем
+      setAlbums(defaultAlbums);
       localStorage.setItem('albums', JSON.stringify(defaultAlbums));
     }
   }, []);
