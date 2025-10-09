@@ -50,9 +50,12 @@ export const useAlbumManagement = () => {
       ...albumData,
       id: Date.now().toString()
     };
+    console.log('Добавление нового альбома:', newAlbum);
     const updatedAlbums = [...albums, newAlbum];
+    console.log('Обновленный список альбомов:', updatedAlbums);
     setAlbums(updatedAlbums);
     localStorage.setItem('albums', JSON.stringify(updatedAlbums));
+    console.log('Сохранено в localStorage');
     window.dispatchEvent(new CustomEvent('albumsUpdated'));
   };
 

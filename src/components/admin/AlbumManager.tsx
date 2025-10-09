@@ -64,19 +64,25 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
   const [editCoverPreview, setEditCoverPreview] = useState<string | null>(null);
 
   const handleAddAlbum = async () => {
+    console.log('handleAddAlbum вызван, данные:', newAlbum);
     if (newAlbum.title && newAlbum.artist) {
       let coverUrl = newAlbum.cover;
       
       if (coverFile) {
+        console.log('Загрузка обложки из файла');
         coverUrl = await saveCoverImage(coverFile);
       }
       
-      onAddAlbum({
+      const albumData = {
         ...newAlbum,
         cover: coverUrl,
         tracks: 0,
         trackList: []
-      });
+      };
+      
+      console.log('Вызов onAddAlbum с данными:', albumData);
+      onAddAlbum(albumData);
+      
       setNewAlbum({
         title: '',
         artist: '',
@@ -87,6 +93,9 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
       setCoverFile(null);
       setCoverPreview(null);
       setShowAddAlbum(false);
+      console.log('Диалог закрыт');
+    } else {
+      console.log('Не заполнены обязательные поля:', { title: newAlbum.title, artist: newAlbum.artist });
     }
   };
 

@@ -110,7 +110,10 @@ const AddAlbumDialog: React.FC<AddAlbumDialogProps> = ({
             />
           </div>
           <Button 
-            onClick={onAddAlbum}
+            onClick={() => {
+              console.log('Кнопка "Создать альбом" нажата');
+              onAddAlbum();
+            }}
             className="w-full bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
           >
             Создать альбом
