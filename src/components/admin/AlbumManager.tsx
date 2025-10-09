@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Icon from '@/components/ui/icon';
 import { Track, Album } from '@/types';
 
@@ -16,6 +17,7 @@ interface AlbumManagerProps {
   onRemoveAlbum: (albumId: string) => void;
   onRemoveTrack?: (trackId: string) => void;
   onEditTrack?: (trackId: string, trackData: Omit<Track, 'id'>) => void;
+  onMoveTrack?: (trackId: string, fromAlbumId: string, toAlbumId: string) => void;
 }
 
 const AlbumManager: React.FC<AlbumManagerProps> = ({
@@ -24,7 +26,8 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
   onEditAlbum,
   onRemoveAlbum,
   onRemoveTrack,
-  onEditTrack
+  onEditTrack,
+  onMoveTrack
 }) => {
   const [expandedAlbums, setExpandedAlbums] = useState<string[]>([]);
   const [editingTrack, setEditingTrack] = useState<Track | null>(null);
@@ -35,6 +38,9 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
     price: 0,
     file: ''
   });
+  const [movingTrack, setMovingTrack] = useState<{track: Track, albumId: string} | null>(null);
+  const [showMoveTrack, setShowMoveTrack] = useState(false);
+  const [targetAlbumId, setTargetAlbumId] = useState('');
   const [newAlbum, setNewAlbum] = useState({
     title: '',
     artist: '',
@@ -206,6 +212,21 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
     }
   };
 
+  const handleMoveTrack = (track: Track, albumId: string) => {
+    setMovingTrack({track, albumId});
+    setTargetAlbumId('');
+    setShowMoveTrack(true);
+  };
+
+  const handleSaveMoveTrack = () => {
+    if (movingTrack && targetAlbumId && targetAlbumId !== movingTrack.albumId) {
+      onMoveTrack?.(movingTrack.track.id, movingTrack.albumId, targetAlbumId);
+      setShowMoveTrack(false);
+      setMovingTrack(null);
+      setTargetAlbumId('');
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
@@ -297,6 +318,51 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Диалог перемещения трека */}
+      <Dialog open={showMoveTrack} onOpenChange={setShowMoveTrack}>
+        <DialogContent className="bg-vintage-cream border-vintage-brown/20">
+          <DialogHeader>
+            <DialogTitle className="text-vintage-warm">Переместить трек</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-vintage-warm mb-2 block">Трек: {movingTrack?.track.title}</Label>
+              <Label htmlFor="target-album" className="text-vintage-warm">Переместить в альбом:</Label>
+              <Select value={targetAlbumId} onValueChange={setTargetAlbumId}>
+                <SelectTrigger className="border-vintage-brown/30 focus:border-vintage-dark-brown">
+                  <SelectValue placeholder="Выберите альбом" />
+                </SelectTrigger>
+                <SelectContent>
+                  {albums
+                    .filter(album => album.id !== movingTrack?.albumId)
+                    .map(album => (
+                      <SelectItem key={album.id} value={album.id}>
+                        {album.title} - {album.artist}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleSaveMoveTrack}
+                disabled={!targetAlbumId}
+                className="flex-1 bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream disabled:opacity-50"
+              >
+                Переместить
+              </Button>
+              <Button 
+                onClick={() => setShowMoveTrack(false)}
+                variant="outline"
+                className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
+              >
+                Отмена
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Диалог редактирования трека */}
       <Dialog open={showEditTrack} onOpenChange={setShowEditTrack}>
@@ -527,10 +593,20 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
                         </div>
                         <div className="flex gap-1 flex-shrink-0">
                           <Button 
+                            onClick={() => handleMoveTrack(track, album.id)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-vintage-dark-brown hover:bg-vintage-brown/20 h-7 w-7 p-0"
+                            title="Переместить в другой альбом"
+                          >
+                            <Icon name="Move" size={12} />
+                          </Button>
+                          <Button 
                             onClick={() => handleEditTrack(track)}
                             variant="ghost"
                             size="sm"
                             className="text-vintage-dark-brown hover:bg-vintage-brown/20 h-7 w-7 p-0"
+                            title="Редактировать трек"
                           >
                             <Icon name="Edit" size={12} />
                           </Button>
@@ -539,6 +615,7 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
                             variant="ghost"
                             size="sm"
                             className="text-red-500 hover:bg-red-50 h-7 w-7 p-0"
+                            title="Удалить трек"
                           >
                             <Icon name="Trash2" size={12} />
                           </Button>

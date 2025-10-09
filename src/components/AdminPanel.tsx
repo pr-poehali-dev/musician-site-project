@@ -12,6 +12,7 @@ interface AdminPanelProps {
   onAddTrack: (albumId: string, track: Omit<Track, 'id'>) => void;
   onRemoveTrack: (trackId: string) => void;
   onEditTrack: (trackId: string, trackData: Omit<Track, 'id'>) => void;
+  onMoveTrack: (trackId: string, fromAlbumId: string, toAlbumId: string) => void;
 }
 
 const AdminPanel: React.FC<AdminPanelProps> = ({
@@ -22,7 +23,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   onRemoveAlbum,
   onAddTrack,
   onRemoveTrack,
-  onEditTrack
+  onEditTrack,
+  onMoveTrack
 }) => {
   return (
     <div className="space-y-6">
@@ -34,6 +36,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
         onRemoveAlbum={onRemoveAlbum}
         onRemoveTrack={onRemoveTrack}
         onEditTrack={onEditTrack}
+        onMoveTrack={onMoveTrack}
       />
 
       {/* Управление треками */}

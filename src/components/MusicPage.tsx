@@ -234,6 +234,33 @@ const MusicPage = () => {
     window.dispatchEvent(new CustomEvent('albumsUpdated'));
   };
 
+  const moveTrack = (trackId: string, fromAlbumId: string, toAlbumId: string) => {
+    const sourceAlbum = albums.find(album => album.id === fromAlbumId);
+    const trackToMove = sourceAlbum?.trackList.find(track => track.id === trackId);
+    
+    if (!trackToMove) return;
+
+    const updatedAlbums = albums.map(album => {
+      if (album.id === fromAlbumId) {
+        return {
+          ...album,
+          trackList: album.trackList.filter(track => track.id !== trackId)
+        };
+      }
+      if (album.id === toAlbumId) {
+        return {
+          ...album,
+          trackList: [...album.trackList, trackToMove]
+        };
+      }
+      return album;
+    });
+
+    setAlbums(updatedAlbums);
+    localStorage.setItem('albums', JSON.stringify(updatedAlbums));
+    window.dispatchEvent(new CustomEvent('albumsUpdated'));
+  };
+
   const editAlbum = (albumId: string, albumData: Omit<Album, 'id'>) => {
     const updatedAlbums = albums.map(album => 
       album.id === albumId 
@@ -329,6 +356,7 @@ const MusicPage = () => {
         addTrackToAlbum={addTrackToAlbum}
         removeTrack={removeTrack}
         editTrack={editTrack}
+        moveTrack={moveTrack}
       />
 
       <footer className="bg-vintage-warm text-vintage-cream py-8 px-6">
