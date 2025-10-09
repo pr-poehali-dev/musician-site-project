@@ -38,6 +38,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         cursor = conn.cursor()
         
         path = event.get('queryStringParameters', {}).get('path', '')
+        print(f'[DEBUG] Method: {method}, Path: {path}')
         
         if method == 'GET':
             if path == 'albums':
@@ -117,6 +118,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             conn.close()
 
 def get_albums(cursor) -> List[Dict]:
+    print('[DEBUG] Getting albums...')
     cursor.execute('''
         SELECT a.*, 
                COUNT(t.id) as tracks_count
@@ -126,23 +128,35 @@ def get_albums(cursor) -> List[Dict]:
         ORDER BY a.created_at DESC
     ''')
     albums = cursor.fetchall()
+    print(f'[DEBUG] Found {len(albums)} albums')
     
     for album in albums:
-        cursor.execute('SELECT * FROM tracks WHERE album_id = %s ORDER BY track_order, created_at', (album['id'],))
-        album['trackList'] = cursor.fetchall()
+        try:
+            album_id = str(album['id']).replace("'", "''")
+            print(f'[DEBUG] Getting tracks for album: {album_id}')
+            cursor.execute(f"SELECT * FROM tracks WHERE album_id = '{album_id}' ORDER BY track_order, created_at")
+            tracks = cursor.fetchall()
+            album['trackList'] = tracks if tracks else []
+            print(f'[DEBUG] Found {len(tracks) if tracks else 0} tracks for album {album_id}')
+        except Exception as e:
+            print(f'[ERROR] Failed to get tracks for album: {e}')
+            album['trackList'] = []
     
+    print(f'[DEBUG] Returning albums with tracks')
     return albums
 
 def get_tracks(cursor, album_id: Optional[str] = None) -> List[Dict]:
     if album_id:
-        cursor.execute('SELECT * FROM tracks WHERE album_id = %s ORDER BY track_order, created_at', (album_id,))
+        safe_id = album_id.replace("'", "''")
+        cursor.execute(f"SELECT * FROM tracks WHERE album_id = '{safe_id}' ORDER BY track_order, created_at")
     else:
         cursor.execute('SELECT * FROM tracks ORDER BY created_at DESC')
     return cursor.fetchall()
 
 def get_stats(cursor, track_id: Optional[str] = None) -> Dict:
     if track_id:
-        cursor.execute('SELECT * FROM track_stats WHERE track_id = %s', (track_id,))
+        safe_id = track_id.replace("'", "''")
+        cursor.execute(f"SELECT * FROM track_stats WHERE track_id = '{safe_id}'")
         return cursor.fetchone() or {}
     else:
         cursor.execute('''
@@ -180,122 +194,122 @@ def get_all_data(cursor) -> Dict:
     }
 
 def create_album(cursor, conn, data: Dict) -> Dict:
-    cursor.execute('''
+    album_id = data.get('id', str(int(datetime.now().timestamp() * 1000))).replace("'", "''")
+    title = data['title'].replace("'", "''")
+    artist = data['artist'].replace("'", "''")
+    cover = data.get('cover', '').replace("'", "''")
+    price = data.get('price', 0)
+    description = data.get('description', '').replace("'", "''")
+    now = datetime.now().isoformat()
+    
+    cursor.execute(f'''
         INSERT INTO albums (id, title, artist, cover, price, description, tracks_count, created_at)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES ('{album_id}', '{title}', '{artist}', '{cover}', {price}, '{description}', 0, '{now}')
         RETURNING *
-    ''', (
-        data.get('id', str(int(datetime.now().timestamp() * 1000))),
-        data['title'],
-        data['artist'],
-        data.get('cover', ''),
-        data.get('price', 0),
-        data.get('description', ''),
-        0,
-        datetime.now()
-    ))
+    ''')
     conn.commit()
     return cursor.fetchone()
 
 def create_track(cursor, conn, data: Dict) -> Dict:
-    cursor.execute('''
+    track_id = data.get('id', str(int(datetime.now().timestamp() * 1000))).replace("'", "''")
+    album_id = data.get('album_id', '').replace("'", "''")
+    title = data['title'].replace("'", "''")
+    duration = data['duration'].replace("'", "''")
+    file_path = data.get('file', '').replace("'", "''")
+    price = data.get('price', 0)
+    cover = data.get('cover', '').replace("'", "''")
+    track_order = data.get('track_order', 0)
+    now = datetime.now().isoformat()
+    
+    cursor.execute(f'''
         INSERT INTO tracks (id, album_id, title, duration, file, price, cover, track_order, created_at)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES ('{track_id}', '{album_id}', '{title}', '{duration}', '{file_path}', {price}, '{cover}', {track_order}, '{now}')
         RETURNING *
-    ''', (
-        data.get('id', str(int(datetime.now().timestamp() * 1000))),
-        data.get('album_id', ''),
-        data['title'],
-        data['duration'],
-        data.get('file', ''),
-        data.get('price', 0),
-        data.get('cover', ''),
-        data.get('track_order', 0),
-        datetime.now()
-    ))
+    ''')
     conn.commit()
     
-    if data.get('album_id'):
-        cursor.execute('''
+    if album_id:
+        cursor.execute(f'''
             UPDATE albums 
-            SET tracks_count = tracks_count + 1, updated_at = %s
-            WHERE id = %s
-        ''', (datetime.now(), data['album_id']))
+            SET tracks_count = tracks_count + 1, updated_at = '{now}'
+            WHERE id = '{album_id}'
+        ''')
         conn.commit()
     
     return cursor.fetchone()
 
 def update_album(cursor, conn, album_id: str, data: Dict) -> Dict:
-    cursor.execute('''
+    safe_id = album_id.replace("'", "''")
+    title = data['title'].replace("'", "''")
+    artist = data['artist'].replace("'", "''")
+    cover = data.get('cover', '').replace("'", "''")
+    price = data.get('price', 0)
+    description = data.get('description', '').replace("'", "''")
+    now = datetime.now().isoformat()
+    
+    cursor.execute(f'''
         UPDATE albums 
-        SET title = %s, artist = %s, cover = %s, price = %s, description = %s, updated_at = %s
-        WHERE id = %s
+        SET title = '{title}', artist = '{artist}', cover = '{cover}', price = {price}, description = '{description}', updated_at = '{now}'
+        WHERE id = '{safe_id}'
         RETURNING *
-    ''', (
-        data['title'],
-        data['artist'],
-        data.get('cover', ''),
-        data.get('price', 0),
-        data.get('description', ''),
-        datetime.now(),
-        album_id
-    ))
+    ''')
     conn.commit()
     return cursor.fetchone()
 
 def update_track(cursor, conn, track_id: str, data: Dict) -> Dict:
-    cursor.execute('''
+    safe_id = track_id.replace("'", "''")
+    title = data['title'].replace("'", "''")
+    duration = data['duration'].replace("'", "''")
+    file_path = data.get('file', '').replace("'", "''")
+    price = data.get('price', 0)
+    track_order = data.get('track_order', 0)
+    now = datetime.now().isoformat()
+    
+    cursor.execute(f'''
         UPDATE tracks 
-        SET title = %s, duration = %s, file = %s, price = %s, track_order = %s, updated_at = %s
-        WHERE id = %s
+        SET title = '{title}', duration = '{duration}', file = '{file_path}', price = {price}, track_order = {track_order}, updated_at = '{now}'
+        WHERE id = '{safe_id}'
         RETURNING *
-    ''', (
-        data['title'],
-        data['duration'],
-        data.get('file', ''),
-        data.get('price', 0),
-        data.get('track_order', 0),
-        datetime.now(),
-        track_id
-    ))
+    ''')
     conn.commit()
     return cursor.fetchone()
 
 def update_stat(cursor, conn, data: Dict) -> Dict:
-    track_id = data['track_id']
+    track_id = data['track_id'].replace("'", "''")
     stat_type = data.get('type', 'play')
+    now = datetime.now().isoformat()
     
-    cursor.execute('SELECT * FROM track_stats WHERE track_id = %s', (track_id,))
+    cursor.execute(f"SELECT * FROM track_stats WHERE track_id = '{track_id}'")
     existing = cursor.fetchone()
     
     if existing:
         if stat_type == 'play':
-            cursor.execute('''
+            cursor.execute(f'''
                 UPDATE track_stats 
-                SET plays_count = plays_count + 1, last_played_at = %s, updated_at = %s
-                WHERE track_id = %s
+                SET plays_count = plays_count + 1, last_played_at = '{now}', updated_at = '{now}'
+                WHERE track_id = '{track_id}'
                 RETURNING *
-            ''', (datetime.now(), datetime.now(), track_id))
+            ''')
         else:
-            cursor.execute('''
+            cursor.execute(f'''
                 UPDATE track_stats 
-                SET downloads_count = downloads_count + 1, last_downloaded_at = %s, updated_at = %s
-                WHERE track_id = %s
+                SET downloads_count = downloads_count + 1, last_downloaded_at = '{now}', updated_at = '{now}'
+                WHERE track_id = '{track_id}'
                 RETURNING *
-            ''', (datetime.now(), datetime.now(), track_id))
+            ''')
     else:
         if stat_type == 'play':
-            cursor.execute('''
+            cursor.execute(f'''
                 INSERT INTO track_stats (track_id, plays_count, last_played_at, created_at)
-                VALUES (%s, 1, %s, %s)
+                VALUES ('{track_id}', 1, '{now}', '{now}')
                 RETURNING *
-            ''', (track_id, datetime.now(), datetime.now()))
+            ''')
         else:
-            cursor.execute('''
+            cursor.execute(f'''
                 INSERT INTO track_stats (track_id, downloads_count, last_downloaded_at, created_at)
-                VALUES (%s, 1, %s, %s)
+                VALUES ('{track_id}', 1, '{now}', '{now}')
                 RETURNING *
-            ''', (track_id, datetime.now(), datetime.now()))
+            ''')
     
     conn.commit()
     return cursor.fetchone()
