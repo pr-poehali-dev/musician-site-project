@@ -203,12 +203,42 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration) || currentTrack?.duration || '0:00'}</span>
               </div>
-              <div className="w-full bg-vintage-brown/20 rounded-full h-2">
-                <div 
-                  className="bg-vintage-dark-brown h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
-                ></div>
-              </div>
+              <input
+                type="range"
+                min="0"
+                max={duration || 100}
+                value={currentTime}
+                onChange={(e) => {
+                  const newTime = parseFloat(e.target.value);
+                  setCurrentTime(newTime);
+                  if (audioRef.current) {
+                    audioRef.current.currentTime = newTime;
+                  }
+                }}
+                disabled={!currentTrack}
+                className="w-full h-2 bg-vintage-brown/20 rounded-full appearance-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50
+                  [&::-webkit-slider-thumb]:appearance-none
+                  [&::-webkit-slider-thumb]:w-4
+                  [&::-webkit-slider-thumb]:h-4
+                  [&::-webkit-slider-thumb]:rounded-full
+                  [&::-webkit-slider-thumb]:bg-vintage-dark-brown
+                  [&::-webkit-slider-thumb]:cursor-pointer
+                  [&::-webkit-slider-thumb]:shadow-lg
+                  [&::-webkit-slider-thumb]:hover:scale-110
+                  [&::-webkit-slider-thumb]:transition-transform
+                  [&::-moz-range-thumb]:w-4
+                  [&::-moz-range-thumb]:h-4
+                  [&::-moz-range-thumb]:rounded-full
+                  [&::-moz-range-thumb]:bg-vintage-dark-brown
+                  [&::-moz-range-thumb]:border-0
+                  [&::-moz-range-thumb]:cursor-pointer
+                  [&::-moz-range-thumb]:shadow-lg
+                  [&::-moz-range-thumb]:hover:scale-110
+                  [&::-moz-range-thumb]:transition-transform"
+                style={{
+                  background: `linear-gradient(to right, rgb(139 101 82) 0%, rgb(139 101 82) ${(currentTime / (duration || 1)) * 100}%, rgb(139 101 82 / 0.2) ${(currentTime / (duration || 1)) * 100}%, rgb(139 101 82 / 0.2) 100%)`
+                }}
+              />
             </div>
 
             {/* Регулятор громкости */}
