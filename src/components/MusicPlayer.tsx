@@ -31,11 +31,16 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   onTrackEnd
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const playerRef = useRef<HTMLDivElement>(null);
   const [volume, setVolume] = React.useState(1);
   const [isMuted, setIsMuted] = React.useState(false);
   const [showTooltip, setShowTooltip] = React.useState(false);
   const [tooltipPosition, setTooltipPosition] = React.useState(0);
   const [tooltipTime, setTooltipTime] = React.useState(0);
+  const [position, setPosition] = React.useState({ x: 100, y: 100 });
+  const [isDragging, setIsDragging] = React.useState(false);
+  const [dragOffset, setDragOffset] = React.useState({ x: 0, y: 0 });
+  const [isMinimized, setIsMinimized] = React.useState(false);
 
   const togglePlay = () => {
     if (audioRef.current && currentTrack) {
@@ -152,28 +157,154 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     setIsMuted(!isMuted);
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (playerRef.current && !isMinimized) {
+      const rect = playerRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+      setIsDragging(true);
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging && playerRef.current) {
+      const newX = e.clientX - dragOffset.x;
+      const newY = e.clientY - dragOffset.y;
+      
+      const maxX = window.innerWidth - playerRef.current.offsetWidth;
+      const maxY = window.innerHeight - playerRef.current.offsetHeight;
+      
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY))
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, dragOffset]);
+
   const isPlayerActive = currentTrack && isPlaying;
 
   return (
     <>
-      {/* Плавающий плеер */}
+      {/* Перемещаемый плеер */}
       {isPlayerActive && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-vintage-dark-brown/95 backdrop-blur-lg border-t border-vintage-warm/20 shadow-2xl">
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            <div className="flex items-center gap-4">
+        <div 
+          ref={playerRef}
+          className="fixed z-50 bg-vintage-dark-brown/98 backdrop-blur-lg rounded-2xl shadow-2xl border-2 border-vintage-warm/30 transition-all"
+          style={{
+            left: `${position.x}px`,
+            top: `${position.y}px`,
+            width: isMinimized ? '300px' : '400px',
+            cursor: isDragging ? 'grabbing' : 'default'
+          }}
+        >
+          {/* Заголовок с возможностью перетаскивания */}
+          <div 
+            className="px-4 py-3 bg-vintage-warm/20 rounded-t-2xl cursor-grab active:cursor-grabbing flex items-center justify-between border-b border-vintage-warm/20"
+            onMouseDown={handleMouseDown}
+          >
+            <div className="flex items-center gap-2">
+              <Icon name="Music" size={18} className="text-vintage-cream" />
+              <span className="text-vintage-cream font-semibold text-sm">Music Player</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMinimized(!isMinimized)}
+                className="text-vintage-cream hover:bg-vintage-warm/20 h-7 w-7 p-0"
+              >
+                <Icon name={isMinimized ? "Maximize2" : "Minimize2"} size={14} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsPlaying(false);
+                  if (audioRef.current) {
+                    audioRef.current.pause();
+                  }
+                }}
+                className="text-vintage-cream hover:bg-vintage-warm/20 h-7 w-7 p-0"
+              >
+                <Icon name="X" size={14} />
+              </Button>
+            </div>
+          </div>
+
+          {!isMinimized && (
+            <div className="p-5 space-y-4">
               {/* Обложка и название */}
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-vintage-brown via-vintage-warm to-vintage-cream flex items-center justify-center shadow-lg flex-shrink-0">
-                  <Icon name="Music" size={28} className="text-vintage-dark-brown" />
+              <div className="flex items-center gap-3">
+                <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-vintage-brown via-vintage-warm to-vintage-cream flex items-center justify-center shadow-lg flex-shrink-0">
+                  <Icon name="Music" size={32} className="text-vintage-dark-brown" />
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <h4 className="text-vintage-cream font-semibold truncate">{currentTrack?.title}</h4>
                   <p className="text-vintage-cream/60 text-sm">Vintage Soul</p>
                 </div>
               </div>
 
+              {/* Прогресс бар */}
+              <div className="space-y-2">
+                <div className="relative">
+                  <input
+                    type="range"
+                    min="0"
+                    max={duration || 100}
+                    value={currentTime}
+                    onChange={(e) => {
+                      const newTime = parseFloat(e.target.value);
+                      setCurrentTime(newTime);
+                      if (audioRef.current) {
+                        audioRef.current.currentTime = newTime;
+                      }
+                    }}
+                    className="w-full h-2 bg-vintage-warm/20 rounded-full appearance-none cursor-pointer
+                      [&::-webkit-slider-thumb]:appearance-none
+                      [&::-webkit-slider-thumb]:w-4
+                      [&::-webkit-slider-thumb]:h-4
+                      [&::-webkit-slider-thumb]:rounded-full
+                      [&::-webkit-slider-thumb]:bg-vintage-cream
+                      [&::-webkit-slider-thumb]:cursor-pointer
+                      [&::-webkit-slider-thumb]:shadow-lg
+                      [&::-webkit-slider-thumb]:hover:scale-110
+                      [&::-webkit-slider-thumb]:transition-transform
+                      [&::-moz-range-thumb]:w-4
+                      [&::-moz-range-thumb]:h-4
+                      [&::-moz-range-thumb]:rounded-full
+                      [&::-moz-range-thumb]:bg-vintage-cream
+                      [&::-moz-range-thumb]:border-0
+                      [&::-moz-range-thumb]:cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, rgb(245 237 224) 0%, rgb(245 237 224) ${(currentTime / (duration || 1)) * 100}%, rgb(194 146 110 / 0.2) ${(currentTime / (duration || 1)) * 100}%, rgb(194 146 110 / 0.2) 100%)`
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-vintage-cream/70">
+                  <span>{formatTime(currentTime)}</span>
+                  <span>{formatTime(duration)}</span>
+                </div>
+              </div>
+
               {/* Управление */}
-              <div className="flex items-center gap-3 flex-shrink-0">
+              <div className="flex items-center justify-center gap-4">
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -181,13 +312,13 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
                   disabled={tracks.findIndex(track => track.id === currentTrack?.id) === 0}
                   className="text-vintage-cream hover:bg-vintage-warm/20"
                 >
-                  <Icon name="SkipBack" size={20} />
+                  <Icon name="SkipBack" size={22} />
                 </Button>
                 <Button 
                   onClick={togglePlay}
-                  className="bg-vintage-warm hover:bg-vintage-cream text-vintage-dark-brown w-12 h-12 rounded-full"
+                  className="bg-vintage-warm hover:bg-vintage-cream text-vintage-dark-brown w-14 h-14 rounded-full shadow-lg"
                 >
-                  <Icon name={isPlaying ? "Pause" : "Play"} size={20} />
+                  <Icon name={isPlaying ? "Pause" : "Play"} size={24} />
                 </Button>
                 <Button 
                   variant="ghost" 
@@ -196,52 +327,12 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
                   disabled={tracks.findIndex(track => track.id === currentTrack?.id) === tracks.length - 1}
                   className="text-vintage-cream hover:bg-vintage-warm/20"
                 >
-                  <Icon name="SkipForward" size={20} />
+                  <Icon name="SkipForward" size={22} />
                 </Button>
               </div>
 
-              {/* Прогресс бар */}
-              <div className="flex-1 min-w-0 hidden md:block">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-vintage-cream/70 flex-shrink-0">{formatTime(currentTime)}</span>
-                  <div className="relative flex-1">
-                    <input
-                      type="range"
-                      min="0"
-                      max={duration || 100}
-                      value={currentTime}
-                      onChange={(e) => {
-                        const newTime = parseFloat(e.target.value);
-                        setCurrentTime(newTime);
-                        if (audioRef.current) {
-                          audioRef.current.currentTime = newTime;
-                        }
-                      }}
-                      className="w-full h-1.5 bg-vintage-warm/20 rounded-full appearance-none cursor-pointer
-                        [&::-webkit-slider-thumb]:appearance-none
-                        [&::-webkit-slider-thumb]:w-3
-                        [&::-webkit-slider-thumb]:h-3
-                        [&::-webkit-slider-thumb]:rounded-full
-                        [&::-webkit-slider-thumb]:bg-vintage-cream
-                        [&::-webkit-slider-thumb]:cursor-pointer
-                        [&::-webkit-slider-thumb]:shadow-lg
-                        [&::-moz-range-thumb]:w-3
-                        [&::-moz-range-thumb]:h-3
-                        [&::-moz-range-thumb]:rounded-full
-                        [&::-moz-range-thumb]:bg-vintage-cream
-                        [&::-moz-range-thumb]:border-0
-                        [&::-moz-range-thumb]:cursor-pointer"
-                      style={{
-                        background: `linear-gradient(to right, rgb(245 237 224) 0%, rgb(245 237 224) ${(currentTime / (duration || 1)) * 100}%, rgb(194 146 110 / 0.2) ${(currentTime / (duration || 1)) * 100}%, rgb(194 146 110 / 0.2) 100%)`
-                      }}
-                    />
-                  </div>
-                  <span className="text-xs text-vintage-cream/70 flex-shrink-0">{formatTime(duration)}</span>
-                </div>
-              </div>
-
               {/* Громкость */}
-              <div className="hidden lg:flex items-center gap-2 flex-shrink-0 w-32">
+              <div className="flex items-center gap-3">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -250,7 +341,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
                 >
                   <Icon 
                     name={isMuted || volume === 0 ? "VolumeX" : volume < 0.5 ? "Volume1" : "Volume2"} 
-                    size={18} 
+                    size={20} 
                   />
                 </Button>
                 <input
@@ -260,7 +351,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
                   step="0.01"
                   value={isMuted ? 0 : volume}
                   onChange={handleVolumeChange}
-                  className="flex-1 h-1.5 bg-vintage-warm/20 rounded-full appearance-none cursor-pointer
+                  className="flex-1 h-2 bg-vintage-warm/20 rounded-full appearance-none cursor-pointer
                     [&::-webkit-slider-thumb]:appearance-none
                     [&::-webkit-slider-thumb]:w-3
                     [&::-webkit-slider-thumb]:h-3
@@ -273,22 +364,47 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
                     [&::-moz-range-thumb]:bg-vintage-cream
                     [&::-moz-range-thumb]:border-0
                     [&::-moz-range-thumb]:cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, rgb(245 237 224) 0%, rgb(245 237 224) ${(isMuted ? 0 : volume) * 100}%, rgb(194 146 110 / 0.2) ${(isMuted ? 0 : volume) * 100}%, rgb(194 146 110 / 0.2) 100%)`
+                  }}
                 />
+                <span className="text-xs text-vintage-cream/70 w-10 text-right">
+                  {Math.round((isMuted ? 0 : volume) * 100)}%
+                </span>
               </div>
             </div>
+          )}
 
-            {/* Скрытый аудио элемент */}
-            <audio 
-              ref={audioRef} 
-              preload="metadata"
-              onError={() => console.warn('Ошибка загрузки аудиофайла')}
-            />
-          </div>
+          {/* Минимизированный вид */}
+          {isMinimized && (
+            <div className="p-3 flex items-center justify-between">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-vintage-brown to-vintage-warm flex items-center justify-center flex-shrink-0">
+                  <Icon name="Music" size={20} className="text-vintage-cream" />
+                </div>
+                <span className="text-vintage-cream text-sm truncate">{currentTrack?.title}</span>
+              </div>
+              <Button 
+                onClick={togglePlay}
+                size="sm"
+                className="bg-vintage-warm hover:bg-vintage-cream text-vintage-dark-brown w-10 h-10 rounded-full flex-shrink-0"
+              >
+                <Icon name={isPlaying ? "Pause" : "Play"} size={16} />
+              </Button>
+            </div>
+          )}
+
+          {/* Скрытый аудио элемент */}
+          <audio 
+            ref={audioRef} 
+            preload="metadata"
+            onError={() => console.warn('Ошибка загрузки аудиофайла')}
+          />
         </div>
       )}
 
       {/* Основная секция */}
-      <section id="music" className={`py-16 px-6 ${isPlayerActive ? 'pb-32' : ''}`}>
+      <section id="music" className="py-16 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h3 className="text-4xl font-bold text-vintage-warm mb-4">Музыка</h3>
