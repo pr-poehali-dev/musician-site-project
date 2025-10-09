@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,85 @@ interface AlbumCardProps {
   onDeleteTrack: (trackId: string) => void;
 }
 
+const TrackItem = React.memo<{
+  track: Track;
+  albumId: string;
+  isSelected: boolean;
+  onToggleSelection: (trackId: string) => void;
+  onMove: (track: Track, albumId: string) => void;
+  onEdit: (track: Track) => void;
+  onDelete: (trackId: string) => void;
+}>(({ track, albumId, isSelected, onToggleSelection, onMove, onEdit, onDelete }) => {
+  const handleToggle = useCallback(() => onToggleSelection(track.id), [onToggleSelection, track.id]);
+  const handleMove = useCallback(() => onMove(track, albumId), [onMove, track, albumId]);
+  const handleEdit = useCallback(() => onEdit(track), [onEdit, track]);
+  const handleDelete = useCallback(() => onDelete(track.id), [onDelete, track.id]);
+
+  return (
+    <div 
+      className={`flex items-center justify-between p-2 bg-vintage-brown/10 rounded-lg transition-colors ${
+        isSelected ? 'ring-2 ring-vintage-dark-brown bg-vintage-brown/20' : ''
+      }`}
+    >
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <button
+          onClick={handleToggle}
+          className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+            isSelected 
+              ? 'bg-vintage-dark-brown border-vintage-dark-brown' 
+              : 'border-vintage-brown/40 hover:border-vintage-dark-brown'
+          }`}
+          title="Выбрать трек"
+        >
+          {isSelected && (
+            <Icon name="Check" size={14} className="text-vintage-cream" />
+          )}
+        </button>
+        <Icon name="Music" size={14} className="text-vintage-dark-brown flex-shrink-0" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-vintage-warm truncate">{track.title}</p>
+          <div className="flex gap-2 text-xs text-vintage-warm/60">
+            <span>{track.duration}</span>
+            <span>•</span>
+            <span>{track.price} ₽</span>
+          </div>
+        </div>
+      </div>
+      <div className="flex gap-1 flex-shrink-0">
+        <Button 
+          onClick={handleMove}
+          variant="ghost"
+          size="sm"
+          className="text-vintage-dark-brown hover:bg-vintage-brown/20 h-7 w-7 p-0"
+          title="Переместить в другой альбом"
+        >
+          <Icon name="Move" size={12} />
+        </Button>
+        <Button 
+          onClick={handleEdit}
+          variant="ghost"
+          size="sm"
+          className="text-vintage-dark-brown hover:bg-vintage-brown/20 h-7 w-7 p-0"
+          title="Редактировать трек"
+        >
+          <Icon name="Edit" size={12} />
+        </Button>
+        <Button 
+          onClick={handleDelete}
+          variant="ghost"
+          size="sm"
+          className="text-red-500 hover:bg-red-50 h-7 w-7 p-0"
+          title="Удалить трек"
+        >
+          <Icon name="Trash2" size={12} />
+        </Button>
+      </div>
+    </div>
+  );
+});
+
+TrackItem.displayName = 'TrackItem';
+
 const AlbumCard: React.FC<AlbumCardProps> = ({
   album,
   isExpanded,
@@ -34,10 +113,25 @@ const AlbumCard: React.FC<AlbumCardProps> = ({
   onEditTrack,
   onDeleteTrack
 }) => {
-  const hasTracksInAlbum = album.trackList && album.trackList.length > 0;
-  const allTracksSelected = hasTracksInAlbum && album.trackList!.every(t => selectedTracks.includes(t.id));
-  const someTracksSelected = selectedTracks.some(id => album.trackList?.some(t => t.id === id));
-  const selectedInAlbumCount = selectedTracks.filter(id => album.trackList?.some(t => t.id === id)).length;
+  const hasTracksInAlbum = useMemo(() => 
+    album.trackList && album.trackList.length > 0, 
+    [album.trackList]
+  );
+
+  const allTracksSelected = useMemo(() => 
+    hasTracksInAlbum && album.trackList!.every(t => selectedTracks.includes(t.id)),
+    [hasTracksInAlbum, album.trackList, selectedTracks]
+  );
+
+  const someTracksSelected = useMemo(() => 
+    selectedTracks.some(id => album.trackList?.some(t => t.id === id)),
+    [selectedTracks, album.trackList]
+  );
+
+  const selectedInAlbumCount = useMemo(() => 
+    selectedTracks.filter(id => album.trackList?.some(t => t.id === id)).length,
+    [selectedTracks, album.trackList]
+  );
 
   return (
     <Card className="bg-vintage-cream/95 border-vintage-brown/20">
@@ -126,66 +220,16 @@ const AlbumCard: React.FC<AlbumCardProps> = ({
             <h5 className="text-sm font-semibold text-vintage-warm mb-2">Треки альбома:</h5>
             <div className="space-y-2">
               {album.trackList!.map((track) => (
-                <div 
-                  key={track.id} 
-                  className={`flex items-center justify-between p-2 bg-vintage-brown/10 rounded-lg transition-colors ${
-                    selectedTracks.includes(track.id) ? 'ring-2 ring-vintage-dark-brown bg-vintage-brown/20' : ''
-                  }`}
-                >
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <button
-                      onClick={() => onToggleTrackSelection(track.id)}
-                      className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                        selectedTracks.includes(track.id) 
-                          ? 'bg-vintage-dark-brown border-vintage-dark-brown' 
-                          : 'border-vintage-brown/40 hover:border-vintage-dark-brown'
-                      }`}
-                      title="Выбрать трек"
-                    >
-                      {selectedTracks.includes(track.id) && (
-                        <Icon name="Check" size={14} className="text-vintage-cream" />
-                      )}
-                    </button>
-                    <Icon name="Music" size={14} className="text-vintage-dark-brown flex-shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-vintage-warm truncate">{track.title}</p>
-                      <div className="flex gap-2 text-xs text-vintage-warm/60">
-                        <span>{track.duration}</span>
-                        <span>•</span>
-                        <span>{track.price} ₽</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-1 flex-shrink-0">
-                    <Button 
-                      onClick={() => onMoveTrack(track, album.id)}
-                      variant="ghost"
-                      size="sm"
-                      className="text-vintage-dark-brown hover:bg-vintage-brown/20 h-7 w-7 p-0"
-                      title="Переместить в другой альбом"
-                    >
-                      <Icon name="Move" size={12} />
-                    </Button>
-                    <Button 
-                      onClick={() => onEditTrack(track)}
-                      variant="ghost"
-                      size="sm"
-                      className="text-vintage-dark-brown hover:bg-vintage-brown/20 h-7 w-7 p-0"
-                      title="Редактировать трек"
-                    >
-                      <Icon name="Edit" size={12} />
-                    </Button>
-                    <Button 
-                      onClick={() => onDeleteTrack(track.id)}
-                      variant="ghost"
-                      size="sm"
-                      className="text-red-500 hover:bg-red-50 h-7 w-7 p-0"
-                      title="Удалить трек"
-                    >
-                      <Icon name="Trash2" size={12} />
-                    </Button>
-                  </div>
-                </div>
+                <TrackItem
+                  key={track.id}
+                  track={track}
+                  albumId={album.id}
+                  isSelected={selectedTracks.includes(track.id)}
+                  onToggleSelection={onToggleTrackSelection}
+                  onMove={onMoveTrack}
+                  onEdit={onEditTrack}
+                  onDelete={onDeleteTrack}
+                />
               ))}
             </div>
           </div>
@@ -201,4 +245,4 @@ const AlbumCard: React.FC<AlbumCardProps> = ({
   );
 };
 
-export default AlbumCard;
+export default React.memo(AlbumCard);

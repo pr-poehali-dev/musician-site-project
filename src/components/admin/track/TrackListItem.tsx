@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import Icon from '@/components/ui/icon';
 import { Track } from '@/types';
@@ -9,6 +9,10 @@ interface TrackListItemProps {
 }
 
 const TrackListItem: React.FC<TrackListItemProps> = ({ track, onRemove }) => {
+  const handleRemove = useCallback(() => {
+    onRemove(track.id);
+  }, [onRemove, track.id]);
+
   return (
     <div className="flex items-center justify-between p-3 bg-vintage-brown/10 rounded-lg">
       <div className="flex items-center gap-3">
@@ -29,7 +33,7 @@ const TrackListItem: React.FC<TrackListItemProps> = ({ track, onRemove }) => {
       <div className="flex items-center gap-2">
         <span className="font-bold text-vintage-dark-brown">{track.price} ₽</span>
         <Button 
-          onClick={() => onRemove(track.id)}
+          onClick={handleRemove}
           variant="outline"
           size="sm"
           className="text-red-500 border-red-300 hover:bg-red-50"
@@ -41,4 +45,4 @@ const TrackListItem: React.FC<TrackListItemProps> = ({ track, onRemove }) => {
   );
 };
 
-export default TrackListItem;
+export default React.memo(TrackListItem);

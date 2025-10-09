@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Track, Album } from '@/types';
 import AddAlbumDialog from './album/AddAlbumDialog';
 import EditAlbumDialog from './album/EditAlbumDialog';
@@ -166,27 +166,27 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
     }
   };
 
-  const handleDeleteAlbum = (albumId: string) => {
+  const handleDeleteAlbum = useCallback((albumId: string) => {
     if (window.confirm('Вы уверены, что хотите удалить этот альбом?')) {
       onRemoveAlbum(albumId);
     }
-  };
+  }, [onRemoveAlbum]);
 
-  const handleDeleteTrack = (trackId: string) => {
+  const handleDeleteTrack = useCallback((trackId: string) => {
     if (window.confirm('Вы уверены, что хотите удалить этот трек?')) {
       onRemoveTrack?.(trackId);
     }
-  };
+  }, [onRemoveTrack]);
 
-  const toggleAlbumExpanded = (albumId: string) => {
+  const toggleAlbumExpanded = useCallback((albumId: string) => {
     setExpandedAlbums(prev => 
       prev.includes(albumId) 
         ? prev.filter(id => id !== albumId)
         : [...prev, albumId]
     );
-  };
+  }, []);
 
-  const handleEditTrack = (track: Track) => {
+  const handleEditTrack = useCallback((track: Track) => {
     setEditingTrack(track);
     setEditTrackData({
       title: track.title,
@@ -195,9 +195,9 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
       file: track.file
     });
     setShowEditTrack(true);
-  };
+  }, []);
 
-  const handleSaveEditTrack = () => {
+  const handleSaveEditTrack = useCallback(() => {
     if (editingTrack && editTrackData.title && editTrackData.duration) {
       onEditTrack?.(editingTrack.id, editTrackData);
       setShowEditTrack(false);
@@ -209,39 +209,39 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
         file: ''
       });
     }
-  };
+  }, [editingTrack, editTrackData, onEditTrack]);
 
-  const handleMoveTrack = (track: Track, albumId: string) => {
+  const handleMoveTrack = useCallback((track: Track, albumId: string) => {
     setMovingTrack({track, albumId});
     setTargetAlbumId('');
     setShowMoveTrack(true);
-  };
+  }, []);
 
-  const handleSaveMoveTrack = () => {
+  const handleSaveMoveTrack = useCallback(() => {
     if (movingTrack && targetAlbumId && targetAlbumId !== movingTrack.albumId) {
       onMoveTrack?.(movingTrack.track.id, movingTrack.albumId, targetAlbumId);
       setShowMoveTrack(false);
       setMovingTrack(null);
       setTargetAlbumId('');
     }
-  };
+  }, [movingTrack, targetAlbumId, onMoveTrack]);
 
-  const handleToggleTrackSelection = (trackId: string) => {
+  const handleToggleTrackSelection = useCallback((trackId: string) => {
     setSelectedTracks(prev => 
       prev.includes(trackId) 
         ? prev.filter(id => id !== trackId)
         : [...prev, trackId]
     );
-  };
+  }, []);
 
-  const handleBulkMove = (albumId: string) => {
+  const handleBulkMove = useCallback((albumId: string) => {
     if (selectedTracks.length === 0) return;
     setBulkMoveAlbumId(albumId);
     setBulkMoveTargetId('');
     setShowBulkMove(true);
-  };
+  }, [selectedTracks]);
 
-  const handleSaveBulkMove = () => {
+  const handleSaveBulkMove = useCallback(() => {
     if (bulkMoveAlbumId && bulkMoveTargetId && bulkMoveTargetId !== bulkMoveAlbumId) {
       selectedTracks.forEach(trackId => {
         onMoveTrack?.(trackId, bulkMoveAlbumId, bulkMoveTargetId);
@@ -251,9 +251,9 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
       setBulkMoveAlbumId('');
       setBulkMoveTargetId('');
     }
-  };
+  }, [bulkMoveAlbumId, bulkMoveTargetId, selectedTracks, onMoveTrack]);
 
-  const handleSelectAllTracksInAlbum = (albumId: string) => {
+  const handleSelectAllTracksInAlbum = useCallback((albumId: string) => {
     const album = albums.find(a => a.id === albumId);
     if (album?.trackList) {
       const trackIds = album.trackList.map(t => t.id);
@@ -264,7 +264,7 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
         setSelectedTracks(prev => [...new Set([...prev, ...trackIds])]);
       }
     }
-  };
+  }, [albums, selectedTracks]);
 
   return (
     <div>

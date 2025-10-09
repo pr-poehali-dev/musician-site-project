@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Track } from '@/types';
 import Icon from '@/components/ui/icon';
 
@@ -7,6 +7,84 @@ interface TrackListProps {
   currentTrack: Track | null;
   isPlaying: boolean;
 }
+
+const TrackItem = React.memo<{
+  track: Track;
+  isCurrentTrack: boolean;
+  isPlaying: boolean;
+  onSelect: (track: Track) => void;
+}>(({ track, isCurrentTrack, isPlaying, onSelect }) => {
+  const handleClick = useCallback(() => onSelect(track), [onSelect, track]);
+
+  const formatDuration = useCallback((duration: string) => {
+    if (duration.includes(':')) {
+      return duration;
+    }
+    const seconds = parseInt(duration);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  }, []);
+
+  const isCurrentlyPlaying = isCurrentTrack && isPlaying;
+
+  return (
+    <div
+      className={`
+        flex items-center p-4 rounded-lg cursor-pointer transition-all
+        ${isCurrentTrack 
+          ? 'bg-vintage-warm/20 border-2 border-vintage-warm' 
+          : 'bg-vintage-dark-brown/40 hover:bg-vintage-dark-brown/60 border-2 border-transparent'
+        }
+        backdrop-blur-sm
+      `}
+      onClick={handleClick}
+    >
+      <button 
+        className={`
+          flex items-center justify-center w-12 h-12 rounded-full mr-4 transition-all
+          ${isCurrentTrack 
+            ? 'bg-vintage-warm text-vintage-dark-brown' 
+            : 'bg-vintage-cream/20 text-vintage-cream hover:bg-vintage-cream/30'
+          }
+        `}
+      >
+        {isCurrentlyPlaying ? (
+          <Icon name="Pause" size={20} />
+        ) : (
+          <Icon name="Play" size={20} />
+        )}
+      </button>
+
+      <div className="flex-1">
+        <h4 className="text-lg font-semibold text-vintage-cream mb-1">
+          {track.title}
+        </h4>
+        <p className="text-vintage-cream/60 text-sm">
+          Vintage Soul • {formatDuration(track.duration)}
+        </p>
+      </div>
+
+      {isCurrentlyPlaying && (
+        <div className="flex items-center space-x-1 mr-4">
+          <div className="w-1 h-4 bg-vintage-warm animate-pulse rounded-full"></div>
+          <div className="w-1 h-6 bg-vintage-warm animate-pulse rounded-full" style={{animationDelay: '0.1s'}}></div>
+          <div className="w-1 h-4 bg-vintage-warm animate-pulse rounded-full" style={{animationDelay: '0.2s'}}></div>
+        </div>
+      )}
+
+      {!isCurrentTrack && (
+        <Icon 
+          name="Music" 
+          size={20} 
+          className="text-vintage-cream/40" 
+        />
+      )}
+    </div>
+  );
+});
+
+TrackItem.displayName = 'TrackItem';
 
 const TrackList = ({ onTrackSelect, currentTrack, isPlaying }: TrackListProps) => {
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -38,18 +116,6 @@ const TrackList = ({ onTrackSelect, currentTrack, isPlaying }: TrackListProps) =
     window.addEventListener('tracksUpdated', handleStorageChange);
     return () => window.removeEventListener('tracksUpdated', handleStorageChange);
   }, []);
-
-  const formatDuration = (duration: string) => {
-    // Если duration уже в формате MM:SS, возвращаем как есть
-    if (duration.includes(':')) {
-      return duration;
-    }
-    // Если это число секунд, конвертируем
-    const seconds = parseInt(duration);
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
 
   if (loading) {
     return (
@@ -92,70 +158,15 @@ const TrackList = ({ onTrackSelect, currentTrack, isPlaying }: TrackListProps) =
         </h3>
         
         <div className="space-y-4">
-          {tracks.map((track) => {
-            const isCurrentTrack = currentTrack?.id === track.id;
-            const isCurrentlyPlaying = isCurrentTrack && isPlaying;
-
-            return (
-              <div
-                key={track.id}
-                className={`
-                  flex items-center p-4 rounded-lg cursor-pointer transition-all
-                  ${isCurrentTrack 
-                    ? 'bg-vintage-warm/20 border-2 border-vintage-warm' 
-                    : 'bg-vintage-dark-brown/40 hover:bg-vintage-dark-brown/60 border-2 border-transparent'
-                  }
-                  backdrop-blur-sm
-                `}
-                onClick={() => onTrackSelect(track)}
-              >
-                {/* Play/Pause кнопка */}
-                <button 
-                  className={`
-                    flex items-center justify-center w-12 h-12 rounded-full mr-4 transition-all
-                    ${isCurrentTrack 
-                      ? 'bg-vintage-warm text-vintage-dark-brown' 
-                      : 'bg-vintage-cream/20 text-vintage-cream hover:bg-vintage-cream/30'
-                    }
-                  `}
-                >
-                  {isCurrentlyPlaying ? (
-                    <Icon name="Pause" size={20} />
-                  ) : (
-                    <Icon name="Play" size={20} />
-                  )}
-                </button>
-
-                {/* Информация о треке */}
-                <div className="flex-1">
-                  <h4 className="text-lg font-semibold text-vintage-cream mb-1">
-                    {track.title}
-                  </h4>
-                  <p className="text-vintage-cream/60 text-sm">
-                    Vintage Soul • {formatDuration(track.duration)}
-                  </p>
-                </div>
-
-                {/* Индикатор воспроизведения */}
-                {isCurrentlyPlaying && (
-                  <div className="flex items-center space-x-1 mr-4">
-                    <div className="w-1 h-4 bg-vintage-warm animate-pulse rounded-full"></div>
-                    <div className="w-1 h-6 bg-vintage-warm animate-pulse rounded-full" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-1 h-4 bg-vintage-warm animate-pulse rounded-full" style={{animationDelay: '0.2s'}}></div>
-                  </div>
-                )}
-
-                {/* Иконка музыки для неактивных треков */}
-                {!isCurrentTrack && (
-                  <Icon 
-                    name="Music" 
-                    size={20} 
-                    className="text-vintage-cream/40" 
-                  />
-                )}
-              </div>
-            );
-          })}
+          {tracks.map((track) => (
+            <TrackItem
+              key={track.id}
+              track={track}
+              isCurrentTrack={currentTrack?.id === track.id}
+              isPlaying={isPlaying}
+              onSelect={onTrackSelect}
+            />
+          ))}
         </div>
 
         {/* Подсказка для пользователя */}
@@ -169,4 +180,4 @@ const TrackList = ({ onTrackSelect, currentTrack, isPlaying }: TrackListProps) =
   );
 };
 
-export default TrackList;
+export default React.memo(TrackList);
