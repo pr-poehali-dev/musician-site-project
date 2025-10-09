@@ -67,11 +67,13 @@ export const getAudioFromIndexedDB = async (fileId: string): Promise<string> => 
         const url = URL.createObjectURL(result.blob);
         resolve(url);
       } else {
-        reject(new Error('Audio file not found'));
+        console.error('❌ Аудиофайл не найден в IndexedDB:', fileId);
+        reject(new Error(`Аудиофайл ${fileId} не найден в базе данных`));
       }
     };
 
     request.onerror = () => {
+      console.error('❌ Ошибка чтения из IndexedDB:', request.error);
       reject(request.error);
     };
   });

@@ -25,6 +25,12 @@ const AlbumView: React.FC<AlbumViewProps> = ({
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const handlePlayTrack = (track: Track) => {
+    if (!track.file || track.file.trim() === '') {
+      console.warn('⚠️ Трек не имеет аудиофайла:', track.title);
+      alert(`Для трека "${track.title}" не загружен аудиофайл. Загрузите файл в админ-панели.`);
+      return;
+    }
+
     if (currentTrack?.id === track.id) {
       const audio = audioRef.current;
       if (audio) {
@@ -45,9 +51,14 @@ const AlbumView: React.FC<AlbumViewProps> = ({
   const playNext = () => {
     if (!currentTrack || !album.trackList) return;
     const currentIndex = album.trackList.findIndex(t => t.id === currentTrack.id);
-    if (currentIndex < album.trackList.length - 1) {
-      const nextTrack = album.trackList[currentIndex + 1];
-      setCurrentTrack(nextTrack);
+    const playableTracks = album.trackList.filter(t => t.file && t.file.trim() !== '');
+    const nextPlayableTrack = playableTracks.find((_, idx, arr) => {
+      const currentPlayableIndex = arr.findIndex(t => t.id === currentTrack.id);
+      return idx > currentPlayableIndex;
+    });
+    
+    if (nextPlayableTrack) {
+      setCurrentTrack(nextPlayableTrack);
       setIsPlaying(true);
       setCurrentTime(0);
     }
@@ -55,9 +66,11 @@ const AlbumView: React.FC<AlbumViewProps> = ({
 
   const playPrevious = () => {
     if (!currentTrack || !album.trackList) return;
-    const currentIndex = album.trackList.findIndex(t => t.id === currentTrack.id);
-    if (currentIndex > 0) {
-      const prevTrack = album.trackList[currentIndex - 1];
+    const playableTracks = album.trackList.filter(t => t.file && t.file.trim() !== '');
+    const currentPlayableIndex = playableTracks.findIndex(t => t.id === currentTrack.id);
+    
+    if (currentPlayableIndex > 0) {
+      const prevTrack = playableTracks[currentPlayableIndex - 1];
       setCurrentTrack(prevTrack);
       setIsPlaying(true);
       setCurrentTime(0);
@@ -66,9 +79,14 @@ const AlbumView: React.FC<AlbumViewProps> = ({
 
   const playAlbum = () => {
     if (album.trackList && album.trackList.length > 0) {
-      setCurrentTrack(album.trackList[0]);
-      setIsPlaying(true);
-      setCurrentTime(0);
+      const firstPlayableTrack = album.trackList.find(t => t.file && t.file.trim() !== '');
+      if (firstPlayableTrack) {
+        setCurrentTrack(firstPlayableTrack);
+        setIsPlaying(true);
+        setCurrentTime(0);
+      } else {
+        alert('В этом альбоме нет загруженных аудиофайлов. Добавьте файлы в админ-панели.');
+      }
     }
   };
 
@@ -79,7 +97,6 @@ const AlbumView: React.FC<AlbumViewProps> = ({
         try {
           let audioUrl = currentTrack.file;
           
-          // Если это ID из IndexedDB, получаем blob URL
           if (audioUrl.startsWith('audio_')) {
             audioUrl = await getAudioFromIndexedDB(audioUrl);
           }
@@ -90,13 +107,15 @@ const AlbumView: React.FC<AlbumViewProps> = ({
           setDuration(0);
           
           if (isPlaying) {
-            audio.play().catch(error => {
-              console.warn('Ошибка автовоспроизведения:', error);
-              setIsPlaying(false);
-            });
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(() => {
+                setIsPlaying(false);
+              });
+            }
           }
         } catch (error) {
-          console.error('Ошибка загрузки аудио:', error);
+          console.error('❌ Ошибка загрузки аудио для трека:', currentTrack.title, error);
           setIsPlaying(false);
         }
       };
@@ -222,50 +241,62 @@ const AlbumView: React.FC<AlbumViewProps> = ({
             {/* Список треков */}
             <div className="space-y-3">
               <h3 className="text-xl font-bold text-vintage-warm mb-4">Треки</h3>
-              {album.trackList.map((track, index) => (
-                <div
-                  key={track.id}
-                  className={`flex items-center justify-between p-4 rounded-lg transition-all ${
-                    currentTrack?.id === track.id
-                      ? 'bg-vintage-dark-brown/20 border border-vintage-dark-brown/30'
-                      : 'bg-vintage-brown/10 hover:bg-vintage-brown/15'
-                  }`}
-                >
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="text-vintage-warm/60 w-8 text-center font-mono">
-                      {(index + 1).toString().padStart(2, '0')}
+              {album.trackList.map((track, index) => {
+                const hasAudioFile = track.file && track.file.trim() !== '';
+                return (
+                  <div
+                    key={track.id}
+                    className={`flex items-center justify-between p-4 rounded-lg transition-all ${
+                      currentTrack?.id === track.id
+                        ? 'bg-vintage-dark-brown/20 border border-vintage-dark-brown/30'
+                        : 'bg-vintage-brown/10 hover:bg-vintage-brown/15'
+                    } ${!hasAudioFile ? 'opacity-50' : ''}`}
+                  >
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="text-vintage-warm/60 w-8 text-center font-mono">
+                        {(index + 1).toString().padStart(2, '0')}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handlePlayTrack(track)}
+                        disabled={!hasAudioFile}
+                        className="text-vintage-dark-brown hover:bg-vintage-brown/20 w-10 h-10 rounded-full disabled:opacity-30"
+                        title={!hasAudioFile ? 'Аудиофайл не загружен' : 'Воспроизвести'}
+                      >
+                        {currentTrack?.id === track.id && isPlaying ? (
+                          <Icon name="Pause" size={16} />
+                        ) : (
+                          <Icon name="Play" size={16} />
+                        )}
+                      </Button>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-vintage-warm">{track.title}</p>
+                          {!hasAudioFile && (
+                            <Badge variant="outline" className="text-xs bg-red-500/10 text-red-700 border-red-300">
+                              Нет файла
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-vintage-warm/60">{track.duration}</p>
+                      </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handlePlayTrack(track)}
-                      className="text-vintage-dark-brown hover:bg-vintage-brown/20 w-10 h-10 rounded-full"
-                    >
-                      {currentTrack?.id === track.id && isPlaying ? (
-                        <Icon name="Pause" size={16} />
-                      ) : (
-                        <Icon name="Play" size={16} />
-                      )}
-                    </Button>
-                    <div className="flex-1">
-                      <p className="font-medium text-vintage-warm">{track.title}</p>
-                      <p className="text-sm text-vintage-warm/60">{track.duration}</p>
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-vintage-dark-brown">{track.price} ₽</span>
+                      <Button
+                        onClick={() => handleAddTrackToCart(track)}
+                        variant="outline"
+                        size="sm"
+                        className="border-vintage-brown/30 text-vintage-dark-brown hover:bg-vintage-brown/10"
+                      >
+                        <Icon name="ShoppingCart" size={14} className="mr-1" />
+                        Купить
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-vintage-dark-brown">{track.price} ₽</span>
-                    <Button
-                      onClick={() => handleAddTrackToCart(track)}
-                      variant="outline"
-                      size="sm"
-                      className="border-vintage-brown/30 text-vintage-dark-brown hover:bg-vintage-brown/10"
-                    >
-                      <Icon name="ShoppingCart" size={14} className="mr-1" />
-                      Купить
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Мини-плеер */}
