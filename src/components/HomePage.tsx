@@ -18,9 +18,9 @@ const HomePage: React.FC = () => {
             <div className="text-center md:text-left">
               <Badge className="mb-6 px-4 py-2 bg-vintage-warm text-vintage-cream hover:bg-vintage-brown">🎵 Авторские песни</Badge>
               
-              <h1 className="text-4xl md:text-6xl text-vintage-dark-brown font-extrabold mb-6">
-                Музыка слов от сердца к клавишам
-              </h1>
+              <h1 className="md:text-6xl text-vintage-dark-brown font-extrabold mb-6 text-5xl text-center">Музыка слов 
+от сердца 
+к клавишам</h1>
               
               <p className="text-xl text-vintage-brown mb-8">Официальный сайт Дмитрия Шмелидзэ</p>
               
