@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Album, Track } from '@/types';
 import { apiClient } from '@/utils/apiClient';
 import { musicApi } from '@/utils/musicApi';
+import { checkMigrationStatus } from '@/utils/dataMigration';
 
 const defaultAlbums: Album[] = [
   { 
@@ -43,6 +44,15 @@ export const useAlbumManagement = () => {
       try {
         console.log('[Albums] Загрузка альбомов из базы данных...');
         const dbAlbums = await musicApi.getAlbums();
+        
+        const migrationStatus = await checkMigrationStatus();
+        
+        if (migrationStatus.needsMigration) {
+          console.log('⚠️ Обнаружены данные для миграции!');
+          console.log(`  localStorage: ${migrationStatus.localAlbumsCount} альбомов, ${migrationStatus.localTracksCount} треков`);
+          console.log(`  База данных: ${migrationStatus.dbAlbumsCount} альбомов, ${migrationStatus.dbTracksCount} треков`);
+          console.log('💡 Перейдите в админ-панель → вкладка "Миграция" для переноса данных');
+        }
         
         if (dbAlbums.length > 0) {
           console.log('[Albums] Загружено из БД:', dbAlbums.length, 'альбомов');
