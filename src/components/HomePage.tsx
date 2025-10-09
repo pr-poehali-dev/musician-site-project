@@ -8,26 +8,26 @@ const HomePage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-950 via-green-900 to-indigo-950">
+    <div className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-brown to-vintage-dark-brown">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 bg-black/10" />
         <div className="relative z-10 max-w-6xl mx-auto px-4 py-20">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Текстовая часть */}
             <div className="text-center md:text-left">
-              <Badge className="mb-6 px-4 py-2 bg-gradient-to-r from-emerald-600 to-blue-600 text-white hover:from-emerald-700 hover:to-blue-700">🎵 Авторские песни</Badge>
+              <Badge className="mb-6 px-4 py-2 bg-vintage-warm text-vintage-cream hover:bg-vintage-brown">🎵 Авторские песни</Badge>
               
-              <h1 className="text-4xl md:text-6xl text-white bg-gradient-to-r from-emerald-300 via-blue-300 to-purple-300 bg-clip-text text-transparent font-extrabold mb-6">
+              <h1 className="text-4xl md:text-6xl text-vintage-dark-brown font-extrabold mb-6">
                 Музыка слов от сердца к клавишам
               </h1>
               
-              <p className="text-xl text-emerald-100 mb-8">Официальный сайт Дмитрия Шмелидзэ</p>
+              <p className="text-xl text-vintage-brown mb-8">Официальный сайт Дмитрия Шмелидзэ</p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                 <Button 
                   size="lg" 
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 text-lg"
+                  className="bg-vintage-warm hover:bg-vintage-brown text-vintage-cream px-8 py-4 text-lg"
                   onClick={() => navigate('/music')}
                 >
                   <Icon name="Music" size={20} className="mr-2" />
@@ -37,7 +37,7 @@ const HomePage: React.FC = () => {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="border-blue-400 text-blue-300 hover:bg-blue-500 hover:text-white px-8 py-4 text-lg"
+                  className="border-vintage-brown text-vintage-brown hover:bg-vintage-brown hover:text-vintage-cream px-8 py-4 text-lg"
                   onClick={() => navigate('/music')}
                 >
                   <Icon name="Music2" size={20} className="mr-2" />
@@ -47,7 +47,7 @@ const HomePage: React.FC = () => {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="border-purple-400 text-purple-300 hover:bg-purple-500 hover:text-white px-8 py-4 text-lg"
+                  className="border-vintage-dark-brown text-vintage-dark-brown hover:bg-vintage-dark-brown hover:text-vintage-cream px-8 py-4 text-lg"
                   onClick={() => navigate('/contact')}
                 >
                   <Icon name="MessageCircle" size={20} className="mr-2" />
@@ -59,7 +59,7 @@ const HomePage: React.FC = () => {
             {/* Фото музыканта */}
             <div className="flex justify-center">
               <div className="relative">
-                <div className="w-80 h-80 rounded-full overflow-hidden shadow-2xl border-4 border-emerald-400/40 bg-gradient-to-br from-emerald-900/30 to-indigo-900/30 backdrop-blur-sm">
+                <div className="w-80 h-80 rounded-full overflow-hidden shadow-2xl border-4 border-vintage-warm/40 bg-gradient-to-br from-vintage-brown/30 to-vintage-dark-brown/30 backdrop-blur-sm">
                   <img 
                     src="https://cdn.poehali.dev/files/57940c73-7a29-4c84-8c4b-d402f03adc4a.png" 
                     alt="Дмитрий Шмелидзэ - музыкант"
@@ -67,9 +67,9 @@ const HomePage: React.FC = () => {
                   />
                 </div>
                 {/* Декоративные элементы */}
-                <div className="absolute -top-4 -right-4 w-8 h-8 bg-blue-400 rounded-full opacity-70"></div>
-                <div className="absolute -bottom-4 -left-4 w-6 h-6 bg-purple-400 rounded-full opacity-80"></div>
-                <div className="absolute top-8 -left-8 w-4 h-4 bg-emerald-300 rounded-full opacity-60"></div>
+                <div className="absolute -top-4 -right-4 w-8 h-8 bg-vintage-warm rounded-full opacity-70"></div>
+                <div className="absolute -bottom-4 -left-4 w-6 h-6 bg-vintage-brown rounded-full opacity-80"></div>
+                <div className="absolute top-8 -left-8 w-4 h-4 bg-vintage-cream rounded-full opacity-60"></div>
               </div>
             </div>
           </div>
@@ -79,51 +79,51 @@ const HomePage: React.FC = () => {
       {/* Features Section */}
       <div className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <h3 className="text-3xl font-bold text-center text-emerald-100 mb-16">Почему выбирают мои песни</h3>
+          <h3 className="text-3xl font-bold text-center text-vintage-dark-brown mb-16">Почему выбирают мои песни</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-8 bg-emerald-900/30 rounded-2xl backdrop-blur-sm border border-emerald-500/30">
-              <div className="w-16 h-16 bg-gradient-to-br from-emerald-600 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Icon name="Headphones" size={32} className="text-white" />
+            <div className="text-center p-8 bg-vintage-cream/50 rounded-2xl backdrop-blur-sm border border-vintage-warm/30">
+              <div className="w-16 h-16 bg-gradient-to-br from-vintage-warm to-vintage-brown rounded-full flex items-center justify-center mx-auto mb-6">
+                <Icon name="Headphones" size={32} className="text-vintage-cream" />
               </div>
-              <h4 className="text-xl font-bold text-emerald-100 mb-4">Эксклюзивные треки</h4>
-              <p className="text-emerald-200">
+              <h4 className="text-xl font-bold text-vintage-dark-brown mb-4">Эксклюзивные треки</h4>
+              <p className="text-vintage-brown">
                 Все треки записаны и обработаны в студийном качестве для максимального погружения
               </p>
             </div>
             
-            <div className="text-center p-8 bg-blue-900/30 rounded-2xl backdrop-blur-sm border border-blue-500/30">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Icon name="Heart" size={32} className="text-white" />
+            <div className="text-center p-8 bg-vintage-cream/50 rounded-2xl backdrop-blur-sm border border-vintage-warm/30">
+              <div className="w-16 h-16 bg-gradient-to-br from-vintage-warm to-vintage-brown rounded-full flex items-center justify-center mx-auto mb-6">
+                <Icon name="Heart" size={32} className="text-vintage-cream" />
               </div>
-              <h4 className="text-xl font-bold text-blue-100 mb-4">С душой</h4>
-              <p className="text-blue-200">Каждая песня не просто набор звуков, а откровенный разговор с вами о том, что действительно важно.</p>
+              <h4 className="text-xl font-bold text-vintage-dark-brown mb-4">С душой</h4>
+              <p className="text-vintage-brown">Каждая песня не просто набор звуков, а откровенный разговор с вами о том, что действительно важно.</p>
             </div>
             
-            <div className="text-center p-8 bg-purple-900/30 rounded-2xl backdrop-blur-sm border border-purple-500/30">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-violet-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Icon name="Clock" size={32} className="text-white" />
+            <div className="text-center p-8 bg-vintage-cream/50 rounded-2xl backdrop-blur-sm border border-vintage-warm/30">
+              <div className="w-16 h-16 bg-gradient-to-br from-vintage-warm to-vintage-brown rounded-full flex items-center justify-center mx-auto mb-6">
+                <Icon name="Clock" size={32} className="text-vintage-cream" />
               </div>
-              <h4 className="text-xl font-bold text-purple-100 mb-4">Глубокий смысл</h4>
-              <p className="text-purple-200">В моих текстах нет пустых слов. Каждая строчка наполнена смыслом и отражает реальные жизненные истории.</p>
+              <h4 className="text-xl font-bold text-vintage-dark-brown mb-4">Глубокий смысл</h4>
+              <p className="text-vintage-brown">В моих текстах нет пустых слов. Каждая строчка наполнена смыслом и отражает реальные жизненные истории.</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* CTA Section */}
-      <div className="py-20 px-4 bg-gradient-to-r from-emerald-800/40 via-blue-800/30 to-purple-800/40">
+      <div className="py-20 px-4 bg-vintage-dark-brown/40">
         <div className="max-w-4xl mx-auto text-center">
-          <h3 className="text-4xl font-bold text-emerald-100 mb-6">
+          <h3 className="text-4xl font-bold text-vintage-cream mb-6">
             Готовы окунуться в мир музыки?
           </h3>
-          <p className="text-xl text-emerald-200 mb-8">
+          <p className="text-xl text-vintage-cream/80 mb-8">
             Откройте для себя коллекцию уникальных треков уже сейчас
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              className="bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 hover:from-emerald-700 hover:via-blue-700 hover:to-purple-700 text-white px-12 py-4 text-lg shadow-xl"
+              className="bg-vintage-warm hover:bg-vintage-brown text-vintage-cream px-12 py-4 text-lg shadow-xl"
               onClick={() => navigate('/music')}
             >
               <Icon name="Play" size={20} className="mr-2" />
@@ -133,7 +133,7 @@ const HomePage: React.FC = () => {
             <Button 
               size="lg" 
               variant="outline"
-              className="border-emerald-400 text-emerald-300 hover:bg-emerald-500 hover:text-white px-12 py-4 text-lg"
+              className="border-vintage-cream text-vintage-cream hover:bg-vintage-cream hover:text-vintage-dark-brown px-12 py-4 text-lg"
               onClick={() => navigate('/contact')}
             >
               <Icon name="MessageCircle" size={20} className="mr-2" />
