@@ -22,7 +22,7 @@ const HomePage: React.FC = () => {
 от сердца
 к клавишам</h1>
               
-              <p className="text-xl text-vintage-brown mb-8">Официальный сайт Дмитрия Шмелидзэ</p>
+              <p className="text-xl mb-8 text-[#72430d]">Официальный сайт Дмитрия Шмелидзэ</p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                 <Button 
