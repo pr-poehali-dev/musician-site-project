@@ -1,14 +1,9 @@
 import React, { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import Icon from '@/components/ui/icon';
 import { Track, Album } from '@/types';
+import AddAlbumDialog from './album/AddAlbumDialog';
+import EditAlbumDialog from './album/EditAlbumDialog';
+import { EditTrackDialog, MoveTrackDialog, BulkMoveDialog } from './album/TrackDialogs';
+import AlbumCard from './album/AlbumCard';
 
 interface AlbumManagerProps {
   albums: Album[];
@@ -275,493 +270,73 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
     <div>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold text-vintage-warm">Альбомы</h3>
-        <Dialog open={showAddAlbum} onOpenChange={setShowAddAlbum}>
-          <DialogTrigger asChild>
-            <Button className="bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream">
-              <Icon name="Plus" size={16} className="mr-2" />
-              Добавить альбом
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-vintage-cream border-vintage-brown/20">
-            <DialogHeader>
-              <DialogTitle className="text-vintage-warm">Новый альбом</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="album-title" className="text-vintage-warm">Название</Label>
-                <Input
-                  id="album-title"
-                  value={newAlbum.title}
-                  onChange={(e) => setNewAlbum({...newAlbum, title: e.target.value})}
-                  placeholder="Название альбома"
-                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
-                />
-              </div>
-              <div>
-                <Label htmlFor="album-artist" className="text-vintage-warm">Исполнитель</Label>
-                <Input
-                  id="album-artist"
-                  value={newAlbum.artist}
-                  onChange={(e) => setNewAlbum({...newAlbum, artist: e.target.value})}
-                  placeholder="Имя исполнителя"
-                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
-                />
-              </div>
-              <div>
-                <Label htmlFor="album-cover" className="text-vintage-warm">Обложка</Label>
-                <div className="space-y-2">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleCoverUpload}
-                    className="w-full px-3 py-2 border border-vintage-brown/30 rounded-md focus:border-vintage-dark-brown bg-vintage-cream file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:bg-vintage-dark-brown file:text-vintage-cream hover:file:bg-vintage-warm"
-                  />
-                  {coverPreview && (
-                    <div className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-vintage-brown/20">
-                      <img src={coverPreview} alt="Предпросмотр" className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                  <div className="text-sm text-vintage-warm/60">или</div>
-                  <Input
-                    id="album-cover"
-                    value={newAlbum.cover}
-                    onChange={(e) => setNewAlbum({...newAlbum, cover: e.target.value})}
-                    placeholder="Вставьте ссылку на обложку"
-                    className="border-vintage-brown/30 focus:border-vintage-dark-brown"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="album-price" className="text-vintage-warm">Цена (₽)</Label>
-                <Input
-                  id="album-price"
-                  type="number"
-                  value={newAlbum.price}
-                  onChange={(e) => setNewAlbum({...newAlbum, price: Number(e.target.value)})}
-                  placeholder="Цена альбома"
-                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
-                />
-              </div>
-              <div>
-                <Label htmlFor="album-description" className="text-vintage-warm">Описание</Label>
-                <Textarea
-                  id="album-description"
-                  value={newAlbum.description}
-                  onChange={(e) => setNewAlbum({...newAlbum, description: e.target.value})}
-                  placeholder="Описание альбома"
-                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
-                />
-              </div>
-              <Button 
-                onClick={handleAddAlbum}
-                className="w-full bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
-              >
-                Создать альбом
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <AddAlbumDialog
+          open={showAddAlbum}
+          onOpenChange={setShowAddAlbum}
+          newAlbum={newAlbum}
+          onAlbumChange={setNewAlbum}
+          coverPreview={coverPreview}
+          onCoverUpload={handleCoverUpload}
+          onAddAlbum={handleAddAlbum}
+        />
       </div>
 
-      {/* Диалог массового перемещения треков */}
-      <Dialog open={showBulkMove} onOpenChange={setShowBulkMove}>
-        <DialogContent className="bg-vintage-cream border-vintage-brown/20">
-          <DialogHeader>
-            <DialogTitle className="text-vintage-warm">Массовое перемещение треков</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label className="text-vintage-warm mb-2 block">Выбрано треков: {selectedTracks.length}</Label>
-              <Label htmlFor="bulk-target-album" className="text-vintage-warm">Переместить в альбом:</Label>
-              <Select value={bulkMoveTargetId} onValueChange={setBulkMoveTargetId}>
-                <SelectTrigger className="border-vintage-brown/30 focus:border-vintage-dark-brown">
-                  <SelectValue placeholder="Выберите альбом" />
-                </SelectTrigger>
-                <SelectContent>
-                  {albums
-                    .filter(album => album.id !== bulkMoveAlbumId)
-                    .map(album => (
-                      <SelectItem key={album.id} value={album.id}>
-                        {album.title} - {album.artist}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleSaveBulkMove}
-                disabled={!bulkMoveTargetId}
-                className="flex-1 bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream disabled:opacity-50"
-              >
-                Переместить ({selectedTracks.length})
-              </Button>
-              <Button 
-                onClick={() => setShowBulkMove(false)}
-                variant="outline"
-                className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
-              >
-                Отмена
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <BulkMoveDialog
+        open={showBulkMove}
+        onOpenChange={setShowBulkMove}
+        selectedTracksCount={selectedTracks.length}
+        bulkMoveAlbumId={bulkMoveAlbumId}
+        bulkMoveTargetId={bulkMoveTargetId}
+        onTargetChange={setBulkMoveTargetId}
+        albums={albums}
+        onSaveBulkMove={handleSaveBulkMove}
+      />
 
-      {/* Диалог перемещения трека */}
-      <Dialog open={showMoveTrack} onOpenChange={setShowMoveTrack}>
-        <DialogContent className="bg-vintage-cream border-vintage-brown/20">
-          <DialogHeader>
-            <DialogTitle className="text-vintage-warm">Переместить трек</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label className="text-vintage-warm mb-2 block">Трек: {movingTrack?.track.title}</Label>
-              <Label htmlFor="target-album" className="text-vintage-warm">Переместить в альбом:</Label>
-              <Select value={targetAlbumId} onValueChange={setTargetAlbumId}>
-                <SelectTrigger className="border-vintage-brown/30 focus:border-vintage-dark-brown">
-                  <SelectValue placeholder="Выберите альбом" />
-                </SelectTrigger>
-                <SelectContent>
-                  {albums
-                    .filter(album => album.id !== movingTrack?.albumId)
-                    .map(album => (
-                      <SelectItem key={album.id} value={album.id}>
-                        {album.title} - {album.artist}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleSaveMoveTrack}
-                disabled={!targetAlbumId}
-                className="flex-1 bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream disabled:opacity-50"
-              >
-                Переместить
-              </Button>
-              <Button 
-                onClick={() => setShowMoveTrack(false)}
-                variant="outline"
-                className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
-              >
-                Отмена
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <MoveTrackDialog
+        open={showMoveTrack}
+        onOpenChange={setShowMoveTrack}
+        movingTrack={movingTrack}
+        targetAlbumId={targetAlbumId}
+        onTargetAlbumChange={setTargetAlbumId}
+        albums={albums}
+        onSaveMoveTrack={handleSaveMoveTrack}
+      />
 
-      {/* Диалог редактирования трека */}
-      <Dialog open={showEditTrack} onOpenChange={setShowEditTrack}>
-        <DialogContent className="bg-vintage-cream border-vintage-brown/20">
-          <DialogHeader>
-            <DialogTitle className="text-vintage-warm">Редактировать трек</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="edit-track-title" className="text-vintage-warm">Название</Label>
-              <Input
-                id="edit-track-title"
-                value={editTrackData.title}
-                onChange={(e) => setEditTrackData({...editTrackData, title: e.target.value})}
-                placeholder="Название трека"
-                className="border-vintage-brown/30 focus:border-vintage-dark-brown"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-track-duration" className="text-vintage-warm">Длительность</Label>
-              <Input
-                id="edit-track-duration"
-                value={editTrackData.duration}
-                onChange={(e) => setEditTrackData({...editTrackData, duration: e.target.value})}
-                placeholder="3:42"
-                className="border-vintage-brown/30 focus:border-vintage-dark-brown"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-track-price" className="text-vintage-warm">Цена (₽)</Label>
-              <Input
-                id="edit-track-price"
-                type="number"
-                value={editTrackData.price}
-                onChange={(e) => setEditTrackData({...editTrackData, price: Number(e.target.value)})}
-                placeholder="Цена трека"
-                className="border-vintage-brown/30 focus:border-vintage-dark-brown"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleSaveEditTrack}
-                className="flex-1 bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
-              >
-                Сохранить изменения
-              </Button>
-              <Button 
-                onClick={() => setShowEditTrack(false)}
-                variant="outline"
-                className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
-              >
-                Отмена
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <EditTrackDialog
+        open={showEditTrack}
+        onOpenChange={setShowEditTrack}
+        editTrackData={editTrackData}
+        onTrackDataChange={setEditTrackData}
+        onSaveEditTrack={handleSaveEditTrack}
+      />
 
-      {/* Диалог редактирования альбома */}
-      <Dialog open={showEditAlbum} onOpenChange={setShowEditAlbum}>
-        <DialogContent className="bg-vintage-cream border-vintage-brown/20">
-          <DialogHeader>
-            <DialogTitle className="text-vintage-warm">Редактировать альбом</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="edit-album-title" className="text-vintage-warm">Название</Label>
-              <Input
-                id="edit-album-title"
-                value={editAlbumData.title}
-                onChange={(e) => setEditAlbumData({...editAlbumData, title: e.target.value})}
-                placeholder="Название альбома"
-                className="border-vintage-brown/30 focus:border-vintage-dark-brown"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-album-artist" className="text-vintage-warm">Исполнитель</Label>
-              <Input
-                id="edit-album-artist"
-                value={editAlbumData.artist}
-                onChange={(e) => setEditAlbumData({...editAlbumData, artist: e.target.value})}
-                placeholder="Имя исполнителя"
-                className="border-vintage-brown/30 focus:border-vintage-dark-brown"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-album-cover" className="text-vintage-warm">Обложка</Label>
-              <div className="space-y-2">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleEditCoverUpload}
-                  className="w-full px-3 py-2 border border-vintage-brown/30 rounded-md focus:border-vintage-dark-brown bg-vintage-cream file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:bg-vintage-dark-brown file:text-vintage-cream hover:file:bg-vintage-warm"
-                />
-                {editCoverPreview && (
-                  <div className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-vintage-brown/20">
-                    <img src={editCoverPreview} alt="Предпросмотр" className="w-full h-full object-cover" />
-                  </div>
-                )}
-                <div className="text-sm text-vintage-warm/60">или</div>
-                <Input
-                  id="edit-album-cover"
-                  value={editAlbumData.cover}
-                  onChange={(e) => setEditAlbumData({...editAlbumData, cover: e.target.value})}
-                  placeholder="Вставьте ссылку на обложку"
-                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="edit-album-price" className="text-vintage-warm">Цена (₽)</Label>
-              <Input
-                id="edit-album-price"
-                type="number"
-                value={editAlbumData.price}
-                onChange={(e) => setEditAlbumData({...editAlbumData, price: Number(e.target.value)})}
-                placeholder="Цена альбома"
-                className="border-vintage-brown/30 focus:border-vintage-dark-brown"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-album-description" className="text-vintage-warm">Описание</Label>
-              <Textarea
-                id="edit-album-description"
-                value={editAlbumData.description}
-                onChange={(e) => setEditAlbumData({...editAlbumData, description: e.target.value})}
-                placeholder="Описание альбома"
-                className="border-vintage-brown/30 focus:border-vintage-dark-brown"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleSaveEditAlbum}
-                className="flex-1 bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
-              >
-                Сохранить изменения
-              </Button>
-              <Button 
-                onClick={() => setShowEditAlbum(false)}
-                variant="outline"
-                className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
-              >
-                Отмена
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <EditAlbumDialog
+        open={showEditAlbum}
+        onOpenChange={setShowEditAlbum}
+        editAlbumData={editAlbumData}
+        onAlbumDataChange={setEditAlbumData}
+        editCoverPreview={editCoverPreview}
+        onEditCoverUpload={handleEditCoverUpload}
+        onSaveEditAlbum={handleSaveEditAlbum}
+      />
 
       <div className="grid md:grid-cols-2 gap-4">
         {albums.map((album) => (
-          <Card key={album.id} className="bg-vintage-cream/95 border-vintage-brown/20">
-            <CardContent className="p-4">
-              <div className="flex gap-3 mb-3">
-                {album.cover ? (
-                  <div className="w-20 h-20 rounded overflow-hidden flex-shrink-0">
-                    <img src={album.cover} alt={album.title} className="w-full h-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="w-20 h-20 bg-vintage-dark-brown/20 rounded flex items-center justify-center flex-shrink-0">
-                    <Icon name="Disc" size={32} className="text-vintage-dark-brown" />
-                  </div>
-                )}
-                <div className="flex-1">
-                  <div className="flex justify-between items-start mb-1">
-                    <div>
-                      <h4 className="font-bold text-vintage-warm">{album.title}</h4>
-                      <p className="text-sm text-vintage-warm/70">{album.artist}</p>
-                    </div>
-                    <Badge className="bg-vintage-dark-brown text-vintage-cream">
-                      {album.tracks} треков
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-vintage-warm/60 line-clamp-2">{album.description}</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between mb-3">
-                <p className="font-bold text-vintage-dark-brown">{album.price} ₽</p>
-                <div className="flex gap-2 flex-wrap">
-                  <Button 
-                    onClick={() => toggleAlbumExpanded(album.id)}
-                    variant="outline"
-                    size="sm"
-                    className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
-                  >
-                    <Icon name={expandedAlbums.includes(album.id) ? "ChevronUp" : "ChevronDown"} size={14} className="mr-1" />
-                    Треки
-                  </Button>
-                  {expandedAlbums.includes(album.id) && album.trackList && album.trackList.length > 0 && (
-                    <>
-                      <Button 
-                        onClick={() => handleSelectAllTracksInAlbum(album.id)}
-                        variant="outline"
-                        size="sm"
-                        className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
-                        title="Выбрать все треки"
-                      >
-                        <Icon name="CheckSquare" size={14} className="mr-1" />
-                        {album.trackList.every(t => selectedTracks.includes(t.id)) ? 'Снять' : 'Выбрать'}
-                      </Button>
-                      {selectedTracks.some(id => album.trackList?.some(t => t.id === id)) && (
-                        <Button 
-                          onClick={() => handleBulkMove(album.id)}
-                          variant="outline"
-                          size="sm"
-                          className="border-vintage-dark-brown text-vintage-dark-brown hover:bg-vintage-dark-brown hover:text-vintage-cream"
-                        >
-                          <Icon name="FolderOutput" size={14} className="mr-1" />
-                          Переместить ({selectedTracks.filter(id => album.trackList?.some(t => t.id === id)).length})
-                        </Button>
-                      )}
-                    </>
-                  )}
-                  <Button 
-                    onClick={() => handleEditAlbum(album)}
-                    variant="outline"
-                    size="sm"
-                    className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
-                  >
-                    <Icon name="Edit" size={14} />
-                  </Button>
-                  <Button 
-                    onClick={() => handleDeleteAlbum(album.id)}
-                    variant="outline"
-                    size="sm"
-                    className="text-red-500 border-red-300 hover:bg-red-50"
-                  >
-                    <Icon name="Trash2" size={14} />
-                  </Button>
-                </div>
-              </div>
-              
-              {/* Список треков альбома */}
-              {expandedAlbums.includes(album.id) && album.trackList && album.trackList.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-vintage-brown/20">
-                  <h5 className="text-sm font-semibold text-vintage-warm mb-2">Треки альбома:</h5>
-                  <div className="space-y-2">
-                    {album.trackList.map((track) => (
-                      <div 
-                        key={track.id} 
-                        className={`flex items-center justify-between p-2 bg-vintage-brown/10 rounded-lg transition-colors ${
-                          selectedTracks.includes(track.id) ? 'ring-2 ring-vintage-dark-brown bg-vintage-brown/20' : ''
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <button
-                            onClick={() => handleToggleTrackSelection(track.id)}
-                            className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                              selectedTracks.includes(track.id) 
-                                ? 'bg-vintage-dark-brown border-vintage-dark-brown' 
-                                : 'border-vintage-brown/40 hover:border-vintage-dark-brown'
-                            }`}
-                            title="Выбрать трек"
-                          >
-                            {selectedTracks.includes(track.id) && (
-                              <Icon name="Check" size={14} className="text-vintage-cream" />
-                            )}
-                          </button>
-                          <Icon name="Music" size={14} className="text-vintage-dark-brown flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-vintage-warm truncate">{track.title}</p>
-                            <div className="flex gap-2 text-xs text-vintage-warm/60">
-                              <span>{track.duration}</span>
-                              <span>•</span>
-                              <span>{track.price} ₽</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex gap-1 flex-shrink-0">
-                          <Button 
-                            onClick={() => handleMoveTrack(track, album.id)}
-                            variant="ghost"
-                            size="sm"
-                            className="text-vintage-dark-brown hover:bg-vintage-brown/20 h-7 w-7 p-0"
-                            title="Переместить в другой альбом"
-                          >
-                            <Icon name="Move" size={12} />
-                          </Button>
-                          <Button 
-                            onClick={() => handleEditTrack(track)}
-                            variant="ghost"
-                            size="sm"
-                            className="text-vintage-dark-brown hover:bg-vintage-brown/20 h-7 w-7 p-0"
-                            title="Редактировать трек"
-                          >
-                            <Icon name="Edit" size={12} />
-                          </Button>
-                          <Button 
-                            onClick={() => handleDeleteTrack(track.id)}
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-500 hover:bg-red-50 h-7 w-7 p-0"
-                            title="Удалить трек"
-                          >
-                            <Icon name="Trash2" size={12} />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {expandedAlbums.includes(album.id) && (!album.trackList || album.trackList.length === 0) && (
-                <div className="mt-3 pt-3 border-t border-vintage-brown/20">
-                  <p className="text-sm text-vintage-warm/60 text-center">Треков пока нет</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <AlbumCard
+            key={album.id}
+            album={album}
+            isExpanded={expandedAlbums.includes(album.id)}
+            selectedTracks={selectedTracks}
+            onToggleExpanded={() => toggleAlbumExpanded(album.id)}
+            onSelectAllTracks={() => handleSelectAllTracksInAlbum(album.id)}
+            onBulkMove={() => handleBulkMove(album.id)}
+            onEdit={() => handleEditAlbum(album)}
+            onDelete={() => handleDeleteAlbum(album.id)}
+            onToggleTrackSelection={handleToggleTrackSelection}
+            onMoveTrack={handleMoveTrack}
+            onEditTrack={handleEditTrack}
+            onDeleteTrack={handleDeleteTrack}
+          />
         ))}
       </div>
     </div>
