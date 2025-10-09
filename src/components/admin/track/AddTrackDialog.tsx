@@ -30,6 +30,7 @@ interface AddTrackDialogProps {
   onCoverUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSaveAudioFile: () => void;
   onAddTrack: () => void;
+  fileInputKey: number;
 }
 
 const AddTrackDialog: React.FC<AddTrackDialogProps> = ({
@@ -49,7 +50,8 @@ const AddTrackDialog: React.FC<AddTrackDialogProps> = ({
   onFileUpload,
   onCoverUpload,
   onSaveAudioFile,
-  onAddTrack
+  onAddTrack,
+  fileInputKey
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -88,6 +90,7 @@ const AddTrackDialog: React.FC<AddTrackDialogProps> = ({
             <Label className="text-vintage-warm">Аудиофайл</Label>
             <div className="space-y-2">
               <input
+                key={`audio-${fileInputKey}`}
                 type="file"
                 accept="audio/*"
                 onChange={onFileUpload}
@@ -140,6 +143,7 @@ const AddTrackDialog: React.FC<AddTrackDialogProps> = ({
             <Label className="text-vintage-warm">Обложка трека (необязательно)</Label>
             <div className="space-y-2">
               <input
+                key={`cover-${fileInputKey}`}
                 type="file"
                 accept="image/*"
                 onChange={onCoverUpload}

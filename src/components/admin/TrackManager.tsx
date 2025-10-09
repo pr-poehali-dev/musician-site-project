@@ -34,6 +34,7 @@ const TrackManager: React.FC<TrackManagerProps> = ({
   const [savedFilePath, setSavedFilePath] = useState<string | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [fileInputKey, setFileInputKey] = useState(Date.now());
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -85,6 +86,8 @@ const TrackManager: React.FC<TrackManagerProps> = ({
     setSavedFilePath(null);
     setCoverFile(null);
     setCoverPreview(null);
+    setSelectedAlbum('');
+    setFileInputKey(Date.now());
   };
   
   const handleSaveAudioFile = async () => {
@@ -177,6 +180,7 @@ const TrackManager: React.FC<TrackManagerProps> = ({
           onCoverUpload={handleCoverUpload}
           onSaveAudioFile={handleSaveAudioFile}
           onAddTrack={handleAddTrack}
+          fileInputKey={fileInputKey}
         />
       </div>
 
