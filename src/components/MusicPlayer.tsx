@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Track } from '@/types';
 import { getAudioFromIndexedDB } from '@/utils/audioStorage';
+import { incrementPlays } from '@/utils/trackStats';
 import FloatingPlayer from '@/components/player/FloatingPlayer';
 import PlayerCard from '@/components/player/PlayerCard';
 
@@ -129,6 +130,8 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
               console.warn('Ошибка автовоспроизведения:', error);
               setIsPlaying(false);
             });
+            
+            incrementPlays(currentTrack.id);
           }
         } catch (error) {
           console.error('Ошибка загрузки аудио:', error);

@@ -14,6 +14,8 @@ export interface Track {
   price: number;
   cover?: string;
   albumId?: string;
+  downloads?: number;
+  plays?: number;
 }
 
 export interface Album {

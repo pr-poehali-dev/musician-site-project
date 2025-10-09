@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Icon from '@/components/ui/icon';
+import DownloadTrackButton from '@/components/DownloadTrackButton';
 import { Track } from '@/types';
 
 interface PlayerCardProps {
@@ -258,27 +259,37 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                       }`}
                       onClick={() => setCurrentTrack(track)}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-vintage-dark-brown rounded-full flex items-center justify-center">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-10 h-10 bg-vintage-dark-brown rounded-full flex items-center justify-center flex-shrink-0">
                           {currentTrack?.id === track.id && isPlaying ? (
                             <Icon name="Pause" size={16} className="text-vintage-cream" />
                           ) : (
                             <Icon name="Play" size={16} className="text-vintage-cream" />
                           )}
                         </div>
-                        <div>
-                          <p className="font-medium text-vintage-warm">{track.title}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-vintage-warm truncate">{track.title}</p>
                           <p className="text-sm text-vintage-warm/60">{track.duration}</p>
                         </div>
                       </div>
                       
-                      {currentTrack?.id === track.id && (
-                        <div className="flex items-center space-x-1">
-                          <div className="w-1 h-3 bg-vintage-warm animate-pulse rounded-full"></div>
-                          <div className="w-1 h-4 bg-vintage-warm animate-pulse rounded-full" style={{animationDelay: '0.1s'}}></div>
-                          <div className="w-1 h-3 bg-vintage-warm animate-pulse rounded-full" style={{animationDelay: '0.2s'}}></div>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {track.file && (
+                          <DownloadTrackButton 
+                            track={track}
+                            variant="ghost"
+                            size="sm"
+                            className="text-vintage-dark-brown hover:bg-vintage-brown/20"
+                          />
+                        )}
+                        {currentTrack?.id === track.id && (
+                          <div className="flex items-center space-x-1">
+                            <div className="w-1 h-3 bg-vintage-warm animate-pulse rounded-full"></div>
+                            <div className="w-1 h-4 bg-vintage-warm animate-pulse rounded-full" style={{animationDelay: '0.1s'}}></div>
+                            <div className="w-1 h-3 bg-vintage-warm animate-pulse rounded-full" style={{animationDelay: '0.2s'}}></div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
