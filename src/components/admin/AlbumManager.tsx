@@ -41,6 +41,10 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
   const [movingTrack, setMovingTrack] = useState<{track: Track, albumId: string} | null>(null);
   const [showMoveTrack, setShowMoveTrack] = useState(false);
   const [targetAlbumId, setTargetAlbumId] = useState('');
+  const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
+  const [showBulkMove, setShowBulkMove] = useState(false);
+  const [bulkMoveAlbumId, setBulkMoveAlbumId] = useState('');
+  const [bulkMoveTargetId, setBulkMoveTargetId] = useState('');
   const [newAlbum, setNewAlbum] = useState({
     title: '',
     artist: '',
@@ -227,6 +231,46 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
     }
   };
 
+  const handleToggleTrackSelection = (trackId: string) => {
+    setSelectedTracks(prev => 
+      prev.includes(trackId) 
+        ? prev.filter(id => id !== trackId)
+        : [...prev, trackId]
+    );
+  };
+
+  const handleBulkMove = (albumId: string) => {
+    if (selectedTracks.length === 0) return;
+    setBulkMoveAlbumId(albumId);
+    setBulkMoveTargetId('');
+    setShowBulkMove(true);
+  };
+
+  const handleSaveBulkMove = () => {
+    if (bulkMoveAlbumId && bulkMoveTargetId && bulkMoveTargetId !== bulkMoveAlbumId) {
+      selectedTracks.forEach(trackId => {
+        onMoveTrack?.(trackId, bulkMoveAlbumId, bulkMoveTargetId);
+      });
+      setShowBulkMove(false);
+      setSelectedTracks([]);
+      setBulkMoveAlbumId('');
+      setBulkMoveTargetId('');
+    }
+  };
+
+  const handleSelectAllTracksInAlbum = (albumId: string) => {
+    const album = albums.find(a => a.id === albumId);
+    if (album?.trackList) {
+      const trackIds = album.trackList.map(t => t.id);
+      const allSelected = trackIds.every(id => selectedTracks.includes(id));
+      if (allSelected) {
+        setSelectedTracks(prev => prev.filter(id => !trackIds.includes(id)));
+      } else {
+        setSelectedTracks(prev => [...new Set([...prev, ...trackIds])]);
+      }
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
@@ -318,6 +362,51 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Диалог массового перемещения треков */}
+      <Dialog open={showBulkMove} onOpenChange={setShowBulkMove}>
+        <DialogContent className="bg-vintage-cream border-vintage-brown/20">
+          <DialogHeader>
+            <DialogTitle className="text-vintage-warm">Массовое перемещение треков</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-vintage-warm mb-2 block">Выбрано треков: {selectedTracks.length}</Label>
+              <Label htmlFor="bulk-target-album" className="text-vintage-warm">Переместить в альбом:</Label>
+              <Select value={bulkMoveTargetId} onValueChange={setBulkMoveTargetId}>
+                <SelectTrigger className="border-vintage-brown/30 focus:border-vintage-dark-brown">
+                  <SelectValue placeholder="Выберите альбом" />
+                </SelectTrigger>
+                <SelectContent>
+                  {albums
+                    .filter(album => album.id !== bulkMoveAlbumId)
+                    .map(album => (
+                      <SelectItem key={album.id} value={album.id}>
+                        {album.title} - {album.artist}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleSaveBulkMove}
+                disabled={!bulkMoveTargetId}
+                className="flex-1 bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream disabled:opacity-50"
+              >
+                Переместить ({selectedTracks.length})
+              </Button>
+              <Button 
+                onClick={() => setShowBulkMove(false)}
+                variant="outline"
+                className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
+              >
+                Отмена
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Диалог перемещения трека */}
       <Dialog open={showMoveTrack} onOpenChange={setShowMoveTrack}>
@@ -541,7 +630,7 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
               </div>
               <div className="flex items-center justify-between mb-3">
                 <p className="font-bold text-vintage-dark-brown">{album.price} ₽</p>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button 
                     onClick={() => toggleAlbumExpanded(album.id)}
                     variant="outline"
@@ -551,6 +640,31 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
                     <Icon name={expandedAlbums.includes(album.id) ? "ChevronUp" : "ChevronDown"} size={14} className="mr-1" />
                     Треки
                   </Button>
+                  {expandedAlbums.includes(album.id) && album.trackList && album.trackList.length > 0 && (
+                    <>
+                      <Button 
+                        onClick={() => handleSelectAllTracksInAlbum(album.id)}
+                        variant="outline"
+                        size="sm"
+                        className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
+                        title="Выбрать все треки"
+                      >
+                        <Icon name="CheckSquare" size={14} className="mr-1" />
+                        {album.trackList.every(t => selectedTracks.includes(t.id)) ? 'Снять' : 'Выбрать'}
+                      </Button>
+                      {selectedTracks.some(id => album.trackList?.some(t => t.id === id)) && (
+                        <Button 
+                          onClick={() => handleBulkMove(album.id)}
+                          variant="outline"
+                          size="sm"
+                          className="border-vintage-dark-brown text-vintage-dark-brown hover:bg-vintage-dark-brown hover:text-vintage-cream"
+                        >
+                          <Icon name="FolderOutput" size={14} className="mr-1" />
+                          Переместить ({selectedTracks.filter(id => album.trackList?.some(t => t.id === id)).length})
+                        </Button>
+                      )}
+                    </>
+                  )}
                   <Button 
                     onClick={() => handleEditAlbum(album)}
                     variant="outline"
@@ -578,9 +692,24 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
                     {album.trackList.map((track) => (
                       <div 
                         key={track.id} 
-                        className="flex items-center justify-between p-2 bg-vintage-brown/10 rounded-lg"
+                        className={`flex items-center justify-between p-2 bg-vintage-brown/10 rounded-lg transition-colors ${
+                          selectedTracks.includes(track.id) ? 'ring-2 ring-vintage-dark-brown bg-vintage-brown/20' : ''
+                        }`}
                       >
                         <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <button
+                            onClick={() => handleToggleTrackSelection(track.id)}
+                            className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                              selectedTracks.includes(track.id) 
+                                ? 'bg-vintage-dark-brown border-vintage-dark-brown' 
+                                : 'border-vintage-brown/40 hover:border-vintage-dark-brown'
+                            }`}
+                            title="Выбрать трек"
+                          >
+                            {selectedTracks.includes(track.id) && (
+                              <Icon name="Check" size={14} className="text-vintage-cream" />
+                            )}
+                          </button>
                           <Icon name="Music" size={14} className="text-vintage-dark-brown flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-vintage-warm truncate">{track.title}</p>
