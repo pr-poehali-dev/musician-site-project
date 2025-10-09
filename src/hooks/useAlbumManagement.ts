@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Album, Track } from '@/types';
 import { apiClient } from '@/utils/apiClient';
+import { musicApi } from '@/utils/musicApi';
 
 const defaultAlbums: Album[] = [
   { 
@@ -40,30 +41,23 @@ export const useAlbumManagement = () => {
   useEffect(() => {
     const loadAlbums = async () => {
       try {
-        const serverAlbums = await apiClient.loadAlbumsFromServer();
+        console.log('[Albums] Загрузка альбомов из базы данных...');
+        const dbAlbums = await musicApi.getAlbums();
         
-        if (serverAlbums.length > 0) {
-          setAlbums(serverAlbums);
-          localStorage.setItem('albums', JSON.stringify(serverAlbums));
+        if (dbAlbums.length > 0) {
+          console.log('[Albums] Загружено из БД:', dbAlbums.length, 'альбомов');
+          setAlbums(dbAlbums);
         } else {
-          const savedAlbums = localStorage.getItem('albums');
-          if (savedAlbums) {
-            const parsed = JSON.parse(savedAlbums);
-            setAlbums(parsed);
-          } else {
-            setAlbums(defaultAlbums);
-            localStorage.setItem('albums', JSON.stringify(defaultAlbums));
+          console.log('[Albums] БД пуста, инициализация дефолтными альбомами');
+          for (const album of defaultAlbums) {
+            await musicApi.createAlbum(album);
           }
+          const newAlbums = await musicApi.getAlbums();
+          setAlbums(newAlbums);
         }
       } catch (error) {
-        console.error('Ошибка загрузки альбомов:', error);
-        const savedAlbums = localStorage.getItem('albums');
-        if (savedAlbums) {
-          setAlbums(JSON.parse(savedAlbums));
-        } else {
-          setAlbums(defaultAlbums);
-          localStorage.setItem('albums', JSON.stringify(defaultAlbums));
-        }
+        console.error('[Albums] Ошибка загрузки из БД:', error);
+        setAlbums(defaultAlbums);
       }
     };
     
@@ -72,25 +66,17 @@ export const useAlbumManagement = () => {
 
   const addNewAlbum = async (albumData: Omit<Album, 'id'>) => {
     try {
-      const newAlbum: Album = {
-        ...albumData,
-        id: Date.now().toString()
-      };
-      console.log('Добавление нового альбома:', newAlbum);
+      console.log('[Albums] Создание нового альбома:', albumData.title);
+      const createdAlbum = await musicApi.createAlbum(albumData);
       
-      await apiClient.saveAlbumToServer(newAlbum);
-      
-      const updatedAlbums = [...albums, newAlbum];
-      console.log('Обновленный список альбомов:', updatedAlbums);
-      
-      const dataToSave = JSON.stringify(updatedAlbums);
-      const dataSizeKB = (dataToSave.length / 1024).toFixed(2);
-      console.log('Размер данных для сохранения:', dataSizeKB + ' KB');
-      
-      setAlbums(updatedAlbums);
-      localStorage.setItem('albums', dataToSave);
-      console.log('✅ Альбом успешно сохранен в localStorage и на сервере');
-      window.dispatchEvent(new CustomEvent('albumsUpdated'));
+      if (createdAlbum) {
+        const updatedAlbums = await musicApi.getAlbums();
+        setAlbums(updatedAlbums);
+        console.log('✅ Альбом успешно сохранен в БД');
+        window.dispatchEvent(new CustomEvent('albumsUpdated'));
+      } else {
+        throw new Error('Не удалось создать альбом');
+      }
     } catch (error) {
       console.error('❌ Ошибка при сохранении альбома:', error);
       alert('Ошибка при сохранении альбома: ' + (error as Error).message);
@@ -98,59 +84,42 @@ export const useAlbumManagement = () => {
     }
   };
 
-  const editAlbum = (albumId: string, albumData: Omit<Album, 'id'>) => {
-    const updatedAlbums = albums.map(album => 
-      album.id === albumId 
-        ? { ...album, ...albumData } 
-        : album
-    );
-    setAlbums(updatedAlbums);
-    localStorage.setItem('albums', JSON.stringify(updatedAlbums));
-    window.dispatchEvent(new CustomEvent('albumsUpdated'));
+  const editAlbum = async (albumId: string, albumData: Omit<Album, 'id'>) => {
+    try {
+      await musicApi.updateAlbum(albumId, albumData);
+      const updatedAlbums = await musicApi.getAlbums();
+      setAlbums(updatedAlbums);
+      window.dispatchEvent(new CustomEvent('albumsUpdated'));
+    } catch (error) {
+      console.error('Ошибка редактирования альбома:', error);
+    }
   };
 
-  const removeAlbum = (albumId: string) => {
-    const updatedAlbums = albums.filter(album => album.id !== albumId);
-    setAlbums(updatedAlbums);
-    localStorage.setItem('albums', JSON.stringify(updatedAlbums));
-    window.dispatchEvent(new CustomEvent('albumsUpdated'));
-    window.dispatchEvent(new CustomEvent('tracksUpdated'));
+  const removeAlbum = async (albumId: string) => {
+    try {
+      const updatedAlbums = albums.filter(album => album.id !== albumId);
+      setAlbums(updatedAlbums);
+      window.dispatchEvent(new CustomEvent('albumsUpdated'));
+      window.dispatchEvent(new CustomEvent('tracksUpdated'));
+    } catch (error) {
+      console.error('Ошибка удаления альбома:', error);
+    }
   };
 
   const addTrackToAlbum = async (albumId: string, trackData: Omit<Track, 'id'>) => {
     try {
-      const newTrack: Track = {
-        ...trackData,
-        id: Date.now().toString(),
-        albumId
-      };
+      console.log('[Tracks] Создание нового трека в альбоме:', albumId);
+      const createdTrack = await musicApi.createTrack({ ...trackData, albumId });
       
-      await apiClient.saveTrackToServer(newTrack);
-      
-      const updatedAlbums = albums.map(album => 
-        album.id === albumId 
-          ? { 
-              ...album, 
-              trackList: [...album.trackList, newTrack],
-              tracks: album.trackList.length + 1
-            } 
-          : album
-      );
-      setAlbums(updatedAlbums);
-      localStorage.setItem('albums', JSON.stringify(updatedAlbums));
-      
-      const savedTracks = localStorage.getItem('uploadedTracks');
-      let uploadedTracks = [];
-      if (savedTracks) {
-        uploadedTracks = JSON.parse(savedTracks);
+      if (createdTrack) {
+        const updatedAlbums = await musicApi.getAlbums();
+        setAlbums(updatedAlbums);
+        console.log('✅ Трек сохранен в БД');
+        window.dispatchEvent(new CustomEvent('tracksUpdated'));
+        window.dispatchEvent(new CustomEvent('albumsUpdated'));
+      } else {
+        throw new Error('Не удалось создать трек');
       }
-      uploadedTracks.push(newTrack);
-      localStorage.setItem('uploadedTracks', JSON.stringify(uploadedTracks));
-      
-      console.log('✅ Трек сохранен в базу данных на сервере');
-      
-      window.dispatchEvent(new CustomEvent('tracksUpdated'));
-      window.dispatchEvent(new CustomEvent('albumsUpdated'));
     } catch (error) {
       console.error('❌ Ошибка при сохранении трека:', error);
       alert('Ошибка при сохранении трека: ' + (error as Error).message);
@@ -158,31 +127,15 @@ export const useAlbumManagement = () => {
     }
   };
 
-  const moveTrack = (trackId: string, fromAlbumId: string, toAlbumId: string) => {
-    const sourceAlbum = albums.find(album => album.id === fromAlbumId);
-    const trackToMove = sourceAlbum?.trackList.find(track => track.id === trackId);
-    
-    if (!trackToMove) return;
-
-    const updatedAlbums = albums.map(album => {
-      if (album.id === fromAlbumId) {
-        return {
-          ...album,
-          trackList: album.trackList.filter(track => track.id !== trackId)
-        };
-      }
-      if (album.id === toAlbumId) {
-        return {
-          ...album,
-          trackList: [...album.trackList, trackToMove]
-        };
-      }
-      return album;
-    });
-
-    setAlbums(updatedAlbums);
-    localStorage.setItem('albums', JSON.stringify(updatedAlbums));
-    window.dispatchEvent(new CustomEvent('albumsUpdated'));
+  const moveTrack = async (trackId: string, fromAlbumId: string, toAlbumId: string) => {
+    try {
+      await musicApi.updateTrack(trackId, { albumId: toAlbumId });
+      const updatedAlbums = await musicApi.getAlbums();
+      setAlbums(updatedAlbums);
+      window.dispatchEvent(new CustomEvent('albumsUpdated'));
+    } catch (error) {
+      console.error('Ошибка перемещения трека:', error);
+    }
   };
 
   return {
