@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import Icon from '@/components/ui/icon';
 import { Track } from '@/types';
@@ -52,15 +52,25 @@ const FloatingPlayer: React.FC<FloatingPlayerProps> = ({
   toggleMute,
   handleVolumeChange,
 }) => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
+
   return (
     <div 
       ref={playerRef}
-      className="fixed z-50 bg-vintage-dark-brown/98 backdrop-blur-lg rounded-2xl shadow-2xl border-2 border-vintage-warm/30 transition-all"
+      className={`fixed z-50 bg-vintage-dark-brown/98 backdrop-blur-lg rounded-2xl shadow-2xl border-2 border-vintage-warm/30 transition-all duration-300 ease-out ${
+        isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+      }`}
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
         width: isMinimized ? '300px' : '400px',
-        cursor: isDragging ? 'grabbing' : 'default'
+        cursor: isDragging ? 'grabbing' : 'default',
+        transform: `scale(${isVisible ? 1 : 0.95})`,
+        transformOrigin: 'center'
       }}
     >
       {/* Заголовок с возможностью перетаскивания */}
