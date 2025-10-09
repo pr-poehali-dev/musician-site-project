@@ -4,7 +4,7 @@ import TrackManager from '@/components/admin/TrackManager';
 import { Track, Album } from '@/types';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
-import { exportTracksBackup, importTracksBackup, getBackupSize } from '@/utils/trackBackup';
+import { exportTracksBackup, importTracksBackup, getBackupSize, getLastBackupDate } from '@/utils/trackBackup';
 import { useToast } from '@/hooks/use-toast';
 
 interface AdminPanelProps {
@@ -90,7 +90,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
           <Icon name="Database" size={20} />
           Резервное копирование
         </h3>
-        <div className="flex flex-wrap gap-3 items-center">
+        <div className="flex flex-wrap gap-3 items-center mb-3">
           <Button
             onClick={handleExport}
             disabled={isExporting || albums.length === 0}
@@ -114,7 +114,23 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
             Размер данных: {getBackupSize()}
           </span>
         </div>
-        <p className="text-xs text-vintage-warm/60 mt-2">
+        
+        <div className="bg-vintage-cream/50 p-3 rounded border border-vintage-brown/10 mb-2">
+          <div className="flex items-center gap-2 text-sm">
+            <Icon name="Clock" size={16} className="text-vintage-warm" />
+            <span className="text-vintage-dark-brown font-medium">
+              Автоматическое резервное копирование:
+            </span>
+            <span className="text-vintage-warm/70">
+              {getLastBackupDate() ? `${getLastBackupDate()}` : 'Не создано'}
+            </span>
+          </div>
+          <p className="text-xs text-vintage-warm/60 mt-1 ml-6">
+            Резервная копия создается автоматически раз в день
+          </p>
+        </div>
+        
+        <p className="text-xs text-vintage-warm/60">
           Экспорт сохранит все альбомы, треки и аудиофайлы в один файл. Импорт восстановит все данные из файла.
         </p>
       </div>

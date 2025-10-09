@@ -134,3 +134,95 @@ export const getBackupSize = (): string => {
   }
   return `${sizeInKB.toFixed(2)} КБ`;
 };
+
+export const createAutoBackup = async (): Promise<BackupData | null> => {
+  try {
+    const albumsData = localStorage.getItem('albums');
+    const tracksData = localStorage.getItem('uploadedTracks');
+    
+    const albums: Album[] = albumsData ? JSON.parse(albumsData) : [];
+    const tracks: Track[] = tracksData ? JSON.parse(tracksData) : [];
+    
+    if (albums.length === 0) {
+      return null;
+    }
+    
+    const backup: BackupData = {
+      albums,
+      tracks,
+      audioFiles: [],
+      exportDate: new Date().toISOString(),
+      version: '1.0'
+    };
+    
+    return backup;
+  } catch (error) {
+    console.error('❌ Ошибка создания автоматической резервной копии:', error);
+    return null;
+  }
+};
+
+export const saveAutoBackup = async (): Promise<void> => {
+  try {
+    const backup = await createAutoBackup();
+    if (!backup) return;
+    
+    const jsonString = JSON.stringify(backup);
+    localStorage.setItem('autoBackup', jsonString);
+    localStorage.setItem('lastBackupDate', new Date().toISOString());
+    
+    console.log('✅ Автоматическая резервная копия сохранена');
+  } catch (error) {
+    console.error('❌ Ошибка сохранения автоматической резервной копии:', error);
+  }
+};
+
+export const downloadAutoBackup = (): void => {
+  try {
+    const backupData = localStorage.getItem('autoBackup');
+    if (!backupData) {
+      throw new Error('Резервная копия не найдена');
+    }
+    
+    const blob = new Blob([backupData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `auto-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    console.log('✅ Автоматическая резервная копия скачана');
+  } catch (error) {
+    console.error('❌ Ошибка скачивания автоматической резервной копии:', error);
+    throw error;
+  }
+};
+
+export const shouldCreateBackup = (): boolean => {
+  const lastBackupDate = localStorage.getItem('lastBackupDate');
+  if (!lastBackupDate) return true;
+  
+  const lastBackup = new Date(lastBackupDate);
+  const now = new Date();
+  const diffInHours = (now.getTime() - lastBackup.getTime()) / (1000 * 60 * 60);
+  
+  return diffInHours >= 24;
+};
+
+export const getLastBackupDate = (): string | null => {
+  const lastBackupDate = localStorage.getItem('lastBackupDate');
+  if (!lastBackupDate) return null;
+  
+  const date = new Date(lastBackupDate);
+  return date.toLocaleString('ru-RU', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
