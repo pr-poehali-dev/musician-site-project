@@ -13,6 +13,7 @@ export interface Track {
   file: string;
   price: number;
   cover?: string;
+  albumId?: string;
 }
 
 export interface Album {

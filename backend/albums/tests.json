@@ -1,0 +1,22 @@
+{
+  "tests": [
+    {
+      "name": "Test OPTIONS request",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test GET albums",
+      "method": "GET",
+      "path": "/albums",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "albums": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
