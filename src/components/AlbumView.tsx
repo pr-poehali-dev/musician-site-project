@@ -42,6 +42,36 @@ const AlbumView: React.FC<AlbumViewProps> = ({
     }
   };
 
+  const playNext = () => {
+    if (!currentTrack || !album.trackList) return;
+    const currentIndex = album.trackList.findIndex(t => t.id === currentTrack.id);
+    if (currentIndex < album.trackList.length - 1) {
+      const nextTrack = album.trackList[currentIndex + 1];
+      setCurrentTrack(nextTrack);
+      setIsPlaying(true);
+      setCurrentTime(0);
+    }
+  };
+
+  const playPrevious = () => {
+    if (!currentTrack || !album.trackList) return;
+    const currentIndex = album.trackList.findIndex(t => t.id === currentTrack.id);
+    if (currentIndex > 0) {
+      const prevTrack = album.trackList[currentIndex - 1];
+      setCurrentTrack(prevTrack);
+      setIsPlaying(true);
+      setCurrentTime(0);
+    }
+  };
+
+  const playAlbum = () => {
+    if (album.trackList && album.trackList.length > 0) {
+      setCurrentTrack(album.trackList[0]);
+      setIsPlaying(true);
+      setCurrentTime(0);
+    }
+  };
+
   useEffect(() => {
     const audio = audioRef.current;
     if (audio && currentTrack?.file) {
@@ -87,7 +117,14 @@ const AlbumView: React.FC<AlbumViewProps> = ({
     if (audio) {
       const updateTime = () => setCurrentTime(audio.currentTime);
       const updateDuration = () => setDuration(audio.duration);
-      const handleEnded = () => setIsPlaying(false);
+      const handleEnded = () => {
+        const currentIndex = album.trackList.findIndex(t => t.id === currentTrack?.id);
+        if (currentIndex < album.trackList.length - 1) {
+          playNext();
+        } else {
+          setIsPlaying(false);
+        }
+      };
       
       audio.addEventListener('timeupdate', updateTime);
       audio.addEventListener('loadedmetadata', updateDuration);
@@ -99,7 +136,7 @@ const AlbumView: React.FC<AlbumViewProps> = ({
         audio.removeEventListener('ended', handleEnded);
       };
     }
-  }, []);
+  }, [currentTrack, album.trackList]);
 
   const formatTime = (time: number) => {
     if (isNaN(time)) return '0:00';
@@ -162,13 +199,23 @@ const AlbumView: React.FC<AlbumViewProps> = ({
                   <span className="text-vintage-warm/60">{album.tracks} треков</span>
                   <span className="text-2xl font-bold text-vintage-dark-brown">{album.price} ₽</span>
                 </div>
-                <Button
-                  onClick={handleAddAlbumToCart}
-                  className="bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
-                >
-                  <Icon name="ShoppingCart" size={16} className="mr-2" />
-                  Купить альбом
-                </Button>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={playAlbum}
+                    className="bg-vintage-warm hover:bg-vintage-brown text-vintage-cream"
+                  >
+                    <Icon name="Play" size={16} className="mr-2" />
+                    Слушать альбом
+                  </Button>
+                  <Button
+                    onClick={handleAddAlbumToCart}
+                    variant="outline"
+                    className="border-vintage-dark-brown text-vintage-dark-brown hover:bg-vintage-dark-brown hover:text-vintage-cream"
+                  >
+                    <Icon name="ShoppingCart" size={16} className="mr-2" />
+                    Купить
+                  </Button>
+                </div>
               </div>
             </div>
 
@@ -226,10 +273,28 @@ const AlbumView: React.FC<AlbumViewProps> = ({
               <div className="mt-8 p-4 bg-vintage-brown/10 rounded-lg border border-vintage-brown/20 space-y-3">
                 <div className="flex items-center gap-4">
                   <Button
+                    onClick={playPrevious}
+                    disabled={album.trackList.findIndex(t => t.id === currentTrack.id) === 0}
+                    variant="ghost"
+                    size="sm"
+                    className="text-vintage-dark-brown hover:bg-vintage-brown/10 disabled:opacity-30"
+                  >
+                    <Icon name="SkipBack" size={16} />
+                  </Button>
+                  <Button
                     onClick={() => handlePlayTrack(currentTrack)}
                     className="bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream w-12 h-12 rounded-full"
                   >
                     <Icon name={isPlaying ? "Pause" : "Play"} size={20} />
+                  </Button>
+                  <Button
+                    onClick={playNext}
+                    disabled={album.trackList.findIndex(t => t.id === currentTrack.id) === album.trackList.length - 1}
+                    variant="ghost"
+                    size="sm"
+                    className="text-vintage-dark-brown hover:bg-vintage-brown/10 disabled:opacity-30"
+                  >
+                    <Icon name="SkipForward" size={16} />
                   </Button>
                   <div className="flex-1">
                     <p className="font-medium text-vintage-warm">{currentTrack.title}</p>

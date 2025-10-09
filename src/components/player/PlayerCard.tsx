@@ -15,11 +15,13 @@ interface PlayerCardProps {
   tooltipPosition: number;
   tooltipTime: number;
   tracks: Track[];
+  currentAlbumTracks?: Track[];
   audioRef: React.RefObject<HTMLAudioElement>;
   formatTime: (time: number) => string;
   togglePlay: () => void;
   playPrevious: () => void;
   playNext: () => void;
+  playAlbum?: () => void;
   setCurrentTime: (value: number) => void;
   setTooltipTime: (value: number) => void;
   setTooltipPosition: (value: number) => void;
@@ -40,11 +42,13 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   tooltipPosition,
   tooltipTime,
   tracks,
+  currentAlbumTracks,
   audioRef,
   formatTime,
   togglePlay,
   playPrevious,
   playNext,
+  playAlbum,
   setCurrentTime,
   setTooltipTime,
   setTooltipPosition,
@@ -53,6 +57,10 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   handleVolumeChange,
   setCurrentTrack,
 }) => {
+  const activeTracks = currentAlbumTracks || tracks;
+  const currentIndex = activeTracks.findIndex(track => track.id === currentTrack?.id);
+  const isFirstTrack = currentIndex === 0;
+  const isLastTrack = currentIndex === activeTracks.length - 1;
   return (
     <section id="music" className="py-16 px-6">
       <div className="max-w-4xl mx-auto">
@@ -75,30 +83,48 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
             </div>
 
             {/* Управление воспроизведением */}
-            <div className="flex items-center justify-center gap-4 mb-8">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={playPrevious}
-                disabled={!currentTrack || tracks.findIndex(track => track.id === currentTrack?.id) === 0}
-              >
-                <Icon name="SkipBack" size={20} className="text-vintage-dark-brown" />
-              </Button>
-              <Button 
-                onClick={togglePlay}
-                disabled={!currentTrack}
-                className="bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream w-16 h-16 rounded-full disabled:opacity-50"
-              >
-                <Icon name={isPlaying ? "Pause" : "Play"} size={24} />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={playNext}
-                disabled={!currentTrack || tracks.findIndex(track => track.id === currentTrack?.id) === tracks.length - 1}
-              >
-                <Icon name="SkipForward" size={20} className="text-vintage-dark-brown" />
-              </Button>
+            <div className="space-y-4 mb-8">
+              <div className="flex items-center justify-center gap-4">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={playPrevious}
+                  disabled={!currentTrack || isFirstTrack}
+                  className="text-vintage-dark-brown hover:bg-vintage-brown/10 disabled:opacity-30"
+                >
+                  <Icon name="SkipBack" size={20} />
+                </Button>
+                <Button 
+                  onClick={togglePlay}
+                  disabled={!currentTrack}
+                  className="bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream w-16 h-16 rounded-full disabled:opacity-50 transition-all hover:scale-105"
+                >
+                  <Icon name={isPlaying ? "Pause" : "Play"} size={24} />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={playNext}
+                  disabled={!currentTrack || isLastTrack}
+                  className="text-vintage-dark-brown hover:bg-vintage-brown/10 disabled:opacity-30"
+                >
+                  <Icon name="SkipForward" size={20} />
+                </Button>
+              </div>
+              
+              {currentAlbumTracks && currentAlbumTracks.length > 0 && playAlbum && (
+                <div className="flex justify-center">
+                  <Button 
+                    onClick={playAlbum}
+                    variant="outline"
+                    size="sm"
+                    className="border-vintage-dark-brown text-vintage-dark-brown hover:bg-vintage-dark-brown hover:text-vintage-cream"
+                  >
+                    <Icon name="ListMusic" size={16} className="mr-2" />
+                    Воспроизвести весь альбом ({currentAlbumTracks.length} треков)
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Прогресс бар */}
