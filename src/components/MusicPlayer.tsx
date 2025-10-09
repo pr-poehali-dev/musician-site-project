@@ -152,15 +152,150 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     setIsMuted(!isMuted);
   };
 
-  return (
-    <section id="music" className="py-16 px-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h3 className="text-4xl font-bold text-vintage-warm mb-4">Музыка</h3>
-          <p className="text-vintage-warm/70 text-lg">Окунись в атмосферу винтажной музыки</p>
-        </div>
+  const isPlayerActive = currentTrack && isPlaying;
 
-        <Card className="bg-vintage-cream/95 backdrop-blur-sm border-vintage-brown/20 shadow-2xl">
+  return (
+    <>
+      {/* Плавающий плеер */}
+      {isPlayerActive && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-vintage-dark-brown/95 backdrop-blur-lg border-t border-vintage-warm/20 shadow-2xl">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <div className="flex items-center gap-4">
+              {/* Обложка и название */}
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-vintage-brown via-vintage-warm to-vintage-cream flex items-center justify-center shadow-lg flex-shrink-0">
+                  <Icon name="Music" size={28} className="text-vintage-dark-brown" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-vintage-cream font-semibold truncate">{currentTrack?.title}</h4>
+                  <p className="text-vintage-cream/60 text-sm">Vintage Soul</p>
+                </div>
+              </div>
+
+              {/* Управление */}
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={playPrevious}
+                  disabled={tracks.findIndex(track => track.id === currentTrack?.id) === 0}
+                  className="text-vintage-cream hover:bg-vintage-warm/20"
+                >
+                  <Icon name="SkipBack" size={20} />
+                </Button>
+                <Button 
+                  onClick={togglePlay}
+                  className="bg-vintage-warm hover:bg-vintage-cream text-vintage-dark-brown w-12 h-12 rounded-full"
+                >
+                  <Icon name={isPlaying ? "Pause" : "Play"} size={20} />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={playNext}
+                  disabled={tracks.findIndex(track => track.id === currentTrack?.id) === tracks.length - 1}
+                  className="text-vintage-cream hover:bg-vintage-warm/20"
+                >
+                  <Icon name="SkipForward" size={20} />
+                </Button>
+              </div>
+
+              {/* Прогресс бар */}
+              <div className="flex-1 min-w-0 hidden md:block">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-vintage-cream/70 flex-shrink-0">{formatTime(currentTime)}</span>
+                  <div className="relative flex-1">
+                    <input
+                      type="range"
+                      min="0"
+                      max={duration || 100}
+                      value={currentTime}
+                      onChange={(e) => {
+                        const newTime = parseFloat(e.target.value);
+                        setCurrentTime(newTime);
+                        if (audioRef.current) {
+                          audioRef.current.currentTime = newTime;
+                        }
+                      }}
+                      className="w-full h-1.5 bg-vintage-warm/20 rounded-full appearance-none cursor-pointer
+                        [&::-webkit-slider-thumb]:appearance-none
+                        [&::-webkit-slider-thumb]:w-3
+                        [&::-webkit-slider-thumb]:h-3
+                        [&::-webkit-slider-thumb]:rounded-full
+                        [&::-webkit-slider-thumb]:bg-vintage-cream
+                        [&::-webkit-slider-thumb]:cursor-pointer
+                        [&::-webkit-slider-thumb]:shadow-lg
+                        [&::-moz-range-thumb]:w-3
+                        [&::-moz-range-thumb]:h-3
+                        [&::-moz-range-thumb]:rounded-full
+                        [&::-moz-range-thumb]:bg-vintage-cream
+                        [&::-moz-range-thumb]:border-0
+                        [&::-moz-range-thumb]:cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, rgb(245 237 224) 0%, rgb(245 237 224) ${(currentTime / (duration || 1)) * 100}%, rgb(194 146 110 / 0.2) ${(currentTime / (duration || 1)) * 100}%, rgb(194 146 110 / 0.2) 100%)`
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs text-vintage-cream/70 flex-shrink-0">{formatTime(duration)}</span>
+                </div>
+              </div>
+
+              {/* Громкость */}
+              <div className="hidden lg:flex items-center gap-2 flex-shrink-0 w-32">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleMute}
+                  className="text-vintage-cream hover:bg-vintage-warm/20"
+                >
+                  <Icon 
+                    name={isMuted || volume === 0 ? "VolumeX" : volume < 0.5 ? "Volume1" : "Volume2"} 
+                    size={18} 
+                  />
+                </Button>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={isMuted ? 0 : volume}
+                  onChange={handleVolumeChange}
+                  className="flex-1 h-1.5 bg-vintage-warm/20 rounded-full appearance-none cursor-pointer
+                    [&::-webkit-slider-thumb]:appearance-none
+                    [&::-webkit-slider-thumb]:w-3
+                    [&::-webkit-slider-thumb]:h-3
+                    [&::-webkit-slider-thumb]:rounded-full
+                    [&::-webkit-slider-thumb]:bg-vintage-cream
+                    [&::-webkit-slider-thumb]:cursor-pointer
+                    [&::-moz-range-thumb]:w-3
+                    [&::-moz-range-thumb]:h-3
+                    [&::-moz-range-thumb]:rounded-full
+                    [&::-moz-range-thumb]:bg-vintage-cream
+                    [&::-moz-range-thumb]:border-0
+                    [&::-moz-range-thumb]:cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* Скрытый аудио элемент */}
+            <audio 
+              ref={audioRef} 
+              preload="metadata"
+              onError={() => console.warn('Ошибка загрузки аудиофайла')}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Основная секция */}
+      <section id="music" className={`py-16 px-6 ${isPlayerActive ? 'pb-32' : ''}`}>
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h3 className="text-4xl font-bold text-vintage-warm mb-4">Музыка</h3>
+            <p className="text-vintage-warm/70 text-lg">Окунись в атмосферу винтажной музыки</p>
+          </div>
+
+          <Card className="bg-vintage-cream/95 backdrop-blur-sm border-vintage-brown/20 shadow-2xl">
           <CardContent className="p-8">
             {/* Текущий трек */}
             <div className="text-center mb-8">
@@ -348,17 +483,11 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
                 </div>
               </div>
             )}
-
-            {/* Скрытый аудио элемент */}
-            <audio 
-              ref={audioRef} 
-              preload="metadata"
-              onError={() => console.warn('Ошибка загрузки аудиофайла')}
-            />
           </CardContent>
         </Card>
       </div>
     </section>
+    </>
   );
 };
 
