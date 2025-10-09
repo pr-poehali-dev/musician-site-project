@@ -73,6 +73,9 @@ const AddAlbumDialog: React.FC<AddAlbumDialogProps> = ({
                 onChange={onCoverUpload}
                 className="w-full px-3 py-2 border border-vintage-brown/30 rounded-md focus:border-vintage-dark-brown bg-vintage-cream file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:bg-vintage-dark-brown file:text-vintage-cream hover:file:bg-vintage-warm"
               />
+              <p className="text-xs text-vintage-warm/60">
+                Изображение будет автоматически сжато до 800x800px
+              </p>
               {coverPreview && (
                 <div className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-vintage-brown/20">
                   <img src={coverPreview} alt="Предпросмотр" className="w-full h-full object-cover" />

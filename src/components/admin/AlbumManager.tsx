@@ -66,46 +66,86 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
   const handleAddAlbum = async () => {
     console.log('handleAddAlbum вызван, данные:', newAlbum);
     if (newAlbum.title && newAlbum.artist) {
-      let coverUrl = newAlbum.cover;
-      
-      if (coverFile) {
-        console.log('Загрузка обложки из файла');
-        coverUrl = await saveCoverImage(coverFile);
+      try {
+        let coverUrl = newAlbum.cover;
+        
+        if (coverFile) {
+          console.log('Загрузка обложки из файла, размер:', (coverFile.size / 1024).toFixed(2) + ' KB');
+          coverUrl = await saveCoverImage(coverFile);
+        }
+        
+        const albumData = {
+          ...newAlbum,
+          cover: coverUrl,
+          tracks: 0,
+          trackList: []
+        };
+        
+        console.log('Вызов onAddAlbum с данными:', albumData);
+        onAddAlbum(albumData);
+        
+        setNewAlbum({
+          title: '',
+          artist: '',
+          cover: '',
+          price: 0,
+          description: ''
+        });
+        setCoverFile(null);
+        setCoverPreview(null);
+        setShowAddAlbum(false);
+        console.log('Альбом успешно добавлен, диалог закрыт');
+      } catch (error) {
+        console.error('Ошибка при добавлении альбома:', error);
+        alert('Ошибка при загрузке обложки. Попробуйте использовать изображение меньшего размера или вставьте ссылку на обложку.');
       }
-      
-      const albumData = {
-        ...newAlbum,
-        cover: coverUrl,
-        tracks: 0,
-        trackList: []
-      };
-      
-      console.log('Вызов onAddAlbum с данными:', albumData);
-      onAddAlbum(albumData);
-      
-      setNewAlbum({
-        title: '',
-        artist: '',
-        cover: '',
-        price: 0,
-        description: ''
-      });
-      setCoverFile(null);
-      setCoverPreview(null);
-      setShowAddAlbum(false);
-      console.log('Диалог закрыт');
     } else {
       console.log('Не заполнены обязательные поля:', { title: newAlbum.title, artist: newAlbum.artist });
+      alert('Пожалуйста, заполните название и исполнителя');
     }
   };
 
   const saveCoverImage = async (file: File): Promise<string> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const result = e.target?.result as string;
-        resolve(result);
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          console.log('Изображение сжато:', {
+            original: e.target?.result?.toString().length,
+            compressed: compressedDataUrl.length,
+            reduction: Math.round((1 - compressedDataUrl.length / (e.target?.result?.toString().length || 1)) * 100) + '%'
+          });
+          resolve(compressedDataUrl);
+        };
+        img.onerror = reject;
+        img.src = e.target?.result as string;
       };
+      reader.onerror = reject;
       reader.readAsDataURL(file);
     });
   };
@@ -149,29 +189,36 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
 
   const handleSaveEditAlbum = async () => {
     if (editingAlbum && editAlbumData.title && editAlbumData.artist) {
-      let coverUrl = editAlbumData.cover;
-      
-      if (editCoverFile) {
-        coverUrl = await saveCoverImage(editCoverFile);
+      try {
+        let coverUrl = editAlbumData.cover;
+        
+        if (editCoverFile) {
+          console.log('Загрузка новой обложки при редактировании, размер:', (editCoverFile.size / 1024).toFixed(2) + ' KB');
+          coverUrl = await saveCoverImage(editCoverFile);
+        }
+        
+        onEditAlbum(editingAlbum.id, {
+          ...editAlbumData,
+          cover: coverUrl,
+          tracks: editingAlbum.tracks,
+          trackList: editingAlbum.trackList
+        });
+        setShowEditAlbum(false);
+        setEditingAlbum(null);
+        setEditAlbumData({
+          title: '',
+          artist: '',
+          cover: '',
+          price: 0,
+          description: ''
+        });
+        setEditCoverFile(null);
+        setEditCoverPreview(null);
+        console.log('Альбом успешно обновлен');
+      } catch (error) {
+        console.error('Ошибка при редактировании альбома:', error);
+        alert('Ошибка при загрузке обложки. Попробуйте использовать изображение меньшего размера или вставьте ссылку на обложку.');
       }
-      
-      onEditAlbum(editingAlbum.id, {
-        ...editAlbumData,
-        cover: coverUrl,
-        tracks: editingAlbum.tracks,
-        trackList: editingAlbum.trackList
-      });
-      setShowEditAlbum(false);
-      setEditingAlbum(null);
-      setEditAlbumData({
-        title: '',
-        artist: '',
-        cover: '',
-        price: 0,
-        description: ''
-      });
-      setEditCoverFile(null);
-      setEditCoverPreview(null);
     }
   };
 

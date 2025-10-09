@@ -46,17 +46,31 @@ export const useAlbumManagement = () => {
   }, []);
 
   const addNewAlbum = (albumData: Omit<Album, 'id'>) => {
-    const newAlbum: Album = {
-      ...albumData,
-      id: Date.now().toString()
-    };
-    console.log('Добавление нового альбома:', newAlbum);
-    const updatedAlbums = [...albums, newAlbum];
-    console.log('Обновленный список альбомов:', updatedAlbums);
-    setAlbums(updatedAlbums);
-    localStorage.setItem('albums', JSON.stringify(updatedAlbums));
-    console.log('Сохранено в localStorage');
-    window.dispatchEvent(new CustomEvent('albumsUpdated'));
+    try {
+      const newAlbum: Album = {
+        ...albumData,
+        id: Date.now().toString()
+      };
+      console.log('Добавление нового альбома:', newAlbum);
+      const updatedAlbums = [...albums, newAlbum];
+      console.log('Обновленный список альбомов:', updatedAlbums);
+      
+      const dataToSave = JSON.stringify(updatedAlbums);
+      console.log('Размер данных для сохранения:', (dataToSave.length / 1024).toFixed(2) + ' KB');
+      
+      setAlbums(updatedAlbums);
+      localStorage.setItem('albums', dataToSave);
+      console.log('Альбом успешно сохранен в localStorage');
+      window.dispatchEvent(new CustomEvent('albumsUpdated'));
+    } catch (error) {
+      console.error('Ошибка при сохранении альбома в localStorage:', error);
+      if (error instanceof Error && error.name === 'QuotaExceededError') {
+        alert('Недостаточно места в хранилище браузера. Удалите старые альбомы или используйте ссылку на изображение вместо загрузки файла.');
+      } else {
+        alert('Ошибка при сохранении альбома: ' + (error as Error).message);
+      }
+      throw error;
+    }
   };
 
   const editAlbum = (albumId: string, albumData: Omit<Album, 'id'>) => {
