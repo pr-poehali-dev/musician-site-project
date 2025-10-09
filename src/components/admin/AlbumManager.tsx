@@ -14,14 +14,17 @@ interface AlbumManagerProps {
   onAddAlbum: (album: Omit<Album, 'id'>) => void;
   onEditAlbum: (albumId: string, albumData: Omit<Album, 'id'>) => void;
   onRemoveAlbum: (albumId: string) => void;
+  onRemoveTrack?: (trackId: string) => void;
 }
 
 const AlbumManager: React.FC<AlbumManagerProps> = ({
   albums,
   onAddAlbum,
   onEditAlbum,
-  onRemoveAlbum
+  onRemoveAlbum,
+  onRemoveTrack
 }) => {
+  const [expandedAlbums, setExpandedAlbums] = useState<string[]>([]);
   const [newAlbum, setNewAlbum] = useState({
     title: '',
     artist: '',
@@ -152,6 +155,20 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
     if (window.confirm('Вы уверены, что хотите удалить этот альбом?')) {
       onRemoveAlbum(albumId);
     }
+  };
+
+  const handleDeleteTrack = (trackId: string) => {
+    if (window.confirm('Вы уверены, что хотите удалить этот трек?')) {
+      onRemoveTrack?.(trackId);
+    }
+  };
+
+  const toggleAlbumExpanded = (albumId: string) => {
+    setExpandedAlbums(prev => 
+      prev.includes(albumId) 
+        ? prev.filter(id => id !== albumId)
+        : [...prev, albumId]
+    );
   };
 
   return (
@@ -364,9 +381,18 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
                   <p className="text-sm text-vintage-warm/60 line-clamp-2">{album.description}</p>
                 </div>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-3">
                 <p className="font-bold text-vintage-dark-brown">{album.price} ₽</p>
                 <div className="flex gap-2">
+                  <Button 
+                    onClick={() => toggleAlbumExpanded(album.id)}
+                    variant="outline"
+                    size="sm"
+                    className="border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown hover:text-vintage-cream"
+                  >
+                    <Icon name={expandedAlbums.includes(album.id) ? "ChevronUp" : "ChevronDown"} size={14} className="mr-1" />
+                    Треки
+                  </Button>
                   <Button 
                     onClick={() => handleEditAlbum(album)}
                     variant="outline"
@@ -385,6 +411,47 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
                   </Button>
                 </div>
               </div>
+              
+              {/* Список треков альбома */}
+              {expandedAlbums.includes(album.id) && album.trackList && album.trackList.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-vintage-brown/20">
+                  <h5 className="text-sm font-semibold text-vintage-warm mb-2">Треки альбома:</h5>
+                  <div className="space-y-2">
+                    {album.trackList.map((track) => (
+                      <div 
+                        key={track.id} 
+                        className="flex items-center justify-between p-2 bg-vintage-brown/10 rounded-lg"
+                      >
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <Icon name="Music" size={14} className="text-vintage-dark-brown flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-vintage-warm truncate">{track.title}</p>
+                            <div className="flex gap-2 text-xs text-vintage-warm/60">
+                              <span>{track.duration}</span>
+                              <span>•</span>
+                              <span>{track.price} ₽</span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button 
+                          onClick={() => handleDeleteTrack(track.id)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-500 hover:bg-red-50 h-7 w-7 p-0 flex-shrink-0"
+                        >
+                          <Icon name="Trash2" size={12} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {expandedAlbums.includes(album.id) && (!album.trackList || album.trackList.length === 0) && (
+                <div className="mt-3 pt-3 border-t border-vintage-brown/20">
+                  <p className="text-sm text-vintage-warm/60 text-center">Треков пока нет</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}

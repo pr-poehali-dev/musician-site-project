@@ -30,6 +30,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
         onAddAlbum={onAddAlbum}
         onEditAlbum={onEditAlbum}
         onRemoveAlbum={onRemoveAlbum}
+        onRemoveTrack={onRemoveTrack}
       />
 
       {/* Управление треками */}
