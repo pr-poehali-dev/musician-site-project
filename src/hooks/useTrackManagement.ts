@@ -1,65 +1,85 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Track, Album } from '@/types';
 
-const defaultTracks: Track[] = [
-  { id: "1", title: "Vintage Dreams", duration: "3:42", file: "", price: 129 },
-  { id: "2", title: "Golden Memories", duration: "4:15", file: "", price: 129 },
-  { id: "3", title: "Sunset Boulevard", duration: "3:28", file: "", price: 129 },
-  { id: "4", title: "Old Soul", duration: "4:03", file: "", price: 129 }
-];
+const API_URL = 'https://functions.poehali.dev/25aac639-cf81-4eb7-80fc-aa9a157a25e6';
 
 export const useTrackManagement = (albums: Album[], setAlbums: (albums: Album[]) => void) => {
-  const [tracks, setTracks] = useState<Track[]>(defaultTracks);
+  const [tracks, setTracks] = useState<Track[]>([]);
 
-  const removeTrack = (trackId: string) => {
-    const updatedTracks = tracks.filter(track => track.id !== trackId);
-    setTracks(updatedTracks);
-    
-    const savedTracks = JSON.parse(localStorage.getItem('uploadedTracks') || '[]');
-    const filteredSavedTracks = savedTracks.filter((track: Track) => track.id !== trackId);
-    localStorage.setItem('uploadedTracks', JSON.stringify(filteredSavedTracks));
-    
-    const updatedAlbums = albums.map(album => ({
-      ...album,
-      trackList: album.trackList.filter(track => track.id !== trackId),
-      tracks: album.trackList.filter(track => track.id !== trackId).length
-    }));
-    setAlbums(updatedAlbums);
-    localStorage.setItem('albums', JSON.stringify(updatedAlbums));
-    
-    window.dispatchEvent(new CustomEvent('tracksUpdated'));
-    window.dispatchEvent(new CustomEvent('albumsUpdated'));
+  // Загружаем треки из базы данных при монтировании
+  useEffect(() => {
+    loadTracksFromDB();
+  }, []);
+
+  const loadTracksFromDB = async () => {
+    try {
+      const response = await fetch(`${API_URL}?path=tracks`);
+      if (response.ok) {
+        const data = await response.json();
+        setTracks(data || []);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки треков:', error);
+    }
   };
 
-  const editTrack = (trackId: string, trackData: Omit<Track, 'id'>) => {
-    const updatedTracks = tracks.map(track => 
-      track.id === trackId 
-        ? { ...track, ...trackData } 
-        : track
-    );
-    setTracks(updatedTracks);
-    
-    const savedTracks = JSON.parse(localStorage.getItem('uploadedTracks') || '[]');
-    const updatedSavedTracks = savedTracks.map((track: Track) => 
-      track.id === trackId 
-        ? { ...track, ...trackData } 
-        : track
-    );
-    localStorage.setItem('uploadedTracks', JSON.stringify(updatedSavedTracks));
-    
-    const updatedAlbums = albums.map(album => ({
-      ...album,
-      trackList: album.trackList.map(track => 
-        track.id === trackId 
-          ? { ...track, ...trackData } 
-          : track
-      )
-    }));
-    setAlbums(updatedAlbums);
-    localStorage.setItem('albums', JSON.stringify(updatedAlbums));
-    
-    window.dispatchEvent(new CustomEvent('tracksUpdated'));
-    window.dispatchEvent(new CustomEvent('albumsUpdated'));
+  const removeTrack = async (trackId: string) => {
+    try {
+      // Удаляем из базы данных
+      const response = await fetch(`${API_URL}?path=track&id=${trackId}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        // Обновляем локальное состояние
+        setTracks(prevTracks => prevTracks.filter(track => track.id !== trackId));
+        
+        // Обновляем альбомы
+        const updatedAlbums = albums.map(album => ({
+          ...album,
+          trackList: album.trackList.filter(track => track.id !== trackId),
+          tracks: album.trackList.filter(track => track.id !== trackId).length
+        }));
+        setAlbums(updatedAlbums);
+        
+        window.dispatchEvent(new CustomEvent('tracksUpdated'));
+        window.dispatchEvent(new CustomEvent('albumsUpdated'));
+      }
+    } catch (error) {
+      console.error('Ошибка удаления трека:', error);
+    }
+  };
+
+  const editTrack = async (trackId: string, trackData: Omit<Track, 'id'>) => {
+    try {
+      // Обновляем в базе данных
+      const response = await fetch(`${API_URL}?path=track&id=${trackId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(trackData)
+      });
+
+      if (response.ok) {
+        // Обновляем локальное состояние
+        setTracks(prevTracks => prevTracks.map(track => 
+          track.id === trackId ? { ...track, ...trackData } : track
+        ));
+        
+        // Обновляем альбомы
+        const updatedAlbums = albums.map(album => ({
+          ...album,
+          trackList: album.trackList.map(track => 
+            track.id === trackId ? { ...track, ...trackData } : track
+          )
+        }));
+        setAlbums(updatedAlbums);
+        
+        window.dispatchEvent(new CustomEvent('tracksUpdated'));
+        window.dispatchEvent(new CustomEvent('albumsUpdated'));
+      }
+    } catch (error) {
+      console.error('Ошибка обновления трека:', error);
+    }
   };
 
   return {

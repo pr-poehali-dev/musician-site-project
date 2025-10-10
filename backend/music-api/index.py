@@ -161,17 +161,20 @@ def get_stats(cursor, track_id: Optional[str] = None) -> Dict:
     else:
         cursor.execute('''
             SELECT 
-                SUM(plays_count) as total_plays,
-                SUM(downloads_count) as total_downloads,
+                COALESCE(SUM(plays_count), 0) as total_plays,
+                COALESCE(SUM(downloads_count), 0) as total_downloads,
                 COUNT(*) as tracked_tracks
             FROM track_stats
         ''')
         totals = cursor.fetchone()
         
         cursor.execute('''
-            SELECT t.id, t.title, ts.plays_count, ts.downloads_count
+            SELECT t.id, t.title, 
+                   COALESCE(ts.plays_count, 0) as plays_count, 
+                   COALESCE(ts.downloads_count, 0) as downloads_count
             FROM track_stats ts
             JOIN tracks t ON ts.track_id = t.id
+            WHERE ts.plays_count > 0
             ORDER BY ts.plays_count DESC
             LIMIT 10
         ''')
@@ -179,7 +182,7 @@ def get_stats(cursor, track_id: Optional[str] = None) -> Dict:
         
         return {
             'totals': totals,
-            'top_tracks': top_tracks
+            'top_tracks': top_tracks if top_tracks else []
         }
 
 def get_all_data(cursor) -> Dict:
