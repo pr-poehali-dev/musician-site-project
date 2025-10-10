@@ -1,17 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Track, Album } from '@/types';
+import { useRealtimeSync } from './useRealtimeSync';
 
 const API_URL = 'https://functions.poehali.dev/25aac639-cf81-4eb7-80fc-aa9a157a25e6';
 
 export const useTrackManagement = (albums: Album[], setAlbums: (albums: Album[]) => void) => {
   const [tracks, setTracks] = useState<Track[]>([]);
 
-  // Загружаем треки из базы данных при монтировании
-  useEffect(() => {
-    loadTracksFromDB();
-  }, []);
-
-  const loadTracksFromDB = async () => {
+  // Загружаем треки из базы данных
+  const loadTracksFromDB = useCallback(async () => {
     try {
       const response = await fetch(`${API_URL}?path=tracks`);
       if (response.ok) {
@@ -21,7 +18,14 @@ export const useTrackManagement = (albums: Album[], setAlbums: (albums: Album[])
     } catch (error) {
       console.error('Ошибка загрузки треков:', error);
     }
-  };
+  }, []);
+
+  // Автоматическое обновление в реальном времени
+  const { isOnline, lastSyncTime } = useRealtimeSync({
+    onSync: loadTracksFromDB,
+    pollingInterval: 5000,
+    enableVisibilityDetection: true
+  });
 
   const removeTrack = async (trackId: string) => {
     try {
@@ -86,6 +90,8 @@ export const useTrackManagement = (albums: Album[], setAlbums: (albums: Album[])
     tracks,
     setTracks,
     removeTrack,
-    editTrack
+    editTrack,
+    isOnline,
+    lastSyncTime
   };
 };

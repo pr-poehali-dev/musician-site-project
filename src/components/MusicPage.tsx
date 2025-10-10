@@ -5,6 +5,7 @@ import ContactSection from '@/components/music/ContactSection';
 import Footer from '@/components/music/Footer';
 import AdminLogin from '@/components/AdminLogin';
 import BackupNotification from '@/components/BackupNotification';
+import SyncIndicator from '@/components/SyncIndicator';
 import { CartItem, Track } from '@/types';
 import { useAlbumManagement } from '@/hooks/useAlbumManagement';
 import { useTrackManagement } from '@/hooks/useTrackManagement';
@@ -32,7 +33,9 @@ const MusicPage = () => {
   const {
     tracks,
     removeTrack,
-    editTrack
+    editTrack,
+    isOnline,
+    lastSyncTime
   } = useTrackManagement(albums, setAlbums);
 
   const {
@@ -158,6 +161,11 @@ const MusicPage = () => {
         lastBackup={lastBackup}
         onDownload={handleDownloadBackup}
         onDismiss={dismissNotification}
+      />
+
+      <SyncIndicator 
+        isOnline={isOnline} 
+        lastSyncTime={lastSyncTime} 
       />
     </div>
   );

@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Album, Track } from '@/types';
 import { apiClient } from '@/utils/apiClient';
+
+const POLLING_INTERVAL = 5000; // Обновление каждые 5 секунд
 
 const defaultAlbums: Album[] = [
   { 
@@ -36,38 +38,62 @@ const defaultAlbums: Album[] = [
 
 export const useAlbumManagement = () => {
   const [albums, setAlbums] = useState<Album[]>(defaultAlbums);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    const loadAlbums = async () => {
-      try {
-        const serverAlbums = await apiClient.loadAlbumsFromServer();
-        
-        if (serverAlbums.length > 0) {
-          setAlbums(serverAlbums);
-          localStorage.setItem('albums', JSON.stringify(serverAlbums));
-        } else {
-          const savedAlbums = localStorage.getItem('albums');
-          if (savedAlbums) {
-            const parsed = JSON.parse(savedAlbums);
-            setAlbums(parsed);
-          } else {
-            setAlbums(defaultAlbums);
-            localStorage.setItem('albums', JSON.stringify(defaultAlbums));
-          }
-        }
-      } catch (error) {
-        console.error('Ошибка загрузки альбомов:', error);
+  // Загрузка альбомов с автообновлением
+  const loadAlbums = async () => {
+    try {
+      const serverAlbums = await apiClient.loadAlbumsFromServer();
+      
+      if (serverAlbums.length > 0) {
+        setAlbums(serverAlbums);
+        localStorage.setItem('albums', JSON.stringify(serverAlbums));
+        console.log('✅ Альбомы обновлены из БД:', serverAlbums.length);
+      } else {
         const savedAlbums = localStorage.getItem('albums');
         if (savedAlbums) {
-          setAlbums(JSON.parse(savedAlbums));
+          const parsed = JSON.parse(savedAlbums);
+          setAlbums(parsed);
         } else {
           setAlbums(defaultAlbums);
           localStorage.setItem('albums', JSON.stringify(defaultAlbums));
         }
       }
-    };
-    
+    } catch (error) {
+      console.error('Ошибка загрузки альбомов:', error);
+      const savedAlbums = localStorage.getItem('albums');
+      if (savedAlbums) {
+        setAlbums(JSON.parse(savedAlbums));
+      } else {
+        setAlbums(defaultAlbums);
+        localStorage.setItem('albums', JSON.stringify(defaultAlbums));
+      }
+    }
+  };
+
+  useEffect(() => {
+    // Загружаем альбомы сразу
     loadAlbums();
+
+    // Запускаем автообновление
+    pollingIntervalRef.current = setInterval(() => {
+      loadAlbums();
+    }, POLLING_INTERVAL);
+
+    // Слушаем события для немедленного обновления
+    const handleAlbumsUpdate = () => {
+      loadAlbums();
+    };
+
+    window.addEventListener('albumsUpdated', handleAlbumsUpdate);
+
+    // Очистка
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+      window.removeEventListener('albumsUpdated', handleAlbumsUpdate);
+    };
   }, []);
 
   const addNewAlbum = async (albumData: Omit<Album, 'id'>) => {
