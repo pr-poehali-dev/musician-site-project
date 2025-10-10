@@ -3,7 +3,6 @@ import { Track, Album } from '@/types';
 import { saveAudioFile, generateAudioFilename, validateAudioFile } from '@/utils/fileUtils';
 import AddTrackDialog from './track/AddTrackDialog';
 import TrackListItem from './track/TrackListItem';
-import HowToUploadGuide from './HowToUploadGuide';
 
 interface TrackManagerProps {
   albums: Album[];
@@ -161,8 +160,6 @@ const TrackManager: React.FC<TrackManagerProps> = ({
 
   return (
     <div>
-      <HowToUploadGuide />
-      
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold text-vintage-warm">Треки</h3>
         <AddTrackDialog
