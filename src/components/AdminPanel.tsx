@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import AlbumManager from '@/components/admin/AlbumManager';
 import TrackManager from '@/components/admin/TrackManager';
 import StatsPanel from '@/components/admin/StatsPanel';
-import MigrationPanel from '@/components/admin/MigrationPanel';
 import { Track, Album } from '@/types';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
@@ -86,12 +85,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   return (
-    <Tabs defaultValue="migration" className="w-full">
-      <TabsList className="grid w-full grid-cols-5 bg-vintage-brown/10">
-        <TabsTrigger value="migration" className="data-[state=active]:bg-vintage-cream">
-          <Icon name="Upload" size={16} className="mr-2" />
-          Миграция
-        </TabsTrigger>
+    <Tabs defaultValue="stats" className="w-full">
+      <TabsList className="grid w-full grid-cols-4 bg-vintage-brown/10">
         <TabsTrigger value="stats" className="data-[state=active]:bg-vintage-cream">
           <Icon name="BarChart3" size={16} className="mr-2" />
           Статистика
@@ -109,10 +104,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
           Резервные копии
         </TabsTrigger>
       </TabsList>
-
-      <TabsContent value="migration" className="mt-6">
-        <MigrationPanel />
-      </TabsContent>
 
       <TabsContent value="stats" className="mt-6">
         <StatsPanel tracks={tracks} />
