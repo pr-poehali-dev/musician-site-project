@@ -105,6 +105,29 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'body': json.dumps(result, default=str)
             }
         
+        elif method == 'DELETE':
+            query_params = event.get('queryStringParameters', {})
+            item_id = query_params.get('id')
+            
+            if not item_id:
+                return error_response('ID is required', 400)
+            
+            if path == 'album':
+                result = delete_album(cursor, conn, item_id)
+            elif path == 'track':
+                result = delete_track(cursor, conn, item_id)
+            else:
+                return error_response('Invalid path', 400)
+            
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps(result, default=str)
+            }
+        
         else:
             return error_response('Method not allowed', 405)
             
@@ -316,6 +339,23 @@ def update_stat(cursor, conn, data: Dict) -> Dict:
     
     conn.commit()
     return cursor.fetchone()
+
+def delete_album(cursor, conn, album_id: str) -> Dict:
+    safe_id = album_id.replace("'", "''")
+    
+    cursor.execute(f"DELETE FROM tracks WHERE album_id = '{safe_id}'")
+    cursor.execute(f"DELETE FROM albums WHERE id = '{safe_id}'")
+    conn.commit()
+    
+    return {'success': True, 'deleted_album_id': album_id}
+
+def delete_track(cursor, conn, track_id: str) -> Dict:
+    safe_id = track_id.replace("'", "''")
+    
+    cursor.execute(f"DELETE FROM tracks WHERE id = '{safe_id}'")
+    conn.commit()
+    
+    return {'success': True, 'deleted_track_id': track_id}
 
 def error_response(message: str, status_code: int) -> Dict:
     return {

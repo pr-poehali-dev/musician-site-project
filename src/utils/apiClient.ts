@@ -47,6 +47,39 @@ export const apiClient = {
     console.log('✅ Альбом сохранен в базу данных:', album.title);
   },
 
+  async deleteAlbumFromServer(albumId: string): Promise<void> {
+    const response = await fetch(`${API_URL}?path=album&id=${albumId}`, {
+      method: 'DELETE'
+    });
+    
+    if (!response.ok) {
+      throw new Error('Ошибка удаления альбома с сервера');
+    }
+    
+    console.log('✅ Альбом удален из базы данных:', albumId);
+  },
+
+  async updateAlbumOnServer(albumId: string, albumData: Omit<Album, 'id'>): Promise<void> {
+    const response = await fetch(`${API_URL}?path=album`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: albumId,
+        title: albumData.title,
+        artist: albumData.artist,
+        cover: albumData.cover,
+        price: albumData.price,
+        description: albumData.description || ''
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Ошибка обновления альбома на сервере');
+    }
+    
+    console.log('✅ Альбом обновлен в базе данных:', albumId);
+  },
+
   async loadAlbumsFromServer(): Promise<Album[]> {
     try {
       const response = await fetch(`${API_URL}?path=albums`);

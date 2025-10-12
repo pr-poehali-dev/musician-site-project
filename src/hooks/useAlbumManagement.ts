@@ -124,23 +124,39 @@ export const useAlbumManagement = () => {
     }
   };
 
-  const editAlbum = (albumId: string, albumData: Omit<Album, 'id'>) => {
-    const updatedAlbums = albums.map(album => 
-      album.id === albumId 
-        ? { ...album, ...albumData } 
-        : album
-    );
-    setAlbums(updatedAlbums);
-    localStorage.setItem('albums', JSON.stringify(updatedAlbums));
-    window.dispatchEvent(new CustomEvent('albumsUpdated'));
+  const editAlbum = async (albumId: string, albumData: Omit<Album, 'id'>) => {
+    try {
+      await apiClient.updateAlbumOnServer(albumId, albumData);
+      
+      const updatedAlbums = albums.map(album => 
+        album.id === albumId 
+          ? { ...album, ...albumData } 
+          : album
+      );
+      setAlbums(updatedAlbums);
+      localStorage.setItem('albums', JSON.stringify(updatedAlbums));
+      window.dispatchEvent(new CustomEvent('albumsUpdated'));
+    } catch (error) {
+      console.error('❌ Ошибка при редактировании альбома:', error);
+      alert('Ошибка при редактировании альбома: ' + (error as Error).message);
+    }
   };
 
-  const removeAlbum = (albumId: string) => {
-    const updatedAlbums = albums.filter(album => album.id !== albumId);
-    setAlbums(updatedAlbums);
-    localStorage.setItem('albums', JSON.stringify(updatedAlbums));
-    window.dispatchEvent(new CustomEvent('albumsUpdated'));
-    window.dispatchEvent(new CustomEvent('tracksUpdated'));
+  const removeAlbum = async (albumId: string) => {
+    try {
+      await apiClient.deleteAlbumFromServer(albumId);
+      
+      const updatedAlbums = albums.filter(album => album.id !== albumId);
+      setAlbums(updatedAlbums);
+      localStorage.setItem('albums', JSON.stringify(updatedAlbums));
+      window.dispatchEvent(new CustomEvent('albumsUpdated'));
+      window.dispatchEvent(new CustomEvent('tracksUpdated'));
+      
+      console.log('✅ Альбом удален:', albumId);
+    } catch (error) {
+      console.error('❌ Ошибка при удалении альбома:', error);
+      alert('Ошибка при удалении альбома: ' + (error as Error).message);
+    }
   };
 
   const addTrackToAlbum = async (albumId: string, trackData: Omit<Track, 'id'>) => {

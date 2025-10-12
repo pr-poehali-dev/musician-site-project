@@ -23,49 +23,17 @@ const Shop: React.FC<ShopProps> = ({
   addToCart
 }) => {
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
-  const [albums, setAlbums] = useState<Album[]>(initialAlbums);
-  const [tracks, setTracks] = useState<Track[]>(initialTracks);
 
   useEffect(() => {
-    const loadAlbums = () => {
-      console.log('[Shop] Загрузка альбомов из localStorage');
-      const savedAlbums = localStorage.getItem('albums');
-      if (savedAlbums) {
-        const parsed = JSON.parse(savedAlbums);
-        console.log('[Shop] Альбомы загружены:', parsed.length, 'альбомов');
-        setAlbums(parsed);
-      } else {
-        console.log('[Shop] Нет сохраненных альбомов, используем начальные');
-        setAlbums(initialAlbums);
-      }
-    };
+    setAlbums(initialAlbums);
+  }, [initialAlbums]);
 
-    const loadTracks = () => {
-      const savedTracks = localStorage.getItem('uploadedTracks');
-      if (savedTracks) {
-        setTracks(JSON.parse(savedTracks));
-      } else {
-        setTracks(initialTracks);
-      }
-    };
+  useEffect(() => {
+    setTracks(initialTracks);
+  }, [initialTracks]);
 
-    loadAlbums();
-    loadTracks();
-
-    const handleAlbumsUpdate = () => {
-      console.log('[Shop] Получено событие albumsUpdated');
-      loadAlbums();
-    };
-    const handleTracksUpdate = () => loadTracks();
-
-    window.addEventListener('albumsUpdated', handleAlbumsUpdate);
-    window.addEventListener('tracksUpdated', handleTracksUpdate);
-
-    return () => {
-      window.removeEventListener('albumsUpdated', handleAlbumsUpdate);
-      window.removeEventListener('tracksUpdated', handleTracksUpdate);
-    };
-  }, [initialAlbums, initialTracks]);
+  const [albums, setAlbums] = useState<Album[]>(initialAlbums);
+  const [tracks, setTracks] = useState<Track[]>(initialTracks);
 
   const handleAddToCart = (item: { id: string; title: string; type: 'track' | 'album'; price: number; quantity: number }) => {
     const fullItem = item.type === 'album' 
