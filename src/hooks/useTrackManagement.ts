@@ -21,12 +21,12 @@ export const useTrackManagement = (albums: Album[], setAlbums: (albums: Album[])
     }
   }, []);
 
-  // Автоматическое обновление в реальном времени
-  const { isOnline, lastSyncTime } = useRealtimeSync({
-    onSync: loadTracksFromDB,
-    pollingInterval: 5000,
-    enableVisibilityDetection: true
-  });
+  // Автоматическое обновление отключено
+  // const { isOnline, lastSyncTime } = useRealtimeSync({
+  //   onSync: loadTracksFromDB,
+  //   pollingInterval: 5000,
+  //   enableVisibilityDetection: true
+  // });
 
   const removeTrack = async (trackId: string) => {
     try {

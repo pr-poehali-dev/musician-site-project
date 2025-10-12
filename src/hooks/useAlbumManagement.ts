@@ -76,10 +76,10 @@ export const useAlbumManagement = () => {
     // Загружаем альбомы сразу
     loadAlbums();
 
-    // Запускаем автообновление
-    pollingIntervalRef.current = setInterval(() => {
-      loadAlbums();
-    }, POLLING_INTERVAL);
+    // Автообновление отключено
+    // pollingIntervalRef.current = setInterval(() => {
+    //   loadAlbums();
+    // }, POLLING_INTERVAL);
 
     // Слушаем события для немедленного обновления
     const handleAlbumsUpdate = () => {
@@ -90,9 +90,9 @@ export const useAlbumManagement = () => {
 
     // Очистка
     return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
+      // if (pollingIntervalRef.current) {
+      //   clearInterval(pollingIntervalRef.current);
+      // }
       window.removeEventListener('albumsUpdated', handleAlbumsUpdate);
     };
   }, []);
