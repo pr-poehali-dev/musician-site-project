@@ -47,7 +47,7 @@ const SyncIndicator = ({ isOnline, lastSyncTime }: SyncIndicatorProps) => {
         backdrop-blur-md transition-all duration-300 border
         ${isOnline 
           ? 'bg-green-500/95 text-white border-green-600' 
-          : 'bg-red-500/95 text-white border-red-600 animate-pulse'
+          : 'bg-red-500/95 text-white border-red-600'
         }
       `}>
         {isOnline ? (
