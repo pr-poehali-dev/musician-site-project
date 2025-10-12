@@ -1,0 +1,1 @@
+ALTER TABLE tracks ADD COLUMN track_order INTEGER DEFAULT 0;
