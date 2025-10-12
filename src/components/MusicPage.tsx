@@ -4,12 +4,10 @@ import Shop from '@/components/Shop';
 import ContactSection from '@/components/music/ContactSection';
 import Footer from '@/components/music/Footer';
 import AdminLogin from '@/components/AdminLogin';
-import BackupNotification from '@/components/BackupNotification';
 import SyncIndicator from '@/components/SyncIndicator';
 import { CartItem, Track } from '@/types';
 import { useAlbumManagement } from '@/hooks/useAlbumManagement';
 import { useTrackManagement } from '@/hooks/useTrackManagement';
-import { useAutoBackup } from '@/hooks/useAutoBackup';
 
 const MusicPage = () => {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
@@ -37,13 +35,6 @@ const MusicPage = () => {
     isOnline,
     lastSyncTime
   } = useTrackManagement(albums, setAlbums);
-
-  const {
-    showBackupNotification,
-    lastBackup,
-    dismissNotification,
-    handleDownloadBackup
-  } = useAutoBackup();
 
   const addToCart = (item: Track | { id: string; title: string; price: number }, type: 'track' | 'album') => {
     const cartItem: CartItem = {
@@ -155,13 +146,6 @@ const MusicPage = () => {
       />
 
       <Footer />
-
-      <BackupNotification
-        show={showBackupNotification}
-        lastBackup={lastBackup}
-        onDownload={handleDownloadBackup}
-        onDismiss={dismissNotification}
-      />
 
       <SyncIndicator 
         isOnline={isOnline} 
