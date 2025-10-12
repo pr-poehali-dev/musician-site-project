@@ -165,14 +165,6 @@ export const useAlbumManagement = () => {
       setAlbums(updatedAlbums);
       localStorage.setItem('albums', JSON.stringify(updatedAlbums));
       
-      const savedTracks = localStorage.getItem('uploadedTracks');
-      let uploadedTracks = [];
-      if (savedTracks) {
-        uploadedTracks = JSON.parse(savedTracks);
-      }
-      uploadedTracks.push(newTrack);
-      localStorage.setItem('uploadedTracks', JSON.stringify(uploadedTracks));
-      
       console.log('✅ Трек сохранен в базу данных на сервере');
       
       window.dispatchEvent(new CustomEvent('tracksUpdated'));
