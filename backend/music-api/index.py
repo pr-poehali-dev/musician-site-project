@@ -33,12 +33,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'body': ''
         }
     
+    path = event.get('queryStringParameters', {}).get('path', '')
+    print(f'[DEBUG] Method: {method}, Path: {path}')
+    
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        
-        path = event.get('queryStringParameters', {}).get('path', '')
-        print(f'[DEBUG] Method: {method}, Path: {path}')
         
         if method == 'GET':
             if path == 'albums':
@@ -63,10 +63,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         elif method == 'POST':
             body = json.loads(event.get('body', '{}'))
+            print(f'[DEBUG] POST body: {json.dumps(body)}')
             
             if path == 'album':
                 result = create_album(cursor, conn, body)
             elif path == 'track':
+                print(f'[DEBUG] Creating track with data: {body}')
                 result = create_track(cursor, conn, body)
             elif path == 'stat':
                 result = update_stat(cursor, conn, body)
@@ -132,7 +134,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return error_response('Method not allowed', 405)
             
     except Exception as e:
-        print(f'Error: {str(e)}')
+        import traceback
+        print(f'[ERROR] Exception: {str(e)}')
+        print(f'[ERROR] Traceback: {traceback.format_exc()}')
         return error_response(str(e), 500)
     finally:
         if 'cursor' in locals():
