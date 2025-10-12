@@ -68,10 +68,17 @@ export const useTrackManagement = (albums: Album[], setAlbums: (albums: Album[])
   const editTrack = async (trackId: string, trackData: Omit<Track, 'id'>) => {
     try {
       // Обновляем в базе данных
-      const response = await fetch(`${API_URL}?path=track&id=${trackId}`, {
+      const response = await fetch(`${API_URL}?path=track`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(trackData)
+        body: JSON.stringify({
+          id: trackId,
+          title: trackData.title,
+          duration: trackData.duration,
+          file: trackData.file,
+          price: trackData.price,
+          track_order: 0
+        })
       });
 
       if (response.ok) {
