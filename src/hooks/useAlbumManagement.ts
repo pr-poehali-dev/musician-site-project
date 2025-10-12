@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Album, Track } from '@/types';
 import { apiClient } from '@/utils/apiClient';
+import { toast } from '@/hooks/use-toast';
 
 const POLLING_INTERVAL = 5000; // Обновление каждые 5 секунд
 
@@ -116,10 +117,20 @@ export const useAlbumManagement = () => {
       setAlbums(updatedAlbums);
       localStorage.setItem('albums', dataToSave);
       console.log('✅ Альбом успешно сохранен в localStorage и на сервере');
+      
+      toast({
+        title: "✅ Альбом сохранен",
+        description: `Альбом "${newAlbum.title}" успешно добавлен`,
+      });
+      
       window.dispatchEvent(new CustomEvent('albumsUpdated'));
     } catch (error) {
       console.error('❌ Ошибка при сохранении альбома:', error);
-      alert('Ошибка при сохранении альбома: ' + (error as Error).message);
+      toast({
+        title: "❌ Ошибка сохранения",
+        description: "Не удалось сохранить альбом в базу данных",
+        variant: "destructive",
+      });
       throw error;
     }
   };
@@ -135,10 +146,20 @@ export const useAlbumManagement = () => {
       );
       setAlbums(updatedAlbums);
       localStorage.setItem('albums', JSON.stringify(updatedAlbums));
+      
+      toast({
+        title: "✅ Альбом обновлен",
+        description: "Изменения сохранены в базе данных",
+      });
+      
       window.dispatchEvent(new CustomEvent('albumsUpdated'));
     } catch (error) {
       console.error('❌ Ошибка при редактировании альбома:', error);
-      alert('Ошибка при редактировании альбома: ' + (error as Error).message);
+      toast({
+        title: "❌ Ошибка обновления",
+        description: "Не удалось обновить альбом",
+        variant: "destructive",
+      });
     }
   };
 
@@ -152,10 +173,19 @@ export const useAlbumManagement = () => {
       window.dispatchEvent(new CustomEvent('albumsUpdated'));
       window.dispatchEvent(new CustomEvent('tracksUpdated'));
       
+      toast({
+        title: "✅ Альбом удален",
+        description: "Альбом успешно удален из базы данных",
+      });
+      
       console.log('✅ Альбом удален:', albumId);
     } catch (error) {
       console.error('❌ Ошибка при удалении альбома:', error);
-      alert('Ошибка при удалении альбома: ' + (error as Error).message);
+      toast({
+        title: "❌ Ошибка удаления",
+        description: "Не удалось удалить альбом",
+        variant: "destructive",
+      });
     }
   };
 
@@ -181,13 +211,22 @@ export const useAlbumManagement = () => {
       setAlbums(updatedAlbums);
       localStorage.setItem('albums', JSON.stringify(updatedAlbums));
       
+      toast({
+        title: "✅ Трек сохранен",
+        description: `Трек "${newTrack.title}" добавлен в базу данных`,
+      });
+      
       console.log('✅ Трек сохранен в базу данных на сервере');
       
       window.dispatchEvent(new CustomEvent('tracksUpdated'));
       window.dispatchEvent(new CustomEvent('albumsUpdated'));
     } catch (error) {
       console.error('❌ Ошибка при сохранении трека:', error);
-      alert('Ошибка при сохранении трека: ' + (error as Error).message);
+      toast({
+        title: "❌ Ошибка сохранения",
+        description: "Не удалось сохранить трек в базу данных",
+        variant: "destructive",
+      });
       throw error;
     }
   };

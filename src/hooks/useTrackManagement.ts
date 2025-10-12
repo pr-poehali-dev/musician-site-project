@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Track, Album } from '@/types';
 import { useRealtimeSync } from './useRealtimeSync';
+import { toast } from '@/hooks/use-toast';
 
 const API_URL = 'https://functions.poehali.dev/25aac639-cf81-4eb7-80fc-aa9a157a25e6';
 
@@ -46,11 +47,21 @@ export const useTrackManagement = (albums: Album[], setAlbums: (albums: Album[])
         }));
         setAlbums(updatedAlbums);
         
+        toast({
+          title: "✅ Трек удален",
+          description: "Трек успешно удален из базы данных",
+        });
+        
         window.dispatchEvent(new CustomEvent('tracksUpdated'));
         window.dispatchEvent(new CustomEvent('albumsUpdated'));
       }
     } catch (error) {
       console.error('Ошибка удаления трека:', error);
+      toast({
+        title: "❌ Ошибка",
+        description: "Не удалось удалить трек",
+        variant: "destructive",
+      });
     }
   };
 
@@ -78,11 +89,21 @@ export const useTrackManagement = (albums: Album[], setAlbums: (albums: Album[])
         }));
         setAlbums(updatedAlbums);
         
+        toast({
+          title: "✅ Трек обновлен",
+          description: "Изменения сохранены в базе данных",
+        });
+        
         window.dispatchEvent(new CustomEvent('tracksUpdated'));
         window.dispatchEvent(new CustomEvent('albumsUpdated'));
       }
     } catch (error) {
       console.error('Ошибка обновления трека:', error);
+      toast({
+        title: "❌ Ошибка",
+        description: "Не удалось обновить трек",
+        variant: "destructive",
+      });
     }
   };
 
