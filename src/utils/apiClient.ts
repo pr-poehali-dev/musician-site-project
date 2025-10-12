@@ -4,26 +4,33 @@ const API_URL = 'https://functions.poehali.dev/25aac639-cf81-4eb7-80fc-aa9a157a2
 
 export const apiClient = {
   async saveTrackToServer(track: Track): Promise<void> {
+    const requestData = {
+      id: track.id,
+      album_id: track.albumId || '',
+      title: track.title,
+      duration: track.duration,
+      file: track.file,
+      price: track.price,
+      cover: track.cover || '',
+      track_order: 0
+    };
+    
+    console.log('📤 Отправка трека на сервер:', requestData);
+    
     const response = await fetch(`${API_URL}?path=track`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: track.id,
-        album_id: track.albumId || '',
-        title: track.title,
-        duration: track.duration,
-        file: track.file,
-        price: track.price,
-        cover: track.cover || '',
-        track_order: 0
-      })
+      body: JSON.stringify(requestData)
     });
     
     if (!response.ok) {
-      throw new Error('Ошибка сохранения трека на сервере');
+      const errorText = await response.text();
+      console.error('❌ Ответ сервера:', response.status, errorText);
+      throw new Error(`Ошибка сохранения трека: ${response.status} - ${errorText}`);
     }
     
-    console.log('✅ Трек сохранен в базу данных:', track.title);
+    const result = await response.json();
+    console.log('✅ Трек сохранен в базу данных:', result);
   },
 
   async saveAlbumToServer(album: Album): Promise<void> {
