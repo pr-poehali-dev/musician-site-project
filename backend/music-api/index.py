@@ -256,6 +256,7 @@ def create_track(cursor, conn, data: Dict) -> Dict:
         VALUES ('{track_id}', '{album_id}', '{title}', '{duration}', '{file_path}', {price}, '{cover}', {track_order}, '{now}')
         RETURNING *
     ''')
+    new_track = cursor.fetchone()
     conn.commit()
     
     if album_id:
@@ -266,7 +267,7 @@ def create_track(cursor, conn, data: Dict) -> Dict:
         ''')
         conn.commit()
     
-    return cursor.fetchone()
+    return new_track
 
 def update_album(cursor, conn, album_id: str, data: Dict) -> Dict:
     safe_id = album_id.replace("'", "''")
