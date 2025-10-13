@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Icon from '@/components/ui/icon';
 import { CartItem } from '@/types';
+import QRCode from 'qrcode';
 
 interface CheckoutModalProps {
   cart: CartItem[];
@@ -24,8 +25,47 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [telegram, setTelegram] = useState('');
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [step, setStep] = useState<'form' | 'payment'>('form');
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   console.log('🛒 CheckoutModal rendered, cart:', cart, 'totalPrice:', totalPrice);
+
+  useEffect(() => {
+    if (step === 'payment' && canvasRef.current) {
+      generateQRCode();
+    }
+  }, [step]);
+
+  const generateQRCode = async () => {
+    if (!canvasRef.current) return;
+
+    try {
+      const orderDescription = cart.map(item => `${item.title} (x${item.quantity})`).join(', ');
+      
+      const sbpPaymentData = {
+        amount: totalPrice,
+        currency: 'RUB',
+        purpose: `Заказ музыки: ${orderDescription}`,
+        payeeId: '2202200505050',
+        orderNumber: `ORDER-${Date.now()}`,
+        merchantName: 'Дмитрий Шмелидзэ - Музыка'
+      };
+
+      const sbpQRData = `https://qr.nspk.ru/AD10009Q6U8LDU2STC9QMRR0EIM2QH20?amount=${sbpPaymentData.amount}&cur=${sbpPaymentData.currency}&payeeId=${sbpPaymentData.payeeId}&purpose=${encodeURIComponent(sbpPaymentData.purpose)}&order=${sbpPaymentData.orderNumber}`;
+
+      await QRCode.toCanvas(canvasRef.current, sbpQRData, {
+        width: 280,
+        margin: 2,
+        color: {
+          dark: '#8B4513',
+          light: '#F5E6D3'
+        },
+        errorCorrectionLevel: 'M'
+      });
+    } catch (error) {
+      console.error('Ошибка генерации QR-кода:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +78,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setIsSubmitting(true);
     try {
       await onSubmit({ name, telegram, email });
-      onClose();
+      setStep('payment');
     } catch (error) {
       console.error('Ошибка оформления заказа:', error);
       alert('Ошибка оформления заказа. Попробуйте снова.');
@@ -85,6 +125,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             </div>
           </div>
 
+          {step === 'form' && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="name" className="text-vintage-warm">
@@ -154,9 +195,61 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
           <div className="mt-4 p-3 bg-vintage-brown/10 rounded-lg">
             <p className="text-xs text-vintage-warm/70">
-              💡 После оформления заказа наш Telegram бот отправит вам уведомление с деталями и инструкцией по оплате
+              💡 После оформления заказа вы увидите QR-код для оплаты через СБП
             </p>
           </div>
+          </form>
+          )}
+
+          {step === 'payment' && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-vintage-warm mb-2">Оплата через СБП</h3>
+                <div className="bg-vintage-warm/10 p-4 rounded-lg">
+                  <p className="text-vintage-warm/70 text-sm">К оплате:</p>
+                  <p className="text-3xl font-bold text-vintage-dark-brown">{totalPrice} ₽</p>
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <div className="p-4 bg-white rounded-lg shadow-lg">
+                  <canvas ref={canvasRef} />
+                </div>
+              </div>
+
+              <div className="space-y-3 text-vintage-warm/80">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-vintage-warm text-vintage-cream text-sm flex items-center justify-center font-bold">1</div>
+                  <p className="text-left text-sm">Откройте приложение вашего банка</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-vintage-warm text-vintage-cream text-sm flex items-center justify-center font-bold">2</div>
+                  <p className="text-left text-sm">Найдите функцию "Оплата по QR"</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-vintage-warm text-vintage-cream text-sm flex items-center justify-center font-bold">3</div>
+                  <p className="text-left text-sm">Наведите камеру на QR-код</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-vintage-warm text-vintage-cream text-sm flex items-center justify-center font-bold">4</div>
+                  <p className="text-left text-sm">Подтвердите платеж</p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  📱 После оплаты я проверю платёж и отправлю файлы на ваш Telegram: <strong>@{telegram.replace('@', '')}</strong>
+                </p>
+              </div>
+
+              <Button
+                onClick={onClose}
+                className="w-full bg-vintage-warm hover:bg-vintage-brown text-vintage-cream"
+              >
+                Закрыть
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
       </div>

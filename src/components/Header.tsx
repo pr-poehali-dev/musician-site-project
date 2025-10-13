@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate, useLocation } from 'react-router-dom';
 import Icon from '@/components/ui/icon';
-import QRPayment from './QRPayment';
+
 import CheckoutModal from './CheckoutModal';
 import { CartItem } from '@/types';
 
@@ -42,7 +42,6 @@ const Header: React.FC<HeaderProps> = ({
   handleAdminLogin,
   onCheckout
 }) => {
-  const [isQRPaymentOpen, setIsQRPaymentOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -57,13 +56,6 @@ const Header: React.FC<HeaderProps> = ({
     if (onCheckout) {
       await onCheckout(data);
     }
-    setIsCheckoutOpen(false);
-    setIsQRPaymentOpen(true);
-  };
-
-  const handlePaymentComplete = () => {
-    cart.forEach(item => removeFromCart(item.id));
-    setIsCartOpen(false);
   };
   return (
     <nav className="sticky top-0 z-50 backdrop-blur-sm bg-vintage-cream/80 border-b border-vintage-brown/20">
@@ -219,15 +211,6 @@ const Header: React.FC<HeaderProps> = ({
           onSubmit={handleCheckoutSubmit}
         />
       )}
-
-      {/* QR Payment Modal */}
-      <QRPayment
-        isOpen={isQRPaymentOpen}
-        onClose={() => setIsQRPaymentOpen(false)}
-        cart={cart}
-        totalPrice={getTotalPrice()}
-        onPaymentComplete={handlePaymentComplete}
-      />
     </nav>
   );
 };
