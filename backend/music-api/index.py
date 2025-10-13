@@ -40,6 +40,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         conn = get_db_connection()
         cursor = conn.cursor()
         
+        if path == 'telegram' and method == 'POST':
+            body = json.loads(event.get('body', '{}'))
+            print(f'[DEBUG] Telegram webhook: {json.dumps(body)}')
+            result = handle_telegram_webhook(cursor, conn, body)
+            cursor.close()
+            conn.close()
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json'},
+                'body': json.dumps(result)
+            }
+        
         if method == 'GET':
             if path == 'albums':
                 result = get_albums(cursor)
@@ -439,3 +451,232 @@ def error_response(message: str, status_code: int) -> Dict:
         'isBase64Encoded': False,
         'body': json.dumps({'error': message})
     }
+
+def send_telegram_message(chat_id: int, text: str, reply_markup: Dict = None) -> bool:
+    import urllib.request
+    import urllib.parse
+    
+    token = os.environ.get('TELEGRAM_BOT_TOKEN')
+    if not token:
+        print('[ERROR] TELEGRAM_BOT_TOKEN not found')
+        return False
+    
+    url = f'https://api.telegram.org/bot{token}/sendMessage'
+    
+    data = {
+        'chat_id': chat_id,
+        'text': text,
+        'parse_mode': 'HTML'
+    }
+    
+    if reply_markup:
+        data['reply_markup'] = json.dumps(reply_markup)
+    
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(data).encode('utf-8'),
+        headers={'Content-Type': 'application/json'}
+    )
+    
+    try:
+        with urllib.request.urlopen(req) as response:
+            return response.status == 200
+    except Exception as e:
+        print(f'[ERROR] Failed to send message: {e}')
+        return False
+
+def create_order(cursor, conn, user_id: int, username: str, first_name: str, items: List[Dict], total: int) -> str:
+    order_id = f'order_{int(datetime.now().timestamp() * 1000)}'
+    items_json = json.dumps(items, ensure_ascii=False).replace("'", "''")
+    safe_username = (username or '').replace("'", "''")
+    safe_first_name = (first_name or '').replace("'", "''")
+    
+    cursor.execute(f'''
+        INSERT INTO orders (id, user_id, username, first_name, items, total_price, status)
+        VALUES ('{order_id}', {user_id}, '{safe_username}', '{safe_first_name}', '{items_json}', {total}, 'pending')
+    ''')
+    conn.commit()
+    
+    return order_id
+
+def handle_telegram_webhook(cursor, conn, body: Dict) -> Dict:
+    if 'message' in body:
+        message = body['message']
+        chat_id = message['chat']['id']
+        text = message.get('text', '')
+        user = message['from']
+        
+        if text == '/start':
+            msg = f'''👋 Привет, <b>{user.get('first_name', 'друг')}</b>!
+
+Я бот для покупки музыкальных треков и альбомов.
+
+<b>Команды:</b>
+/catalog - Посмотреть каталог альбомов
+/help - Помощь'''
+            send_telegram_message(chat_id, msg)
+        elif text == '/catalog':
+            albums = get_albums(cursor)
+            
+            if not albums:
+                send_telegram_message(chat_id, '📁 Каталог пуст')
+                return {'ok': True}
+            
+            msg = '<b>🎵 Каталог альбомов:</b>\n\n'
+            keyboard = {'inline_keyboard': []}
+            
+            for album in albums:
+                msg += f'🎼 <b>{album["title"]}</b>\n'
+                msg += f'👤 {album["artist"]}\n'
+                msg += f'💿 Треков: {album["tracks_count"]}\n'
+                msg += f'💰 {album["price"]} ₽\n\n'
+                
+                keyboard['inline_keyboard'].append([
+                    {'text': f'🎧 {album["title"]}', 'callback_data': f'album_{album["id"]}'}
+                ])
+            
+            send_telegram_message(chat_id, msg, keyboard)
+        elif text == '/help':
+            msg = '''<b>Помощь по боту:</b>
+
+/catalog - Посмотреть все альбомы
+/start - Начать работу с ботом
+
+Для покупки выберите альбом из каталога.'''
+            send_telegram_message(chat_id, msg)
+        else:
+            send_telegram_message(chat_id, 'Используйте /catalog для просмотра каталога')
+    
+    elif 'callback_query' in body:
+        callback = body['callback_query']
+        chat_id = callback['message']['chat']['id']
+        data = callback['data']
+        user = callback['from']
+        
+        if data == 'catalog':
+            albums = get_albums(cursor)
+            msg = '<b>🎵 Каталог альбомов:</b>\n\n'
+            keyboard = {'inline_keyboard': []}
+            
+            for album in albums:
+                msg += f'🎼 <b>{album["title"]}</b>\n'
+                msg += f'👤 {album["artist"]}\n'
+                msg += f'💰 {album["price"]} ₽\n\n'
+                
+                keyboard['inline_keyboard'].append([
+                    {'text': f'🎧 {album["title"]}', 'callback_data': f'album_{album["id"]}'}
+                ])
+            
+            send_telegram_message(chat_id, msg, keyboard)
+            
+        elif data.startswith('album_'):
+            album_id = data.replace('album_', '')
+            safe_id = album_id.replace("'", "''")
+            cursor.execute(f"SELECT * FROM albums WHERE id = '{safe_id}'")
+            album = cursor.fetchone()
+            
+            if not album:
+                send_telegram_message(chat_id, '❌ Альбом не найден')
+                return {'ok': True}
+            
+            tracks = get_tracks(cursor, album_id)
+            
+            msg = f'🎼 <b>{album["title"]}</b>\n'
+            msg += f'👤 {album["artist"]}\n'
+            msg += f'💰 Цена альбома: {album["price"]} ₽\n\n'
+            
+            if album.get('description'):
+                msg += f'📝 {album["description"]}\n\n'
+            
+            msg += '<b>Треки:</b>\n'
+            
+            keyboard = {'inline_keyboard': []}
+            
+            for idx, track in enumerate(tracks, 1):
+                msg += f'{idx}. {track["title"]} - {track["duration"]} ({track["price"]} ₽)\n'
+                keyboard['inline_keyboard'].append([
+                    {'text': f'🎵 Купить "{track["title"]}"', 'callback_data': f'buy_track_{track["id"]}'}
+                ])
+            
+            keyboard['inline_keyboard'].append([
+                {'text': f'💿 Купить весь альбом ({album["price"]} ₽)', 'callback_data': f'buy_album_{album_id}'}
+            ])
+            keyboard['inline_keyboard'].append([
+                {'text': '« Назад к каталогу', 'callback_data': 'catalog'}
+            ])
+            
+            send_telegram_message(chat_id, msg, keyboard)
+            
+        elif data.startswith('buy_track_'):
+            track_id = data.replace('buy_track_', '')
+            safe_id = track_id.replace("'", "''")
+            cursor.execute(f"SELECT t.*, a.title as album_title FROM tracks t JOIN albums a ON t.album_id = a.id WHERE t.id = '{safe_id}'")
+            track = cursor.fetchone()
+            
+            if not track:
+                send_telegram_message(chat_id, '❌ Трек не найден')
+                return {'ok': True}
+            
+            items = [{
+                'type': 'track',
+                'id': track['id'],
+                'title': track['title'],
+                'album': track['album_title'],
+                'price': track['price']
+            }]
+            
+            order_id = create_order(cursor, conn, user['id'], user.get('username', ''), user.get('first_name', ''), items, track['price'])
+            
+            msg = f'''✅ <b>Заказ создан!</b>
+
+Номер заказа: <code>{order_id}</code>
+
+🎵 Трек: {track['title']}
+💿 Альбом: {track['album_title']}
+💰 Сумма: {track['price']} ₽
+
+Для оплаты свяжитесь с администратором'''
+            
+            keyboard = {'inline_keyboard': [[
+                {'text': '« Назад к каталогу', 'callback_data': 'catalog'}
+            ]]}
+            
+            send_telegram_message(chat_id, msg, keyboard)
+            
+        elif data.startswith('buy_album_'):
+            album_id = data.replace('buy_album_', '')
+            safe_id = album_id.replace("'", "''")
+            cursor.execute(f"SELECT * FROM albums WHERE id = '{safe_id}'")
+            album = cursor.fetchone()
+            
+            if not album:
+                send_telegram_message(chat_id, '❌ Альбом не найден')
+                return {'ok': True}
+            
+            items = [{
+                'type': 'album',
+                'id': album['id'],
+                'title': album['title'],
+                'artist': album['artist'],
+                'price': album['price']
+            }]
+            
+            order_id = create_order(cursor, conn, user['id'], user.get('username', ''), user.get('first_name', ''), items, album['price'])
+            
+            msg = f'''✅ <b>Заказ создан!</b>
+
+Номер заказа: <code>{order_id}</code>
+
+💿 Альбом: {album['title']}
+👤 Исполнитель: {album['artist']}
+💰 Сумма: {album['price']} ₽
+
+Для оплаты свяжитесь с администратором'''
+            
+            keyboard = {'inline_keyboard': [[
+                {'text': '« Назад к каталогу', 'callback_data': 'catalog'}
+            ]]}
+            
+            send_telegram_message(chat_id, msg, keyboard)
+    
+    return {'ok': True}
