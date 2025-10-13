@@ -15,8 +15,12 @@ const AlbumCard = React.memo<{
   onAlbumClick: (album: Album) => void;
   onAddToCart: (album: Album, e: React.MouseEvent) => void;
 }>(({ album, onAlbumClick, onAddToCart }) => {
+  const [coverLoaded, setCoverLoaded] = useState(false);
+  const [coverError, setCoverError] = useState(false);
   const handleClick = useCallback(() => onAlbumClick(album), [onAlbumClick, album]);
   const handleAddToCart = useCallback((e: React.MouseEvent) => onAddToCart(album, e), [onAddToCart, album]);
+
+  const validCover = album.cover && album.cover.startsWith('data:') ? album.cover : '';
 
   return (
     <Card
@@ -24,12 +28,28 @@ const AlbumCard = React.memo<{
       onClick={handleClick}
     >
       <CardContent className="p-0">
-        <div className="relative overflow-hidden">
-          <img
-            src={album.cover}
-            alt={album.title}
-            className="w-full h-40 sm:h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-          />
+        <div className="relative overflow-hidden bg-vintage-brown/20">
+          {validCover && !coverError ? (
+            <>
+              {!coverLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Icon name="Music" size={32} className="text-vintage-warm/40 animate-pulse" />
+                </div>
+              )}
+              <img
+                src={validCover}
+                alt={album.title}
+                className="w-full h-40 sm:h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                onLoad={() => setCoverLoaded(true)}
+                onError={() => setCoverError(true)}
+                style={{ opacity: coverLoaded ? 1 : 0 }}
+              />
+            </>
+          ) : (
+            <div className="w-full h-40 sm:h-48 flex items-center justify-center bg-gradient-to-br from-vintage-warm/30 to-vintage-brown/30">
+              <Icon name="Music" size={48} className="text-vintage-warm/60" />
+            </div>
+          )}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
             <Button
               variant="ghost"
@@ -57,7 +77,7 @@ const AlbumCard = React.memo<{
                 {album.price} ₽
               </span>
               <span className="text-xs text-vintage-warm/60">
-                {album.tracks} треков
+                {album.trackList?.length || album.tracks || 0} {(album.trackList?.length || album.tracks || 0) === 1 ? 'трек' : 'треков'}
               </span>
             </div>
             
