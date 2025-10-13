@@ -7,12 +7,10 @@ Returns: HTTP response dict с альбомами, треками или ста�
 
 import json
 import os
-import base64
 from typing import Dict, Any, List, Optional
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
-import boto3
 
 def get_db_connection():
     database_url = os.environ.get('DATABASE_URL')
@@ -102,21 +100,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 result = create_track(cursor, conn, body)
             elif path == 'stat':
                 result = update_stat(cursor, conn, body)
-            elif path == 'media':
-                result = save_media_file_handler(cursor, conn, body)
-            elif path == 'upload-audio':
-                cursor.close()
-                conn.close()
-                result = upload_audio_to_s3(body)
-                return {
-                    'statusCode': 200,
-                    'headers': {
-                        'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
-                    },
-                    'isBase64Encoded': False,
-                    'body': json.dumps(result)
-                }
             elif path == 'order':
                 result = create_web_order(cursor, conn, body)
                 cursor.close()
@@ -311,74 +294,6 @@ def save_media_file(cursor, conn, file_id: str, file_type: str, data: str) -> st
     
     conn.commit()
     return file_id
-
-def save_media_file_handler(cursor, conn, data: Dict) -> Dict:
-    file_id = data.get('id', '').replace("'", "''")
-    file_type = data.get('file_type', 'application/octet-stream').replace("'", "''")
-    file_data = data.get('data', '')
-    
-    if not file_id or not file_data:
-        raise ValueError('Missing required fields: id or data')
-    
-    print(f'[DEBUG] Saving media file: {file_id}, type: {file_type}, data length: {len(file_data)}')
-    
-    saved_id = save_media_file(cursor, conn, file_id, file_type, file_data)
-    
-    return {
-        'id': saved_id,
-        'status': 'saved',
-        'message': 'Media file saved successfully'
-    }
-
-def upload_audio_to_s3(data: Dict) -> Dict:
-    file_data = data.get('file')
-    filename = data.get('filename', 'audio.mp3')
-    
-    if not file_data:
-        raise ValueError('file is required')
-    
-    s3_client = boto3.client(
-        's3',
-        endpoint_url='https://storage.yandexcloud.net',
-        aws_access_key_id=os.environ.get('S3_ACCESS_KEY_ID'),
-        aws_secret_access_key=os.environ.get('S3_SECRET_ACCESS_KEY'),
-        region_name='ru-central1'
-    )
-    
-    bucket_name = os.environ.get('S3_BUCKET_NAME')
-    
-    if file_data.startswith('data:'):
-        file_data = file_data.split(',')[1]
-    
-    file_bytes = base64.b64decode(file_data)
-    
-    content_type = 'audio/mpeg'
-    if filename.endswith('.wav'):
-        content_type = 'audio/wav'
-    elif filename.endswith('.ogg'):
-        content_type = 'audio/ogg'
-    elif filename.endswith('.m4a'):
-        content_type = 'audio/mp4'
-    
-    s3_key = f'audio/{filename}'
-    
-    s3_client.put_object(
-        Bucket=bucket_name,
-        Key=s3_key,
-        Body=file_bytes,
-        ContentType=content_type,
-        ACL='public-read'
-    )
-    
-    file_url = f'https://storage.yandexcloud.net/{bucket_name}/{s3_key}'
-    
-    print(f'[DEBUG] Audio uploaded to S3: {file_url}')
-    
-    return {
-        'url': file_url,
-        'filename': filename,
-        'size': len(file_bytes)
-    }
 
 def create_album(cursor, conn, data: Dict) -> Dict:
     album_id = data.get('id', str(int(datetime.now().timestamp() * 1000))).replace("'", "''")

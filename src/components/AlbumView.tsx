@@ -96,40 +96,10 @@ const AlbumView: React.FC<AlbumViewProps> = ({
     if (audio && currentTrack?.file) {
       const loadAudio = async () => {
         try {
-          console.log('🎵 Загружаем трек:', currentTrack.title);
-          console.log('📂 Файл трека:', currentTrack.file);
-          
           let audioUrl = currentTrack.file;
           
           if (audioUrl.startsWith('audio_')) {
-            console.log('🔍 Пытаемся загрузить аудиофайл из IndexedDB:', audioUrl);
-            try {
-              audioUrl = await getAudioFromIndexedDB(audioUrl);
-              console.log('✅ Аудио получено из IndexedDB');
-            } catch (indexedDBError) {
-              console.log('⚠️ Файл не найден в IndexedDB, загружаем с сервера:', audioUrl);
-              
-              const { apiClient } = await import('@/utils/apiClient');
-              const serverAudioData = await apiClient.getMediaFile(audioUrl);
-              
-              if (serverAudioData && serverAudioData.startsWith('data:audio/')) {
-                console.log('✅ Аудио получено с сервера');
-                audioUrl = serverAudioData;
-              } else {
-                console.error('❌ Не удалось загрузить аудиофайл с сервера');
-                alert(`Не удалось загрузить трек "${currentTrack.title}". Файл не найден.`);
-                setIsPlaying(false);
-                return;
-              }
-            }
-          } else {
-            console.log('🌐 Используем прямую ссылку на аудио:', audioUrl);
-          }
-          
-          if (!audioUrl) {
-            console.error('❌ Не удалось получить URL аудиофайла для:', currentTrack.title);
-            setIsPlaying(false);
-            return;
+            audioUrl = await getAudioFromIndexedDB(audioUrl);
           }
           
           audio.src = audioUrl;
@@ -137,29 +107,23 @@ const AlbumView: React.FC<AlbumViewProps> = ({
           setCurrentTime(0);
           setDuration(0);
           
-          console.log('🎧 Аудиоэлемент настроен, isPlaying:', isPlaying);
-          
           if (isPlaying) {
             const playPromise = audio.play();
             if (playPromise !== undefined) {
-              playPromise
-                .then(() => console.log('▶️ Воспроизведение началось успешно'))
-                .catch((error) => {
-                  console.error('❌ Ошибка воспроизведения:', error);
-                  setIsPlaying(false);
-                });
+              playPromise.catch(() => {
+                setIsPlaying(false);
+              });
             }
           }
         } catch (error) {
           console.error('❌ Ошибка загрузки аудио для трека:', currentTrack.title, error);
-          alert(`Ошибка загрузки трека "${currentTrack.title}"`);
           setIsPlaying(false);
         }
       };
       
       loadAudio();
     }
-  }, [currentTrack]);
+  }, [currentTrack, isPlaying]);
 
   useEffect(() => {
     const audio = audioRef.current;

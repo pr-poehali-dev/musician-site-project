@@ -1,42 +1,16 @@
 import { saveAudioToIndexedDB } from './audioStorage';
-import { apiClient } from './apiClient';
 
 export const saveAudioFile = async (file: File, filename: string, trackData: { title: string; duration: string }): Promise<string> => {
   try {
-    console.log('💾 Начинаем загрузку аудиофайла в облако:', filename);
+    // Сохраняем аудиофайл в IndexedDB
+    const fileId = await saveAudioToIndexedDB(file, filename);
     
-    const reader = new FileReader();
-    const audioDataUrl = await new Promise<string>((resolve, reject) => {
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(new Error('Ошибка чтения файла'));
-      reader.readAsDataURL(file);
-    });
-    
-    console.log('📤 Загружаем в S3...');
-    const response = await fetch('https://functions.poehali.dev/25aac639-cf81-4eb7-80fc-aa9a157a25e6?path=upload-audio', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        file: audioDataUrl,
-        filename: filename
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Ошибка загрузки: ${response.status}`);
-    }
-    
-    const result = await response.json();
-    console.log('✅ Файл загружен в облако:', result.url);
-    
-    await saveAudioToIndexedDB(file, filename);
-    console.log('✅ Файл также сохранен в IndexedDB для офлайн доступа');
-    
+    // Сохраняем информацию о треке в localStorage
     const trackInfo = {
       id: Date.now().toString(),
       title: trackData.title,
       duration: trackData.duration,
-      file: result.url,
+      file: fileId, // ID файла в IndexedDB
       price: 129
     };
 
@@ -48,12 +22,12 @@ export const saveAudioFile = async (file: File, filename: string, trackData: { t
     uploadedTracks.push(trackInfo);
     localStorage.setItem('uploadedTracks', JSON.stringify(uploadedTracks));
 
+    // Отправляем событие для обновления компонентов
     window.dispatchEvent(new CustomEvent('tracksUpdated'));
     
-    return result.url;
+    return fileId;
   } catch (error) {
-    console.error('❌ Ошибка загрузки файла:', error);
-    throw new Error(`Ошибка загрузки файла: ${error}`);
+    throw new Error(`Ошибка сохранения файла: ${error}`);
   }
 };
 

@@ -260,27 +260,5 @@ export const apiClient = {
         transaction.onerror = () => reject(new Error('Transaction error'));
       };
     });
-  },
-
-  async saveMediaToServer(mediaId: string, fileType: string, data: string): Promise<void> {
-    console.log('📤 Отправляем медиафайл на сервер:', mediaId);
-    
-    const response = await fetch(`${API_URL}?path=media`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: mediaId,
-        file_type: fileType,
-        data: data
-      })
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Ошибка сохранения медиафайла на сервер:', response.status, errorText);
-      throw new Error(`Ошибка сохранения медиафайла: ${response.status}`);
-    }
-    
-    console.log('✅ Медиафайл сохранен на сервер:', mediaId);
   }
 };
