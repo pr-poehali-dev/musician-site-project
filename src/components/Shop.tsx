@@ -37,9 +37,19 @@ const Shop: React.FC<ShopProps> = ({
 
   const handleAddToCart = (item: { id: string; title: string; type: 'track' | 'album'; price: number; quantity: number }) => {
     console.log('🛍️ Shop получил запрос добавить в корзину:', item);
-    const fullItem = item.type === 'album' 
-      ? albums.find(a => a.id === item.id) 
-      : tracks.find(t => t.id === item.id);
+    
+    let fullItem;
+    if (item.type === 'album') {
+      fullItem = albums.find(a => a.id === item.id);
+    } else {
+      for (const album of albums) {
+        const track = album.trackList?.find(t => t.id === item.id);
+        if (track) {
+          fullItem = track;
+          break;
+        }
+      }
+    }
     
     console.log('🔍 Найденный элемент:', fullItem);
     if (fullItem) {
