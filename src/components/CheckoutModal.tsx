@@ -45,9 +45,10 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <Card className="bg-vintage-cream/95 border-vintage-brown/20 shadow-2xl max-w-md w-full">
-        <CardContent className="p-6">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 overflow-y-auto">
+      <div className="flex items-start justify-center min-h-screen p-4 pt-20">
+        <Card className="bg-vintage-cream/95 border-vintage-brown/20 shadow-2xl max-w-md w-full my-8">
+          <CardContent className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-vintage-warm">Оформление заказа</h2>
             <Button
@@ -155,6 +156,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };
