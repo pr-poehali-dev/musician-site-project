@@ -191,13 +191,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 {isSubmitting ? 'Оформление...' : 'Оформить заказ'}
               </Button>
             </div>
-          </form>
-
-          <div className="mt-4 p-3 bg-vintage-brown/10 rounded-lg">
-            <p className="text-xs text-vintage-warm/70">
-              💡 После оформления заказа вы увидите QR-код для оплаты через СБП
-            </p>
-          </div>
+            
+            <div className="mt-4 p-3 bg-vintage-brown/10 rounded-lg">
+              <p className="text-xs text-vintage-warm/70">
+                💡 После оформления заказа вы увидите QR-код для оплаты через СБП
+              </p>
+            </div>
           </form>
           )}
 
