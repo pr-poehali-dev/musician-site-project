@@ -166,6 +166,7 @@ const AlbumView: React.FC<AlbumViewProps> = ({
   };
 
   const handleAddTrackToCart = (track: Track) => {
+    console.log('🛒 Добавляем трек в корзину:', track.title, track);
     onAddToCart({
       id: track.id,
       title: track.title,
@@ -173,6 +174,7 @@ const AlbumView: React.FC<AlbumViewProps> = ({
       price: track.price,
       quantity: 1
     });
+    console.log('✅ Трек отправлен в onAddToCart');
   };
 
   const handleAddAlbumToCart = () => {

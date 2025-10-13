@@ -37,6 +37,7 @@ const MusicPage = () => {
   } = useTrackManagement(albums, setAlbums);
 
   const addToCart = (item: Track | { id: string; title: string; price: number }, type: 'track' | 'album') => {
+    console.log('🎯 MusicPage.addToCart вызван:', item, 'type:', type);
     const cartItem: CartItem = {
       id: item.id,
       title: item.title,
@@ -45,17 +46,21 @@ const MusicPage = () => {
       quantity: 1
     };
 
+    console.log('📦 Создан cartItem:', cartItem);
     setCart(prevCart => {
       const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
       if (existingItem) {
+        console.log('✨ Увеличиваем количество существующего товара');
         return prevCart.map(cartItem =>
           cartItem.id === item.id
             ? { ...cartItem, quantity: cartItem.quantity + 1 }
             : cartItem
         );
       }
+      console.log('➕ Добавляем новый товар в корзину');
       return [...prevCart, cartItem];
     });
+    console.log('✅ Корзина обновлена');
   };
 
   const removeFromCart = (id: string) => {

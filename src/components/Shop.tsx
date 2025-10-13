@@ -36,12 +36,17 @@ const Shop: React.FC<ShopProps> = ({
   const [tracks, setTracks] = useState<Track[]>(initialTracks);
 
   const handleAddToCart = (item: { id: string; title: string; type: 'track' | 'album'; price: number; quantity: number }) => {
+    console.log('🛍️ Shop получил запрос добавить в корзину:', item);
     const fullItem = item.type === 'album' 
       ? albums.find(a => a.id === item.id) 
       : tracks.find(t => t.id === item.id);
     
+    console.log('🔍 Найденный элемент:', fullItem);
     if (fullItem) {
+      console.log('➡️ Отправляем в addToCart:', fullItem, item.type);
       addToCart(fullItem, item.type);
+    } else {
+      console.warn('⚠️ Элемент не найден в albums/tracks!');
     }
   };
 
