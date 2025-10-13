@@ -28,7 +28,7 @@ const AlbumCard = React.memo<{
           <img
             src={album.cover}
             alt={album.title}
-            className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-40 sm:h-48 object-cover transition-transform duration-300 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
             <Button
@@ -40,20 +40,20 @@ const AlbumCard = React.memo<{
           </div>
         </div>
         
-        <div className="p-4">
-          <h4 className="font-bold text-vintage-warm text-lg mb-1 line-clamp-1">
+        <div className="p-3 sm:p-4">
+          <h4 className="font-bold text-vintage-warm text-base sm:text-lg mb-1 line-clamp-1">
             {album.title}
           </h4>
-          <p className="text-vintage-warm/70 text-sm mb-2 line-clamp-1">
+          <p className="text-vintage-warm/70 text-xs sm:text-sm mb-2 line-clamp-1">
             {album.artist}
           </p>
-          <p className="text-vintage-warm/60 text-sm mb-3 line-clamp-2">
+          <p className="text-vintage-warm/60 text-xs sm:text-sm mb-3 line-clamp-2 hidden sm:block">
             {album.description}
           </p>
           
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <div className="flex flex-col">
-              <span className="text-xl font-bold text-vintage-dark-brown">
+              <span className="text-lg sm:text-xl font-bold text-vintage-dark-brown">
                 {album.price} ₽
               </span>
               <span className="text-xs text-vintage-warm/60">
@@ -63,11 +63,11 @@ const AlbumCard = React.memo<{
             
             <Button
               onClick={handleAddToCart}
-              className="bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
+              className="bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream text-xs sm:text-sm"
               size="sm"
             >
-              <Icon name="ShoppingCart" size={16} className="mr-1" />
-              В корзину
+              <Icon name="ShoppingCart" size={14} className="sm:mr-1" />
+              <span className="hidden sm:inline">В корзину</span>
             </Button>
           </div>
         </div>
@@ -120,7 +120,7 @@ const AlbumGrid: React.FC<AlbumGridProps> = ({
           <p className="text-vintage-warm/70 text-lg">Выберите альбом для прослушивания треков</p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           {albums.map((album) => (
             <AlbumCard
               key={album.id}
