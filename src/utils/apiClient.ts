@@ -102,42 +102,27 @@ export const apiClient = {
       if (!response.ok) return [];
       
       const albums = await response.json();
-      const localAlbums = JSON.parse(localStorage.getItem('albums') || '[]');
       
       const processedAlbums = await Promise.all(albums.map(async (album: any) => {
-        const localAlbum = localAlbums.find((a: any) => a.id === album.id);
-        
-        let coverUrl = album.cover || localAlbum?.cover || '';
+        let coverUrl = album.cover || '';
         if (coverUrl && coverUrl.startsWith('cover_')) {
           const mediaData = await this.getMediaFile(coverUrl);
           if (mediaData) coverUrl = mediaData;
         }
         
-        const processedTracks = await Promise.all((album.trackList || []).map(async (track: any) => {
-          const localTrack = localAlbum?.trackList?.find((t: any) => t.id === track.id);
-          
-          let fileUrl = track.file || localTrack?.file || '';
-          if (fileUrl && fileUrl.startsWith('audio_') && fileUrl.length < 50) {
-            const mediaData = await this.getMediaFile(fileUrl);
-            if (mediaData) fileUrl = mediaData;
-          }
-          
-          let trackCover = track.cover || localTrack?.cover || coverUrl;
-          if (trackCover && trackCover.startsWith('cover_')) {
-            const mediaData = await this.getMediaFile(trackCover);
-            if (mediaData) trackCover = mediaData;
-          }
+        const processedTracks = (album.trackList || []).map((track: any) => {
+          const trackCover = track.cover || coverUrl;
           
           return {
             id: track.id,
             title: track.title,
             duration: track.duration,
-            file: fileUrl,
+            file: track.file || '',
             price: track.price,
             cover: trackCover,
             albumId: album.id
           };
-        }));
+        });
         
         return {
           id: album.id,

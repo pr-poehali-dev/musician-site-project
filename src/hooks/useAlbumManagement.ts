@@ -48,27 +48,14 @@ export const useAlbumManagement = () => {
       
       if (serverAlbums.length > 0) {
         setAlbums(serverAlbums);
-        localStorage.setItem('albums', JSON.stringify(serverAlbums));
-        console.log('✅ Альбомы обновлены из БД:', serverAlbums.length);
+        console.log('✅ Альбомы загружены из БД:', serverAlbums.length);
       } else {
-        const savedAlbums = localStorage.getItem('albums');
-        if (savedAlbums) {
-          const parsed = JSON.parse(savedAlbums);
-          setAlbums(parsed);
-        } else {
-          setAlbums(defaultAlbums);
-          localStorage.setItem('albums', JSON.stringify(defaultAlbums));
-        }
+        setAlbums(defaultAlbums);
+        console.log('⚠️ Используются дефолтные альбомы');
       }
     } catch (error) {
       console.error('Ошибка загрузки альбомов:', error);
-      const savedAlbums = localStorage.getItem('albums');
-      if (savedAlbums) {
-        setAlbums(JSON.parse(savedAlbums));
-      } else {
-        setAlbums(defaultAlbums);
-        localStorage.setItem('albums', JSON.stringify(defaultAlbums));
-      }
+      setAlbums(defaultAlbums);
     }
   };
 
