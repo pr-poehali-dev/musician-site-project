@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +47,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     }
   };
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto" style={{ zIndex: 9999 }}>
       <div className="flex items-start justify-center min-h-screen p-4 pt-20">
         <Card className="bg-vintage-cream/95 border-vintage-brown/20 shadow-2xl max-w-md w-full my-8">
@@ -161,6 +162,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default CheckoutModal;
