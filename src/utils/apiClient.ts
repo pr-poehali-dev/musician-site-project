@@ -15,22 +15,31 @@ export const apiClient = {
       track_order: 0
     };
     
-    console.log('📤 Отправка трека на сервер:', requestData);
+    console.log('📤 [saveTrackToServer] Начинаем сохранение трека');
+    console.log('📤 [saveTrackToServer] URL:', `${API_URL}?path=track`);
+    console.log('📤 [saveTrackToServer] Данные:', requestData);
     
-    const response = await fetch(`${API_URL}?path=track`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestData)
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Ответ сервера:', response.status, errorText);
-      throw new Error(`Ошибка сохранения трека: ${response.status} - ${errorText}`);
+    try {
+      const response = await fetch(`${API_URL}?path=track`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestData)
+      });
+      
+      console.log('📥 [saveTrackToServer] Получен ответ, статус:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ [saveTrackToServer] Ошибка сервера:', response.status, errorText);
+        throw new Error(`Ошибка сохранения трека: ${response.status} - ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ [saveTrackToServer] Трек сохранен успешно:', result);
+    } catch (error) {
+      console.error('❌ [saveTrackToServer] Исключение при сохранении:', error);
+      throw error;
     }
-    
-    const result = await response.json();
-    console.log('✅ Трек сохранен в базу данных:', result);
   },
 
   async saveAlbumToServer(album: Album): Promise<void> {
