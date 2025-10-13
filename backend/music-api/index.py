@@ -733,10 +733,12 @@ def create_web_order(cursor, conn, data: Dict) -> Dict:
         import urllib.parse
         
         token = os.environ.get('TELEGRAM_BOT_TOKEN')
-        if token:
+        owner_chat_id = os.environ.get('TELEGRAM_OWNER_CHAT_ID')
+        
+        if token and owner_chat_id:
             url = f'https://api.telegram.org/bot{token}/sendMessage'
             data_to_send = {
-                'chat_id': f'@{telegram}',
+                'chat_id': owner_chat_id,
                 'text': msg,
                 'parse_mode': 'HTML'
             }
@@ -748,9 +750,14 @@ def create_web_order(cursor, conn, data: Dict) -> Dict:
             )
             
             with urllib.request.urlopen(req) as response:
-                print(f'[DEBUG] Notification sent to @{telegram}')
+                response_data = json.loads(response.read().decode('utf-8'))
+                print(f'[DEBUG] Notification sent to owner: {response_data}')
+        else:
+            print(f'[WARN] Missing TELEGRAM_BOT_TOKEN or TELEGRAM_OWNER_CHAT_ID')
     except Exception as e:
         print(f'[WARN] Failed to send Telegram notification: {e}')
+        import traceback
+        print(f'[ERROR] Traceback: {traceback.format_exc()}')
     
     return {
         'success': True,
