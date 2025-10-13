@@ -180,7 +180,7 @@ export const apiClient = {
         return '';
       }
 
-      const cachedMedia = localStorage.getItem(`media_${mediaId}`);
+      const cachedMedia = await this.getMediaFromIndexedDB(mediaId);
       if (cachedMedia) {
         return cachedMedia;
       }
@@ -195,7 +195,7 @@ export const apiClient = {
       const mediaData = data.data || '';
       
       if (mediaData) {
-        localStorage.setItem(`media_${mediaId}`, mediaData);
+        await this.saveMediaToIndexedDB(mediaId, mediaData);
       }
       
       return mediaData;
@@ -203,5 +203,65 @@ export const apiClient = {
       console.error('❌ Ошибка загрузки медиафайла:', error);
       return '';
     }
+  },
+
+  async getMediaFromIndexedDB(mediaId: string): Promise<string | null> {
+    return new Promise((resolve) => {
+      const request = indexedDB.open('MediaStorage', 1);
+      
+      request.onerror = () => resolve(null);
+      
+      request.onupgradeneeded = (event: any) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains('media')) {
+          db.createObjectStore('media', { keyPath: 'id' });
+        }
+      };
+      
+      request.onsuccess = (event: any) => {
+        const db = event.target.result;
+        
+        if (!db.objectStoreNames.contains('media')) {
+          resolve(null);
+          return;
+        }
+        
+        const transaction = db.transaction(['media'], 'readonly');
+        const store = transaction.objectStore('media');
+        const getRequest = store.get(mediaId);
+        
+        getRequest.onsuccess = () => {
+          resolve(getRequest.result?.data || null);
+        };
+        
+        getRequest.onerror = () => resolve(null);
+      };
+    });
+  },
+
+  async saveMediaToIndexedDB(mediaId: string, data: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('MediaStorage', 1);
+      
+      request.onerror = () => reject(new Error('IndexedDB error'));
+      
+      request.onupgradeneeded = (event: any) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains('media')) {
+          db.createObjectStore('media', { keyPath: 'id' });
+        }
+      };
+      
+      request.onsuccess = (event: any) => {
+        const db = event.target.result;
+        const transaction = db.transaction(['media'], 'readwrite');
+        const store = transaction.objectStore('media');
+        
+        store.put({ id: mediaId, data });
+        
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(new Error('Transaction error'));
+      };
+    });
   }
 };
