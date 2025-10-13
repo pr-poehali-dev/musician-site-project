@@ -100,6 +100,19 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 result = create_track(cursor, conn, body)
             elif path == 'stat':
                 result = update_stat(cursor, conn, body)
+            elif path == 'order':
+                result = create_web_order(cursor, conn, body)
+                cursor.close()
+                conn.close()
+                return {
+                    'statusCode': 201,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'isBase64Encoded': False,
+                    'body': json.dumps(result, default=str)
+                }
             else:
                 return error_response('Invalid path', 400)
             
@@ -680,3 +693,67 @@ def handle_telegram_webhook(cursor, conn, body: Dict) -> Dict:
             send_telegram_message(chat_id, msg, keyboard)
     
     return {'ok': True}
+
+def create_web_order(cursor, conn, data: Dict) -> Dict:
+    order_id = f'order_{int(datetime.now().timestamp() * 1000)}'
+    name = data.get('name', '').replace("'", "''")
+    telegram = data.get('telegram', '').replace("'", "''")
+    email = data.get('email', '').replace("'", "''")
+    items = data.get('items', [])
+    total = data.get('total', 0)
+    
+    items_json = json.dumps(items, ensure_ascii=False).replace("'", "''")
+    
+    cursor.execute(f'''
+        INSERT INTO orders (id, user_id, username, first_name, items, total_price, status, telegram_username, contact_info)
+        VALUES ('{order_id}', 0, '{telegram}', '{name}', '{items_json}', {total}, 'pending', '{telegram}', '{email}')
+    ''')
+    conn.commit()
+    
+    msg = f'''✅ <b>Новый заказ с сайта!</b>
+
+Номер заказа: <code>{order_id}</code>
+👤 Покупатель: {name}
+📱 Telegram: @{telegram}
+
+<b>Заказ:</b>
+'''
+    
+    for item in items:
+        msg += f'• {item.get("title")} '
+        if item.get('quantity', 1) > 1:
+            msg += f'x{item.get("quantity")} '
+        msg += f'({item.get("price")} ₽)\n'
+    
+    msg += f'\n💰 <b>Итого: {total} ₽</b>\n\n'
+    msg += 'Свяжитесь с покупателем для уточнения деталей оплаты.'
+    
+    try:
+        import urllib.request
+        import urllib.parse
+        
+        token = os.environ.get('TELEGRAM_BOT_TOKEN')
+        if token:
+            url = f'https://api.telegram.org/bot{token}/sendMessage'
+            data_to_send = {
+                'chat_id': f'@{telegram}',
+                'text': msg,
+                'parse_mode': 'HTML'
+            }
+            
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(data_to_send).encode('utf-8'),
+                headers={'Content-Type': 'application/json'}
+            )
+            
+            with urllib.request.urlopen(req) as response:
+                print(f'[DEBUG] Notification sent to @{telegram}')
+    except Exception as e:
+        print(f'[WARN] Failed to send Telegram notification: {e}')
+    
+    return {
+        'success': True,
+        'order_id': order_id,
+        'message': 'Заказ успешно создан!'
+    }

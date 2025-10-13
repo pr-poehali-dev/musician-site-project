@@ -119,6 +119,57 @@ const MusicPage = () => {
     setCurrentTrack(track);
   };
 
+  const handleCheckout = async (data: { name: string; telegram: string; email?: string }) => {
+    try {
+      const API_URL = 'https://functions.poehali.dev/25aac639-cf81-4eb7-80fc-aa9a157a25e6';
+      
+      const orderData = {
+        name: data.name,
+        telegram: data.telegram.replace('@', ''),
+        email: data.email,
+        items: cart.map(item => ({
+          id: item.id,
+          title: item.title,
+          type: item.type,
+          price: item.price,
+          quantity: item.quantity
+        })),
+        total: getTotalPrice()
+      };
+
+      const response = await fetch(`${API_URL}?path=order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Ошибка создания заказа');
+      }
+
+      const result = await response.json();
+      
+      toast({
+        title: "Заказ оформлен!",
+        description: `Номер заказа: ${result.order_id}. Проверьте Telegram для деталей.`,
+        duration: 5000,
+      });
+
+      console.log('✅ Заказ создан:', result);
+    } catch (error) {
+      console.error('❌ Ошибка оформления заказа:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось оформить заказ. Попробуйте снова.",
+        variant: "destructive",
+        duration: 3000,
+      });
+      throw error;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-brown to-vintage-dark-brown">
       <Header
@@ -134,6 +185,7 @@ const MusicPage = () => {
         getTotalPrice={getTotalPrice}
         getTotalItems={getTotalItems}
         handleAdminLogin={handleAdminLogin}
+        onCheckout={handleCheckout}
       />
 
       <Shop

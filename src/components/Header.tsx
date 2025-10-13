@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useNavigate, useLocation } from 'react-router-dom';
 import Icon from '@/components/ui/icon';
 import QRPayment from './QRPayment';
+import CheckoutModal from './CheckoutModal';
 import { CartItem } from '@/types';
 
 interface HeaderProps {
@@ -23,6 +24,7 @@ interface HeaderProps {
   getTotalPrice: () => number;
   getTotalItems: () => number;
   handleAdminLogin: () => void;
+  onCheckout?: (data: { name: string; telegram: string; email?: string }) => Promise<void>;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -37,14 +39,25 @@ const Header: React.FC<HeaderProps> = ({
   removeFromCart,
   getTotalPrice,
   getTotalItems,
-  handleAdminLogin
+  handleAdminLogin,
+  onCheckout
 }) => {
   const [isQRPaymentOpen, setIsQRPaymentOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   
   const handleCheckout = () => {
     if (cart.length === 0) return;
+    setIsCheckoutOpen(true);
+    setIsCartOpen(false);
+  };
+  
+  const handleCheckoutSubmit = async (data: { name: string; telegram: string; email?: string }) => {
+    if (onCheckout) {
+      await onCheckout(data);
+    }
+    setIsCheckoutOpen(false);
     setIsQRPaymentOpen(true);
   };
 
@@ -196,6 +209,16 @@ const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Checkout Modal */}
+      {isCheckoutOpen && (
+        <CheckoutModal
+          cart={cart}
+          totalPrice={getTotalPrice()}
+          onClose={() => setIsCheckoutOpen(false)}
+          onSubmit={handleCheckoutSubmit}
+        />
+      )}
 
       {/* QR Payment Modal */}
       <QRPayment
