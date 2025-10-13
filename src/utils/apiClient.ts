@@ -102,11 +102,42 @@ export const apiClient = {
       if (!response.ok) return [];
       
       const albums = await response.json();
-      
       const localAlbums = JSON.parse(localStorage.getItem('albums') || '[]');
       
-      return albums.map((album: any) => {
+      const processedAlbums = await Promise.all(albums.map(async (album: any) => {
         const localAlbum = localAlbums.find((a: any) => a.id === album.id);
+        
+        let coverUrl = album.cover || localAlbum?.cover || '';
+        if (coverUrl && coverUrl.startsWith('cover_')) {
+          const mediaData = await this.getMediaFile(coverUrl);
+          if (mediaData) coverUrl = mediaData;
+        }
+        
+        const processedTracks = await Promise.all((album.trackList || []).map(async (track: any) => {
+          const localTrack = localAlbum?.trackList?.find((t: any) => t.id === track.id);
+          
+          let fileUrl = track.file || localTrack?.file || '';
+          if (fileUrl && fileUrl.startsWith('audio_') && fileUrl.length < 50) {
+            const mediaData = await this.getMediaFile(fileUrl);
+            if (mediaData) fileUrl = mediaData;
+          }
+          
+          let trackCover = track.cover || localTrack?.cover || coverUrl;
+          if (trackCover && trackCover.startsWith('cover_')) {
+            const mediaData = await this.getMediaFile(trackCover);
+            if (mediaData) trackCover = mediaData;
+          }
+          
+          return {
+            id: track.id,
+            title: track.title,
+            duration: track.duration,
+            file: fileUrl,
+            price: track.price,
+            cover: trackCover,
+            albumId: album.id
+          };
+        }));
         
         return {
           id: album.id,
@@ -114,22 +145,13 @@ export const apiClient = {
           artist: album.artist,
           tracks: album.tracks_count || 0,
           price: album.price,
-          cover: album.cover || localAlbum?.cover || '',
+          cover: coverUrl,
           description: album.description,
-          trackList: (album.trackList || []).map((track: any) => {
-            const localTrack = localAlbum?.trackList?.find((t: any) => t.id === track.id);
-            return {
-              id: track.id,
-              title: track.title,
-              duration: track.duration,
-              file: track.file || localTrack?.file || '',
-              price: track.price,
-              cover: track.cover || localTrack?.cover || localAlbum?.cover || '',
-              albumId: album.id
-            };
-          })
+          trackList: processedTracks
         };
-      });
+      }));
+      
+      return processedAlbums;
     } catch (error) {
       console.error('Ошибка загрузки альбомов:', error);
       return [];
@@ -149,6 +171,37 @@ export const apiClient = {
     } catch (error) {
       console.error('❌ Ошибка загрузки статистики:', error);
       throw error;
+    }
+  },
+
+  async getMediaFile(mediaId: string): Promise<string> {
+    try {
+      if (!mediaId || mediaId.length < 5) {
+        return '';
+      }
+
+      const cachedMedia = localStorage.getItem(`media_${mediaId}`);
+      if (cachedMedia) {
+        return cachedMedia;
+      }
+
+      const response = await fetch(`${API_URL}?path=media&id=${mediaId}`);
+      if (!response.ok) {
+        console.warn(`Медиафайл ${mediaId} не найден`);
+        return '';
+      }
+
+      const data = await response.json();
+      const mediaData = data.data || '';
+      
+      if (mediaData) {
+        localStorage.setItem(`media_${mediaId}`, mediaData);
+      }
+      
+      return mediaData;
+    } catch (error) {
+      console.error('❌ Ошибка загрузки медиафайла:', error);
+      return '';
     }
   }
 };

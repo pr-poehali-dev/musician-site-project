@@ -49,6 +49,22 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             elif path == 'stats':
                 track_id = event.get('queryStringParameters', {}).get('track_id')
                 result = get_stats(cursor, track_id)
+            elif path == 'media':
+                media_id = event.get('queryStringParameters', {}).get('id')
+                if not media_id:
+                    return error_response('Media ID is required', 400)
+                result = get_media_file(cursor, media_id)
+                if not result:
+                    return error_response('Media file not found', 404)
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'isBase64Encoded': False,
+                    'body': json.dumps(result, default=str)
+                }
             else:
                 result = get_all_data(cursor)
             
@@ -186,6 +202,11 @@ def get_tracks(cursor, album_id: Optional[str] = None) -> List[Dict]:
     
     return cursor.fetchall()
 
+def get_media_file(cursor, media_id: str) -> Optional[Dict]:
+    safe_id = media_id.replace("'", "''")
+    cursor.execute(f"SELECT * FROM media_files WHERE id = '{safe_id}'")
+    return cursor.fetchone()
+
 def get_stats(cursor, track_id: Optional[str] = None) -> Dict:
     if track_id:
         safe_id = track_id.replace("'", "''")
@@ -229,18 +250,43 @@ def get_all_data(cursor) -> Dict:
         'stats': stats
     }
 
+def save_media_file(cursor, conn, file_id: str, file_type: str, data: str) -> str:
+    if not data or len(data) < 100:
+        return file_id
+    
+    safe_id = file_id.replace("'", "''")
+    safe_type = file_type.replace("'", "''")
+    safe_data = data.replace("'", "''")
+    now = datetime.now().isoformat()
+    
+    cursor.execute(f"SELECT id FROM media_files WHERE id = '{safe_id}'")
+    existing = cursor.fetchone()
+    
+    if existing:
+        cursor.execute(f"UPDATE media_files SET data = '{safe_data}', file_type = '{safe_type}' WHERE id = '{safe_id}'")
+    else:
+        cursor.execute(f"INSERT INTO media_files (id, file_type, data, created_at) VALUES ('{safe_id}', '{safe_type}', '{safe_data}', '{now}')")
+    
+    conn.commit()
+    return file_id
+
 def create_album(cursor, conn, data: Dict) -> Dict:
     album_id = data.get('id', str(int(datetime.now().timestamp() * 1000))).replace("'", "''")
     title = data['title'].replace("'", "''")
     artist = data['artist'].replace("'", "''")
-    cover = data.get('cover', '').replace("'", "''")
+    cover_data = data.get('cover', '')
     price = data.get('price', 0)
     description = data.get('description', '').replace("'", "''")
     now = datetime.now().isoformat()
     
+    cover_id = ''
+    if cover_data and len(cover_data) > 100:
+        cover_id = f"cover_{album_id}"
+        save_media_file(cursor, conn, cover_id, 'image', cover_data)
+    
     cursor.execute(f'''
         INSERT INTO albums (id, title, artist, cover, price, description, tracks_count, created_at)
-        VALUES ('{album_id}', '{title}', '{artist}', '{cover}', {price}, '{description}', 0, '{now}')
+        VALUES ('{album_id}', '{title}', '{artist}', '{cover_id}', {price}, '{description}', 0, '{now}')
         RETURNING *
     ''')
     conn.commit()
@@ -251,15 +297,25 @@ def create_track(cursor, conn, data: Dict) -> Dict:
     album_id = data.get('album_id', '').replace("'", "''")
     title = data['title'].replace("'", "''")
     duration = data['duration'].replace("'", "''")
-    file_path = data.get('file', '').replace("'", "''")
+    file_data = data.get('file', '')
     price = data.get('price', 0)
-    cover = data.get('cover', '').replace("'", "''")
+    cover_data = data.get('cover', '')
     track_order = data.get('track_order', 0)
     now = datetime.now().isoformat()
     
+    file_id = file_data if len(file_data) < 100 else ''
+    if file_data and len(file_data) > 100:
+        file_id = f"audio_{track_id}"
+        save_media_file(cursor, conn, file_id, 'audio', file_data)
+    
+    cover_id = cover_data if len(cover_data) < 100 else ''
+    if cover_data and len(cover_data) > 100:
+        cover_id = f"cover_{track_id}"
+        save_media_file(cursor, conn, cover_id, 'image', cover_data)
+    
     cursor.execute(f'''
         INSERT INTO tracks (id, album_id, title, duration, file, price, cover, track_order, created_at)
-        VALUES ('{track_id}', '{album_id}', '{title}', '{duration}', '{file_path}', {price}, '{cover}', {track_order}, '{now}')
+        VALUES ('{track_id}', '{album_id}', '{title}', '{duration}', '{file_id}', {price}, '{cover_id}', {track_order}, '{now}')
         RETURNING *
     ''')
     new_track = cursor.fetchone()
@@ -279,14 +335,19 @@ def update_album(cursor, conn, album_id: str, data: Dict) -> Dict:
     safe_id = album_id.replace("'", "''")
     title = data['title'].replace("'", "''")
     artist = data['artist'].replace("'", "''")
-    cover = data.get('cover', '').replace("'", "''")
+    cover_data = data.get('cover', '')
     price = data.get('price', 0)
     description = data.get('description', '').replace("'", "''")
     now = datetime.now().isoformat()
     
+    cover_id = cover_data if len(cover_data) < 100 else ''
+    if cover_data and len(cover_data) > 100:
+        cover_id = f"cover_{album_id}"
+        save_media_file(cursor, conn, cover_id, 'image', cover_data)
+    
     cursor.execute(f'''
         UPDATE albums 
-        SET title = '{title}', artist = '{artist}', cover = '{cover}', price = {price}, description = '{description}', updated_at = '{now}'
+        SET title = '{title}', artist = '{artist}', cover = '{cover_id}', price = {price}, description = '{description}', updated_at = '{now}'
         WHERE id = '{safe_id}'
         RETURNING *
     ''')
