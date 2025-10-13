@@ -185,6 +185,18 @@ export const apiClient = {
         return cachedMedia;
       }
 
+      if (mediaId.startsWith('audio_')) {
+        try {
+          const { getAudioFromIndexedDB } = await import('./audioStorage');
+          const audioUrl = await getAudioFromIndexedDB(mediaId);
+          if (audioUrl) {
+            return audioUrl;
+          }
+        } catch (vintageAudioError) {
+          console.log(`Аудио ${mediaId} не найдено в VintageAudioDB, пробую сервер`);
+        }
+      }
+
       const response = await fetch(`${API_URL}?path=media&id=${mediaId}`);
       if (!response.ok) {
         console.warn(`Медиафайл ${mediaId} не найден`);
