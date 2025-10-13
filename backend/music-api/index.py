@@ -81,6 +81,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
+                'isBase64Encoded': False,
                 'body': json.dumps(result, default=str)
             }
         
@@ -104,6 +105,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
+                'isBase64Encoded': False,
                 'body': json.dumps(result, default=str)
             }
         
@@ -127,6 +129,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
+                'isBase64Encoded': False,
                 'body': json.dumps(result, default=str)
             }
         
@@ -147,12 +150,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 def get_albums(cursor) -> List[Dict]:
     print('[DEBUG] Getting albums...')
     cursor.execute('''
-        SELECT a.*, 
+        SELECT a.id, a.title, a.artist, a.cover, a.price, a.description, a.created_at, a.updated_at,
                COUNT(t.id) as tracks_count
         FROM albums a
         LEFT JOIN tracks t ON a.id = t.album_id
-        GROUP BY a.id
+        GROUP BY a.id, a.title, a.artist, a.cover, a.price, a.description, a.created_at, a.updated_at
         ORDER BY a.created_at DESC
+        LIMIT 100
     ''')
     albums = cursor.fetchall()
     print(f'[DEBUG] Found {len(albums)} albums')
@@ -161,8 +165,9 @@ def get_albums(cursor) -> List[Dict]:
         try:
             album_id = str(album['id']).replace("'", "''")
             print(f'[DEBUG] Getting tracks for album: {album_id}')
-            cursor.execute(f"SELECT * FROM tracks WHERE album_id = '{album_id}' ORDER BY track_order, created_at")
+            cursor.execute(f"SELECT id, album_id, title, duration, file, price, cover, track_order, created_at FROM tracks WHERE album_id = '{album_id}' ORDER BY track_order, created_at LIMIT 50")
             tracks = cursor.fetchall()
+            
             album['trackList'] = tracks if tracks else []
             print(f'[DEBUG] Found {len(tracks) if tracks else 0} tracks for album {album_id}')
         except Exception as e:
@@ -175,9 +180,10 @@ def get_albums(cursor) -> List[Dict]:
 def get_tracks(cursor, album_id: Optional[str] = None) -> List[Dict]:
     if album_id:
         safe_id = album_id.replace("'", "''")
-        cursor.execute(f"SELECT * FROM tracks WHERE album_id = '{safe_id}' ORDER BY track_order, created_at")
+        cursor.execute(f"SELECT id, album_id, title, duration, file, price, cover, track_order, created_at FROM tracks WHERE album_id = '{safe_id}' ORDER BY track_order, created_at LIMIT 50")
     else:
-        cursor.execute('SELECT * FROM tracks ORDER BY created_at DESC')
+        cursor.execute("SELECT id, album_id, title, duration, file, price, cover, track_order, created_at FROM tracks ORDER BY created_at DESC LIMIT 100")
+    
     return cursor.fetchall()
 
 def get_stats(cursor, track_id: Optional[str] = None) -> Dict:
@@ -369,5 +375,6 @@ def error_response(message: str, status_code: int) -> Dict:
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*'
         },
+        'isBase64Encoded': False,
         'body': json.dumps({'error': message})
     }

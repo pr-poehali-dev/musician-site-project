@@ -103,24 +103,33 @@ export const apiClient = {
       
       const albums = await response.json();
       
-      return albums.map((album: any) => ({
-        id: album.id,
-        title: album.title,
-        artist: album.artist,
-        tracks: album.tracks_count || 0,
-        price: album.price,
-        cover: album.cover,
-        description: album.description,
-        trackList: (album.trackList || []).map((track: any) => ({
-          id: track.id,
-          title: track.title,
-          duration: track.duration,
-          file: track.file,
-          price: track.price,
-          cover: track.cover || '',
-          albumId: album.id
-        }))
-      }));
+      const localAlbums = JSON.parse(localStorage.getItem('albums') || '[]');
+      
+      return albums.map((album: any) => {
+        const localAlbum = localAlbums.find((a: any) => a.id === album.id);
+        
+        return {
+          id: album.id,
+          title: album.title,
+          artist: album.artist,
+          tracks: album.tracks_count || 0,
+          price: album.price,
+          cover: album.cover || localAlbum?.cover || '',
+          description: album.description,
+          trackList: (album.trackList || []).map((track: any) => {
+            const localTrack = localAlbum?.trackList?.find((t: any) => t.id === track.id);
+            return {
+              id: track.id,
+              title: track.title,
+              duration: track.duration,
+              file: track.file || localTrack?.file || '',
+              price: track.price,
+              cover: track.cover || localTrack?.cover || localAlbum?.cover || '',
+              albumId: album.id
+            };
+          })
+        };
+      });
     } catch (error) {
       console.error('Ошибка загрузки альбомов:', error);
       return [];
