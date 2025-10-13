@@ -100,6 +100,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 result = create_track(cursor, conn, body)
             elif path == 'stat':
                 result = update_stat(cursor, conn, body)
+            elif path == 'media':
+                result = save_media_file_handler(cursor, conn, body)
             elif path == 'order':
                 result = create_web_order(cursor, conn, body)
                 cursor.close()
@@ -294,6 +296,24 @@ def save_media_file(cursor, conn, file_id: str, file_type: str, data: str) -> st
     
     conn.commit()
     return file_id
+
+def save_media_file_handler(cursor, conn, data: Dict) -> Dict:
+    file_id = data.get('id', '').replace("'", "''")
+    file_type = data.get('file_type', 'application/octet-stream').replace("'", "''")
+    file_data = data.get('data', '')
+    
+    if not file_id or not file_data:
+        raise ValueError('Missing required fields: id or data')
+    
+    print(f'[DEBUG] Saving media file: {file_id}, type: {file_type}, data length: {len(file_data)}')
+    
+    saved_id = save_media_file(cursor, conn, file_id, file_type, file_data)
+    
+    return {
+        'id': saved_id,
+        'status': 'saved',
+        'message': 'Media file saved successfully'
+    }
 
 def create_album(cursor, conn, data: Dict) -> Dict:
     album_id = data.get('id', str(int(datetime.now().timestamp() * 1000))).replace("'", "''")
