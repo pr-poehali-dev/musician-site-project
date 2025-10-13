@@ -27,6 +27,9 @@ const ContactSection: React.FC = () => {
               <Icon name="MessageCircle" size={24} className="mr-2" />
               Связаться по поводу авторских прав
             </Button>
+            <p className="text-vintage-cream/60 mt-4 text-sm">
+              Telegram: @dshmelidze
+            </p>
           </div>
         </div>
 
