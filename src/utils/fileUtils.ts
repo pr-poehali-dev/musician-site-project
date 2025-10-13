@@ -8,17 +8,6 @@ export const saveAudioFile = async (file: File, filename: string, trackData: { t
     const fileId = await saveAudioToIndexedDB(file, filename);
     console.log('✅ Файл сохранен в IndexedDB:', fileId);
     
-    const reader = new FileReader();
-    const audioDataUrl = await new Promise<string>((resolve, reject) => {
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(new Error('Ошибка чтения файла'));
-      reader.readAsDataURL(file);
-    });
-    
-    console.log('📤 Отправляем аудиофайл на сервер...');
-    await apiClient.saveMediaToServer(fileId, file.type, audioDataUrl);
-    console.log('✅ Аудиофайл успешно сохранен на сервер');
-    
     const trackInfo = {
       id: Date.now().toString(),
       title: trackData.title,
