@@ -8,8 +8,10 @@ import SyncIndicator from '@/components/SyncIndicator';
 import { CartItem, Track } from '@/types';
 import { useAlbumManagement } from '@/hooks/useAlbumManagement';
 import { useTrackManagement } from '@/hooks/useTrackManagement';
+import { useToast } from '@/hooks/use-toast';
 
 const MusicPage = () => {
+  const { toast } = useToast();
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -51,6 +53,11 @@ const MusicPage = () => {
       const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
       if (existingItem) {
         console.log('✨ Увеличиваем количество существующего товара');
+        toast({
+          title: "Обновлено",
+          description: `"${item.title}" уже в корзине. Количество увеличено.`,
+          duration: 2000,
+        });
         return prevCart.map(cartItem =>
           cartItem.id === item.id
             ? { ...cartItem, quantity: cartItem.quantity + 1 }
@@ -58,6 +65,11 @@ const MusicPage = () => {
         );
       }
       console.log('➕ Добавляем новый товар в корзину');
+      toast({
+        title: "Добавлено в корзину",
+        description: `${type === 'album' ? 'Альбом' : 'Трек'} "${item.title}" добавлен в корзину`,
+        duration: 2000,
+      });
       return [...prevCart, cartItem];
     });
     console.log('✅ Корзина обновлена');
