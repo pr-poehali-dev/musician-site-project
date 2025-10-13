@@ -96,10 +96,23 @@ const AlbumView: React.FC<AlbumViewProps> = ({
     if (audio && currentTrack?.file) {
       const loadAudio = async () => {
         try {
+          console.log('🎵 Загружаем трек:', currentTrack.title);
+          console.log('📂 Файл трека:', currentTrack.file);
+          
           let audioUrl = currentTrack.file;
           
           if (audioUrl.startsWith('audio_')) {
+            console.log('🔍 Ищем аудиофайл в IndexedDB:', audioUrl);
             audioUrl = await getAudioFromIndexedDB(audioUrl);
+            console.log('✅ Аудио получено из IndexedDB:', audioUrl ? 'SUCCESS' : 'FAILED');
+          } else {
+            console.log('🌐 Используем прямую ссылку на аудио:', audioUrl);
+          }
+          
+          if (!audioUrl) {
+            console.error('❌ Не удалось получить URL аудиофайла для:', currentTrack.title);
+            setIsPlaying(false);
+            return;
           }
           
           audio.src = audioUrl;
@@ -107,12 +120,17 @@ const AlbumView: React.FC<AlbumViewProps> = ({
           setCurrentTime(0);
           setDuration(0);
           
+          console.log('🎧 Аудиоэлемент настроен, isPlaying:', isPlaying);
+          
           if (isPlaying) {
             const playPromise = audio.play();
             if (playPromise !== undefined) {
-              playPromise.catch(() => {
-                setIsPlaying(false);
-              });
+              playPromise
+                .then(() => console.log('▶️ Воспроизведение началось успешно'))
+                .catch((error) => {
+                  console.error('❌ Ошибка воспроизведения:', error);
+                  setIsPlaying(false);
+                });
             }
           }
         } catch (error) {
@@ -123,7 +141,7 @@ const AlbumView: React.FC<AlbumViewProps> = ({
       
       loadAudio();
     }
-  }, [currentTrack, isPlaying]);
+  }, [currentTrack]);
 
   useEffect(() => {
     const audio = audioRef.current;
