@@ -125,5 +125,21 @@ export const apiClient = {
       console.error('Ошибка загрузки альбомов:', error);
       return [];
     }
+  },
+
+  async getStats(): Promise<any> {
+    try {
+      const response = await fetch(`${API_URL}?path=stats`);
+      if (!response.ok) {
+        throw new Error('Ошибка загрузки статистики');
+      }
+      
+      const data = await response.json();
+      console.log('📊 Статистика загружена:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Ошибка загрузки статистики:', error);
+      throw error;
+    }
   }
 };

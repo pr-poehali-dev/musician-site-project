@@ -1,19 +1,61 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Track } from '@/types';
-import { getAllStats, getTopTracks, exportStats, resetStats } from '@/utils/trackStats';
+import { exportStats, resetStats } from '@/utils/trackStats';
 import { useToast } from '@/hooks/use-toast';
+import { apiClient } from '@/utils/apiClient';
 
 interface StatsPanelProps {
   tracks: Track[];
 }
 
+interface StatsData {
+  totals: {
+    total_plays: number;
+    total_downloads: number;
+    tracked_tracks: number;
+  };
+  top_tracks: Array<{
+    id: string;
+    title: string;
+    plays_count: number;
+    downloads_count: number;
+  }>;
+}
+
 const StatsPanel: React.FC<StatsPanelProps> = ({ tracks }) => {
   const { toast } = useToast();
-  const stats = getAllStats();
-  const topTracks = getTopTracks(tracks, 5);
+  const [stats, setStats] = useState<StatsData>({
+    totals: {
+      total_plays: 0,
+      total_downloads: 0,
+      tracked_tracks: 0
+    },
+    top_tracks: []
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      const data = await apiClient.getStats();
+      setStats(data);
+    } catch (error) {
+      console.error('Ошибка загрузки статистики:', error);
+      toast({
+        title: "❌ Ошибка загрузки статистики",
+        description: (error as Error).message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleExportStats = () => {
     try {
@@ -31,16 +73,34 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ tracks }) => {
     }
   };
 
-  const handleResetStats = () => {
+  const handleResetStats = async () => {
     if (window.confirm('Вы уверены, что хотите сбросить всю статистику? Это действие нельзя отменить.')) {
-      resetStats();
-      toast({
-        title: "🔄 Статистика сброшена",
-        description: "Все счетчики обнулены",
-      });
-      setTimeout(() => window.location.reload(), 1000);
+      try {
+        // Сброс локальной статистики
+        resetStats();
+        // Перезагрузка данных с сервера
+        await loadStats();
+        toast({
+          title: "🔄 Статистика сброшена",
+          description: "Все счетчики обнулены",
+        });
+      } catch (error) {
+        toast({
+          title: "❌ Ошибка сброса статистики",
+          description: (error as Error).message,
+          variant: "destructive",
+        });
+      }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-vintage-warm">Загрузка статистики...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -54,7 +114,7 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ tracks }) => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-vintage-dark-brown">
-              {stats.totalDownloads}
+              {stats.totals.total_downloads}
             </div>
           </CardContent>
         </Card>
@@ -68,7 +128,7 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ tracks }) => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-vintage-dark-brown">
-              {stats.totalPlays}
+              {stats.totals.total_plays}
             </div>
           </CardContent>
         </Card>
@@ -82,7 +142,7 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ tracks }) => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-vintage-dark-brown">
-              {Object.keys(stats.tracks).length}
+              {stats.totals.tracked_tracks}
             </div>
           </CardContent>
         </Card>
@@ -96,36 +156,39 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ tracks }) => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {topTracks.length > 0 ? (
+          {stats.top_tracks.length > 0 ? (
             <div className="space-y-3">
-              {topTracks.map((track, index) => (
-                <div 
-                  key={track.id}
-                  className="flex items-center gap-3 p-3 bg-vintage-brown/5 rounded-lg"
-                >
-                  <div className="flex items-center justify-center w-8 h-8 bg-vintage-dark-brown text-vintage-cream rounded-full font-bold text-sm">
-                    {index + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-vintage-dark-brown truncate">
-                      {track.title}
-                    </p>
-                    <p className="text-xs text-vintage-warm/60">
-                      {track.duration}
-                    </p>
-                  </div>
-                  <div className="flex gap-4 text-sm">
-                    <div className="flex items-center gap-1 text-vintage-warm">
-                      <Icon name="Download" size={14} />
-                      <span>{track.downloads || 0}</span>
+              {stats.top_tracks.map((track, index) => {
+                const fullTrack = tracks.find(t => t.id === track.id);
+                return (
+                  <div 
+                    key={track.id}
+                    className="flex items-center gap-3 p-3 bg-vintage-brown/5 rounded-lg"
+                  >
+                    <div className="flex items-center justify-center w-8 h-8 bg-vintage-dark-brown text-vintage-cream rounded-full font-bold text-sm">
+                      {index + 1}
                     </div>
-                    <div className="flex items-center gap-1 text-vintage-warm">
-                      <Icon name="Play" size={14} />
-                      <span>{track.plays || 0}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-vintage-dark-brown truncate">
+                        {track.title}
+                      </p>
+                      <p className="text-xs text-vintage-warm/60">
+                        {fullTrack?.duration || '—'}
+                      </p>
+                    </div>
+                    <div className="flex gap-4 text-sm">
+                      <div className="flex items-center gap-1 text-vintage-warm">
+                        <Icon name="Download" size={14} />
+                        <span>{track.downloads_count || 0}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-vintage-warm">
+                        <Icon name="Play" size={14} />
+                        <span>{track.plays_count || 0}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="text-center text-vintage-warm/60 py-6">
