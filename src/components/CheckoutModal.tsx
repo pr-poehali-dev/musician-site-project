@@ -24,6 +24,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  console.log('🛒 CheckoutModal rendered, cart:', cart, 'totalPrice:', totalPrice);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -45,7 +47,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto" style={{ zIndex: 9999 }}>
       <div className="flex items-start justify-center min-h-screen p-4 pt-20">
         <Card className="bg-vintage-cream/95 border-vintage-brown/20 shadow-2xl max-w-md w-full my-8">
           <CardContent className="p-6">
