@@ -4,20 +4,13 @@ const API_URL = 'https://functions.poehali.dev/25aac639-cf81-4eb7-80fc-aa9a157a2
 
 export const apiClient = {
   async saveTrackToServer(track: Track): Promise<void> {
-    // Сохраняем аудио локально в localStorage
-    const audioKey = `audio_${track.id}`;
-    if (track.file && track.file.startsWith('data:')) {
-      localStorage.setItem(audioKey, track.file);
-      console.log(`💾 Аудио сохранено в localStorage: ${audioKey}`);
-    }
-    
-    // На сервер отправляем только метаданные, без base64 аудио
+    // На сервер отправляем только метаданные (БЕЗ аудио - слишком большой файл)
     const requestData = {
       id: track.id,
       album_id: track.albumId || '',
       title: track.title,
       duration: track.duration,
-      file: track.file.startsWith('data:') ? audioKey : track.file, // Сохраняем ключ вместо base64
+      file: '', // Аудио НЕ сохраняем (только в памяти браузера)
       price: track.price,
       cover: track.cover || '',
       track_order: 0
@@ -130,21 +123,11 @@ export const apiClient = {
         const processedTracks = (album.trackList || []).map((track: any) => {
           const trackCover = track.cover || coverUrl;
           
-          // Если file это ключ localStorage, загружаем из него
-          let audioFile = track.file || '';
-          if (audioFile.startsWith('audio_')) {
-            const savedAudio = localStorage.getItem(audioFile);
-            if (savedAudio) {
-              audioFile = savedAudio;
-              console.log(`📂 Аудио загружено из localStorage: ${audioFile.substring(0, 30)}...`);
-            }
-          }
-          
           return {
             id: track.id,
             title: track.title,
             duration: track.duration,
-            file: audioFile,
+            file: '', // Аудио не загружаем с сервера (хранится только локально)
             price: track.price,
             cover: trackCover,
             albumId: album.id
