@@ -102,12 +102,21 @@ export const apiClient = {
       if (!response.ok) return [];
       
       const albums = await response.json();
+      console.log('📦 Загружено альбомов с сервера:', albums.length);
       
       const processedAlbums = await Promise.all(albums.map(async (album: any) => {
         let coverUrl = album.cover || '';
+        console.log(`🎨 Альбом "${album.title}" - оригинальная обложка:`, coverUrl);
+        
         if (coverUrl && coverUrl.startsWith('cover_')) {
+          console.log(`⏳ Загружаем обложку ${coverUrl} из БД...`);
           const mediaData = await this.getMediaFile(coverUrl);
-          if (mediaData) coverUrl = mediaData;
+          if (mediaData) {
+            coverUrl = mediaData;
+            console.log(`✅ Обложка ${coverUrl.substring(0, 30)}... загружена`);
+          } else {
+            console.warn(`⚠️ Обложка ${coverUrl} не загрузилась`);
+          }
         }
         
         const processedTracks = (album.trackList || []).map((track: any) => {
