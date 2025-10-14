@@ -185,14 +185,31 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
     except Exception as e:
         import traceback
-        print(f'[ERROR] Exception: {str(e)}')
+        error_msg = str(e)
+        print(f'[ERROR] Exception: {error_msg}')
         print(f'[ERROR] Traceback: {traceback.format_exc()}')
-        return error_response(str(e), 500)
-    finally:
-        if 'cursor' in locals():
-            cursor.close()
-        if 'conn' in locals():
-            conn.close()
+        
+        # Закрываем соединение перед возвратом ошибки
+        if 'cursor' in locals() and cursor:
+            try:
+                cursor.close()
+            except:
+                pass
+        if 'conn' in locals() and conn:
+            try:
+                conn.close()
+            except:
+                pass
+        
+        return {
+            'statusCode': 500,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'isBase64Encoded': False,
+            'body': json.dumps({'error': error_msg})
+        }
 
 def get_albums(cursor) -> List[Dict]:
     print('[DEBUG] Getting albums...')
