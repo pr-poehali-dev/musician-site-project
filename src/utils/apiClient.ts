@@ -51,7 +51,7 @@ export const apiClient = {
         id: album.id,
         title: album.title,
         artist: album.artist,
-        cover: album.cover,
+        cover: '', // НЕ отправляем обложку (слишком большой размер)
         price: album.price,
         description: album.description || ''
       })
@@ -84,7 +84,7 @@ export const apiClient = {
         id: albumId,
         title: albumData.title,
         artist: albumData.artist,
-        cover: albumData.cover,
+        cover: '', // НЕ отправляем обложку (слишком большой размер)
         price: albumData.price,
         description: albumData.description || ''
       })
