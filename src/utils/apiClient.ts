@@ -174,26 +174,11 @@ export const apiClient = {
         return '';
       }
 
-      const cachedMedia = await this.getMediaFromIndexedDB(mediaId);
-      if (cachedMedia) {
-        return cachedMedia;
-      }
-
-      if (mediaId.startsWith('audio_')) {
-        try {
-          const { getAudioFromIndexedDB } = await import('./audioStorage');
-          const audioUrl = await getAudioFromIndexedDB(mediaId);
-          if (audioUrl) {
-            return audioUrl;
-          }
-        } catch (vintageAudioError) {
-          console.log(`Аудио ${mediaId} не найдено в VintageAudioDB, пробую сервер`);
-        }
-      }
+      console.log(`🔍 Загрузка медиафайла ${mediaId} с сервера...`);
 
       const response = await fetch(`${API_URL}?path=media&id=${mediaId}`);
       if (!response.ok) {
-        console.warn(`Медиафайл ${mediaId} не найден`);
+        console.warn(`⚠️ Медиафайл ${mediaId} не найден на сервере`);
         return '';
       }
 
@@ -201,7 +186,7 @@ export const apiClient = {
       const mediaData = data.data || '';
       
       if (mediaData) {
-        await this.saveMediaToIndexedDB(mediaId, mediaData);
+        console.log(`✅ Медиафайл ${mediaId} загружен (${Math.round(mediaData.length / 1024)} KB)`);
       }
       
       return mediaData;
@@ -211,63 +196,5 @@ export const apiClient = {
     }
   },
 
-  async getMediaFromIndexedDB(mediaId: string): Promise<string | null> {
-    return new Promise((resolve) => {
-      const request = indexedDB.open('MediaStorage', 1);
-      
-      request.onerror = () => resolve(null);
-      
-      request.onupgradeneeded = (event: any) => {
-        const db = event.target.result;
-        if (!db.objectStoreNames.contains('media')) {
-          db.createObjectStore('media', { keyPath: 'id' });
-        }
-      };
-      
-      request.onsuccess = (event: any) => {
-        const db = event.target.result;
-        
-        if (!db.objectStoreNames.contains('media')) {
-          resolve(null);
-          return;
-        }
-        
-        const transaction = db.transaction(['media'], 'readonly');
-        const store = transaction.objectStore('media');
-        const getRequest = store.get(mediaId);
-        
-        getRequest.onsuccess = () => {
-          resolve(getRequest.result?.data || null);
-        };
-        
-        getRequest.onerror = () => resolve(null);
-      };
-    });
-  },
 
-  async saveMediaToIndexedDB(mediaId: string, data: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open('MediaStorage', 1);
-      
-      request.onerror = () => reject(new Error('IndexedDB error'));
-      
-      request.onupgradeneeded = (event: any) => {
-        const db = event.target.result;
-        if (!db.objectStoreNames.contains('media')) {
-          db.createObjectStore('media', { keyPath: 'id' });
-        }
-      };
-      
-      request.onsuccess = (event: any) => {
-        const db = event.target.result;
-        const transaction = db.transaction(['media'], 'readwrite');
-        const store = transaction.objectStore('media');
-        
-        store.put({ id: mediaId, data });
-        
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(new Error('Transaction error'));
-      };
-    });
-  }
 };

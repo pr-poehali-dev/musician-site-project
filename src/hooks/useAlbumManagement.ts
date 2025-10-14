@@ -94,16 +94,8 @@ export const useAlbumManagement = () => {
       
       await apiClient.saveAlbumToServer(newAlbum);
       
-      const updatedAlbums = [...albums, newAlbum];
-      console.log('Обновленный список альбомов:', updatedAlbums);
-      
-      const dataToSave = JSON.stringify(updatedAlbums);
-      const dataSizeKB = (dataToSave.length / 1024).toFixed(2);
-      console.log('Размер данных для сохранения:', dataSizeKB + ' KB');
-      
-      setAlbums(updatedAlbums);
-      localStorage.setItem('albums', dataToSave);
-      console.log('✅ Альбом успешно сохранен в localStorage и на сервере');
+      console.log('✅ Альбом сохранен на сервере, перезагружаем список...');
+      await loadAlbums();
       
       toast({
         title: "✅ Альбом сохранен",
@@ -126,13 +118,7 @@ export const useAlbumManagement = () => {
     try {
       await apiClient.updateAlbumOnServer(albumId, albumData);
       
-      const updatedAlbums = albums.map(album => 
-        album.id === albumId 
-          ? { ...album, ...albumData } 
-          : album
-      );
-      setAlbums(updatedAlbums);
-      localStorage.setItem('albums', JSON.stringify(updatedAlbums));
+      await loadAlbums();
       
       toast({
         title: "✅ Альбом обновлен",
@@ -154,9 +140,8 @@ export const useAlbumManagement = () => {
     try {
       await apiClient.deleteAlbumFromServer(albumId);
       
-      const updatedAlbums = albums.filter(album => album.id !== albumId);
-      setAlbums(updatedAlbums);
-      localStorage.setItem('albums', JSON.stringify(updatedAlbums));
+      await loadAlbums();
+      
       window.dispatchEvent(new CustomEvent('albumsUpdated'));
       window.dispatchEvent(new CustomEvent('tracksUpdated'));
       
@@ -186,17 +171,7 @@ export const useAlbumManagement = () => {
       
       await apiClient.saveTrackToServer(newTrack);
       
-      const updatedAlbums = albums.map(album => 
-        album.id === albumId 
-          ? { 
-              ...album, 
-              trackList: [...album.trackList, newTrack],
-              tracks: album.trackList.length + 1
-            } 
-          : album
-      );
-      setAlbums(updatedAlbums);
-      localStorage.setItem('albums', JSON.stringify(updatedAlbums));
+      await loadAlbums();
       
       toast({
         title: "✅ Трек сохранен",
@@ -241,7 +216,6 @@ export const useAlbumManagement = () => {
     });
 
     setAlbums(updatedAlbums);
-    localStorage.setItem('albums', JSON.stringify(updatedAlbums));
     window.dispatchEvent(new CustomEvent('albumsUpdated'));
   };
 

@@ -27,29 +27,21 @@ const openDB = (): Promise<IDBDatabase> => {
 };
 
 export const saveAudioToIndexedDB = async (file: File, filename: string): Promise<string> => {
-  const db = await openDB();
   const fileId = `audio_${Date.now()}_${filename}`;
-
+  
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-
-    const audioFile: AudioFile = {
-      id: fileId,
-      filename,
-      blob: file,
-      uploadedAt: Date.now()
+    const reader = new FileReader();
+    
+    reader.onload = () => {
+      const base64Data = reader.result as string;
+      resolve(base64Data);
     };
-
-    const request = store.add(audioFile);
-
-    request.onsuccess = () => {
-      resolve(fileId);
+    
+    reader.onerror = () => {
+      reject(reader.error);
     };
-
-    request.onerror = () => {
-      reject(request.error);
-    };
+    
+    reader.readAsDataURL(file);
   });
 };
 

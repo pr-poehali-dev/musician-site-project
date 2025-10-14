@@ -101,15 +101,15 @@ const TrackManager: React.FC<TrackManagerProps> = ({
     
     try {
       const filename = generateAudioFilename(uploadedFile.name, newTrack.title);
-      const savedPath = await saveAudioFile(uploadedFile, filename, { title: newTrack.title, duration: newTrack.duration });
+      const base64Audio = await saveAudioFile(uploadedFile, filename, { title: newTrack.title, duration: newTrack.duration });
       
-      setNewTrack(prev => ({ ...prev, file: savedPath }));
-      setSavedFilePath(savedPath);
+      setNewTrack(prev => ({ ...prev, file: base64Audio }));
+      setSavedFilePath(base64Audio);
       
-      alert('Трек успешно сохранен в папку audio!');
+      console.log('✅ Аудио конвертировано в base64, готово к сохранению');
     } catch (error) {
-      console.error('Ошибка сохранения файла:', error);
-      setFileError('Ошибка сохранения файла');
+      console.error('Ошибка конвертации файла:', error);
+      setFileError('Ошибка конвертации файла');
     } finally {
       setIsSaving(false);
     }

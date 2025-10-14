@@ -2,32 +2,10 @@ import { saveAudioToIndexedDB } from './audioStorage';
 
 export const saveAudioFile = async (file: File, filename: string, trackData: { title: string; duration: string }): Promise<string> => {
   try {
-    // Сохраняем аудиофайл в IndexedDB
-    const fileId = await saveAudioToIndexedDB(file, filename);
-    
-    // Сохраняем информацию о треке в localStorage
-    const trackInfo = {
-      id: Date.now().toString(),
-      title: trackData.title,
-      duration: trackData.duration,
-      file: fileId, // ID файла в IndexedDB
-      price: 129
-    };
-
-    const savedTracks = localStorage.getItem('uploadedTracks');
-    let uploadedTracks = [];
-    if (savedTracks) {
-      uploadedTracks = JSON.parse(savedTracks);
-    }
-    uploadedTracks.push(trackInfo);
-    localStorage.setItem('uploadedTracks', JSON.stringify(uploadedTracks));
-
-    // Отправляем событие для обновления компонентов
-    window.dispatchEvent(new CustomEvent('tracksUpdated'));
-    
-    return fileId;
+    const base64Data = await saveAudioToIndexedDB(file, filename);
+    return base64Data;
   } catch (error) {
-    throw new Error(`Ошибка сохранения файла: ${error}`);
+    throw new Error(`Ошибка конвертации файла: ${error}`);
   }
 };
 
