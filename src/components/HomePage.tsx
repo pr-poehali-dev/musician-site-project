@@ -3,12 +3,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from 'react-router-dom';
 import Icon from '@/components/ui/icon';
+import Logo from '@/components/Logo';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-brown to-vintage-dark-brown">
+      {/* Header with Logo */}
+      <header className="p-6">
+        <div className="max-w-6xl mx-auto">
+          <Logo />
+        </div>
+      </header>
+
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10" />

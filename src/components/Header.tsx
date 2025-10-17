@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate, useLocation } from 'react-router-dom';
 import Icon from '@/components/ui/icon';
+import Logo from '@/components/Logo';
 
 import CheckoutModal from './CheckoutModal';
 import { CartItem } from '@/types';
@@ -61,12 +62,7 @@ const Header: React.FC<HeaderProps> = ({
     <nav className="sticky top-0 z-50 backdrop-blur-sm bg-vintage-cream/80 border-b border-vintage-brown/20">
       <div className="max-w-6xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <h1 
-            className="text-2xl font-bold text-vintage-warm cursor-pointer hover:text-vintage-dark-brown transition-colors"
-            onClick={() => navigate('/')}
-          >
-            Дмитрий Шмелидзэ
-          </h1>
+          <Logo />
           <div className="hidden md:flex space-x-8">
             <button 
               onClick={() => navigate('/')} 

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import Icon from "@/components/ui/icon";
+import Logo from "@/components/Logo";
 import { useNavigate } from "react-router-dom";
 
 const Contact = () => {
@@ -13,12 +14,9 @@ const Contact = () => {
       <header className="p-6">
         <nav className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center space-x-8">
-            <h1 
-              className="text-2xl font-bold text-emerald-100 cursor-pointer hover:text-emerald-200"
-              onClick={() => navigate('/')}
-            >
-              Дмитрий Шмелидзэ
-            </h1>
+            <div className="text-emerald-100">
+              <Logo />
+            </div>
             <div className="hidden md:flex space-x-6">
               <Button 
                 variant="ghost" 
