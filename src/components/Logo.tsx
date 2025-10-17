@@ -9,9 +9,9 @@ const Logo = () => {
       onClick={() => navigate('/')}
     >
       <img 
-        src="https://cdn.poehali.dev/files/525134cd-28d4-4400-b745-442ff0cdde5d.jpg" 
+        src="https://cdn.poehali.dev/files/35bf3198-6bc5-4049-9328-baf39a81cdb5.jpg" 
         alt="Shmelidze&Co - логотип"
-        className="h-16 w-auto object-contain"
+        className="h-16 w-16 object-contain"
       />
     </div>
   );
