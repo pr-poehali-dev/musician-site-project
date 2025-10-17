@@ -8,6 +8,7 @@ import Logo from '@/components/Logo';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import AlbumForm, { AlbumFormData } from '@/components/AlbumForm';
+import AlbumDetail from '@/components/AlbumDetail';
 
 interface Album {
   id: number;
@@ -26,6 +27,7 @@ const Dashboard = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingAlbum, setEditingAlbum] = useState<Album | null>(null);
+  const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
 
   const USER_MUSIC_API = 'https://functions.poehali.dev/user-music';
 
@@ -222,6 +224,14 @@ const Dashboard = () => {
       </header>
 
       <main className="max-w-6xl mx-auto p-6">
+        {selectedAlbum ? (
+          <AlbumDetail
+            album={selectedAlbum}
+            token={token!}
+            onBack={() => setSelectedAlbum(null)}
+          />
+        ) : (
+        <>
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-vintage-dark-brown mb-2">Личный кабинет</h1>
           <p className="text-vintage-brown">Управляйте своими альбомами и треками</p>
@@ -310,24 +320,34 @@ const Dashboard = () => {
                       )}
                       <h3 className="font-bold text-vintage-dark-brown mb-1">{album.title}</h3>
                       <p className="text-sm text-vintage-brown mb-3">{album.price} ₽</p>
-                      <div className="flex gap-2">
+                      <div className="flex flex-col gap-2">
                         <Button 
                           size="sm" 
-                          variant="outline" 
-                          onClick={() => openEditDialog(album)}
-                          className="flex-1 border-vintage-brown/30 hover:bg-vintage-brown/10"
+                          onClick={() => setSelectedAlbum(album)}
+                          className="w-full bg-vintage-warm/80 hover:bg-vintage-warm text-vintage-cream"
                         >
-                          <Icon name="Edit" size={16} className="mr-1" />
-                          Редактировать
+                          <Icon name="Music" size={16} className="mr-1" />
+                          Управление треками
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleDeleteAlbum(album.id)}
-                          className="border-red-300 text-red-600 hover:bg-red-50"
-                        >
-                          <Icon name="Trash2" size={16} />
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => openEditDialog(album)}
+                            className="flex-1 border-vintage-brown/30 hover:bg-vintage-brown/10"
+                          >
+                            <Icon name="Edit" size={16} className="mr-1" />
+                            Редактировать
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleDeleteAlbum(album.id)}
+                            className="border-red-300 text-red-600 hover:bg-red-50"
+                          >
+                            <Icon name="Trash2" size={16} />
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -336,6 +356,8 @@ const Dashboard = () => {
             )}
           </CardContent>
         </Card>
+        </>
+        )}
       </main>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
