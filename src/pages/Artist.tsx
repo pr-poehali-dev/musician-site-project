@@ -198,6 +198,67 @@ const Artist = () => {
           </Card>
         ) : (
           <div className="space-y-8">
+            {/* Топ популярных треков */}
+            {(() => {
+              const allTracks = Object.values(tracks).flat();
+              const topTracks = allTracks
+                .filter(t => t.plays_count && t.plays_count > 0)
+                .sort((a, b) => (b.plays_count || 0) - (a.plays_count || 0))
+                .slice(0, 5);
+              
+              if (topTracks.length > 0) {
+                return (
+                  <Card className="bg-vintage-cream/80 border-vintage-brown/30">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-3 mb-6">
+                        <Icon name="TrendingUp" size={28} className="text-vintage-warm" />
+                        <h2 className="text-2xl font-bold text-vintage-dark-brown">Популярные треки</h2>
+                      </div>
+                      <div className="space-y-3">
+                        {topTracks.map((track, index) => (
+                          <div
+                            key={track.id}
+                            className="flex items-center gap-4 p-4 bg-vintage-brown/5 rounded-lg hover:bg-vintage-brown/10 transition-colors"
+                          >
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-vintage-warm text-vintage-cream font-bold">
+                              {index + 1}
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-semibold text-vintage-dark-brown">{track.title}</p>
+                              <div className="flex gap-3 items-center mt-1">
+                                {track.genre && (
+                                  <p className="text-xs text-vintage-warm">
+                                    <Icon name="Music" size={12} className="inline mr-1" />
+                                    {track.genre}
+                                  </p>
+                                )}
+                                <p className="text-xs text-vintage-brown/70">
+                                  <Icon name="Headphones" size={12} className="inline mr-1" />
+                                  {track.plays_count} прослушиваний
+                                </p>
+                              </div>
+                            </div>
+                            {track.preview_url && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-vintage-brown/30"
+                                onClick={() => playTrack(track)}
+                              >
+                                <Icon name="Play" size={16} />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              }
+              return null;
+            })()}
+            
+            {/* Альбомы */}
             {albums.map((album) => (
               <Card key={album.id} className="bg-vintage-cream/80 border-vintage-brown/30 overflow-hidden">
                 <CardContent className="p-0">
