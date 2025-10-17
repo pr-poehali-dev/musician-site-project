@@ -13,6 +13,7 @@ const Logo = () => {
         alt="Shmelidze&Co - логотип"
         className="h-16 w-16 object-contain"
       />
+      <span className="text-2xl font-bold text-vintage-dark-brown">Shmelidze&Co</span>
     </div>
   );
 };
