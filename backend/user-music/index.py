@@ -98,7 +98,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 if album_id:
                     cur.execute('''
                         SELECT t.id, t.title, t.duration, t.preview_url, t.file_url, t.price,
-                               t.label, t.album_id, t.created_at, u.username, u.display_name
+                               t.label, t.genre, t.album_id, t.created_at, u.username, u.display_name
                         FROM tracks t
                         JOIN users u ON t.user_id = u.id
                         WHERE t.album_id = %s
@@ -107,7 +107,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 elif username:
                     cur.execute('''
                         SELECT t.id, t.title, t.duration, t.preview_url, t.file_url, t.price,
-                               t.label, t.album_id, t.created_at
+                               t.label, t.genre, t.album_id, t.created_at
                         FROM tracks t
                         JOIN users u ON t.user_id = u.id
                         WHERE u.username = %s
@@ -115,7 +115,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     ''', (username,))
                 elif user_id:
                     cur.execute('''
-                        SELECT id, title, duration, preview_url, file_url, price, label, album_id, created_at
+                        SELECT id, title, duration, preview_url, file_url, price, label, genre, album_id, created_at
                         FROM tracks
                         WHERE user_id = %s
                         ORDER BY created_at DESC
@@ -179,6 +179,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 file_url = body.get('file_url')
                 price = body.get('price', 0)
                 label = body.get('label')
+                genre = body.get('genre')
                 
                 if not title or not album_id:
                     return {
@@ -196,10 +197,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     }
                 
                 cur.execute('''
-                    INSERT INTO tracks (user_id, album_id, title, duration, preview_url, file_url, price, label, created_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
-                    RETURNING id, title, duration, preview_url, file_url, price, label, album_id, created_at
-                ''', (user_id, album_id, title, duration, preview_url, file_url, price, label))
+                    INSERT INTO tracks (user_id, album_id, title, duration, preview_url, file_url, price, label, genre, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                    RETURNING id, title, duration, preview_url, file_url, price, label, genre, album_id, created_at
+                ''', (user_id, album_id, title, duration, preview_url, file_url, price, label, genre))
                 track = cur.fetchone()
                 conn.commit()
                 
@@ -303,6 +304,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 if 'label' in body:
                     updates.append('label = %s')
                     params.append(body['label'])
+                if 'genre' in body:
+                    updates.append('genre = %s')
+                    params.append(body['genre'])
                 
                 if not updates:
                     return {

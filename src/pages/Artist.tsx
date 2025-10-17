@@ -26,6 +26,7 @@ interface Track {
   price: number;
   album_id: number;
   label?: string;
+  genre?: string;
 }
 
 interface Artist {
@@ -222,13 +223,21 @@ const Artist = () => {
                                 <span className="text-vintage-brown/60 font-mono w-6">{index + 1}</span>
                                 <div>
                                   <p className="font-medium text-vintage-dark-brown">{track.title}</p>
-                                  {track.label && (
-                                    <p className="text-xs text-vintage-warm mb-1">
-                                      <Icon name="Tag" size={12} className="inline mr-1" />
-                                      {track.label}
-                                    </p>
-                                  )}
-                                  <p className="text-sm text-vintage-brown">
+                                  <div className="flex gap-3 items-center mt-1">
+                                    {track.genre && (
+                                      <p className="text-xs text-vintage-warm">
+                                        <Icon name="Music" size={12} className="inline mr-1" />
+                                        {track.genre}
+                                      </p>
+                                    )}
+                                    {track.label && (
+                                      <p className="text-xs text-vintage-brown/70">
+                                        <Icon name="Tag" size={12} className="inline mr-1" />
+                                        {track.label}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-vintage-brown mt-1">
                                     {Math.floor(track.duration / 60)}:{(track.duration % 60).toString().padStart(2, '0')}
                                   </p>
                                 </div>

@@ -14,6 +14,7 @@ interface Track {
   file_url?: string;
   price: number;
   label?: string;
+  genre?: string;
   created_at: string;
 }
 

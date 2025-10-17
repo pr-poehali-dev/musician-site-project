@@ -2,8 +2,38 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
 import AudioUploader from '@/components/AudioUploader';
+
+const MUSIC_GENRES = [
+  'Поп',
+  'Рок',
+  'Хип-хоп',
+  'Рэп',
+  'Электронная',
+  'Джаз',
+  'Блюз',
+  'R&B',
+  'Кантри',
+  'Регги',
+  'Классическая',
+  'Метал',
+  'Панк',
+  'Фолк',
+  'Инди',
+  'Диско',
+  'Фанк',
+  'Соул',
+  'Техно',
+  'Хаус',
+  'Транс',
+  'Дабстеп',
+  'Драм-н-бейс',
+  'Ambient',
+  'Шансон',
+  'Другое',
+];
 
 interface TrackFormProps {
   onSubmit: (trackData: TrackFormData) => Promise<void>;
@@ -21,6 +51,7 @@ export interface TrackFormData {
   file_url: string;
   price: number;
   label?: string;
+  genre?: string;
 }
 
 const TrackForm = ({ onSubmit, onCancel, albumId, initialData, isEditing = false }: TrackFormProps) => {
@@ -33,6 +64,7 @@ const TrackForm = ({ onSubmit, onCancel, albumId, initialData, isEditing = false
       file_url: '',
       price: 0,
       label: '',
+      genre: '',
     }
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -193,6 +225,30 @@ const TrackForm = ({ onSubmit, onCancel, albumId, initialData, isEditing = false
           placeholder="Например: Universal Music, Sony Music"
           className="border-vintage-brown/30 focus:border-vintage-warm"
         />
+        <p className="text-xs text-vintage-brown/60 mt-1">
+          Необязательное поле
+        </p>
+      </div>
+
+      <div>
+        <Label htmlFor="genre" className="text-vintage-dark-brown">
+          Стиль музыки
+        </Label>
+        <Select
+          value={formData.genre || ''}
+          onValueChange={(value) => setFormData({ ...formData, genre: value })}
+        >
+          <SelectTrigger className="border-vintage-brown/30 focus:border-vintage-warm">
+            <SelectValue placeholder="Выберите стиль музыки" />
+          </SelectTrigger>
+          <SelectContent>
+            {MUSIC_GENRES.map((genre) => (
+              <SelectItem key={genre} value={genre}>
+                {genre}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <p className="text-xs text-vintage-brown/60 mt-1">
           Необязательное поле
         </p>
