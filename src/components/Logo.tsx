@@ -9,11 +9,10 @@ const Logo = () => {
       onClick={() => navigate('/')}
     >
       <img 
-        src="https://cdn.poehali.dev/projects/43e5d54d-0b57-4be1-b3b3-e23b086ac4cc/files/50212536-b19d-49e1-8c31-c6ddcb354c79.jpg" 
-        alt="Дмитрий Шмелидзэ - логотип"
-        className="w-12 h-12 rounded-full object-cover"
+        src="https://cdn.poehali.dev/files/525134cd-28d4-4400-b745-442ff0cdde5d.jpg" 
+        alt="Shmelidze&Co - логотип"
+        className="h-16 w-auto object-contain"
       />
-      <span className="text-xl font-bold">Дмитрий Шмелидзэ</span>
     </div>
   );
 };
