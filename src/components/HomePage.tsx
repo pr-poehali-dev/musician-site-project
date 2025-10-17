@@ -12,8 +12,25 @@ const HomePage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-brown to-vintage-dark-brown">
       {/* Header with Logo */}
       <header className="p-6">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Logo />
+          <div className="flex gap-3">
+            <Button 
+              variant="outline"
+              className="border-vintage-brown/30 text-vintage-brown hover:bg-vintage-brown hover:text-vintage-cream"
+              onClick={() => navigate('/auth')}
+            >
+              <Icon name="LogIn" size={16} className="mr-2" />
+              Вход
+            </Button>
+            <Button 
+              className="bg-vintage-warm hover:bg-vintage-brown text-vintage-cream"
+              onClick={() => navigate('/auth')}
+            >
+              <Icon name="UserPlus" size={16} className="mr-2" />
+              Регистрация
+            </Button>
+          </div>
         </div>
       </header>
 
