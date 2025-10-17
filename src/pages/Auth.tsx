@@ -258,12 +258,25 @@ const Auth = () => {
                       <Icon name="ShieldCheck" size={16} className="text-vintage-warm" />
                       Подтвердите, что вы человек
                     </Label>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <div className="flex-1 bg-vintage-cream p-3 rounded border border-vintage-brown/20 text-center">
                         <span className="text-2xl font-bold text-vintage-dark-brown font-mono">
                           {captchaQuestion} = ?
                         </span>
                       </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          generateCaptcha();
+                          setUserCaptchaAnswer('');
+                        }}
+                        className="border-vintage-brown/30 hover:bg-vintage-brown/10 px-3"
+                        title="Сменить пример"
+                      >
+                        <Icon name="RefreshCw" size={18} />
+                      </Button>
                       <Input
                         id="captcha"
                         type="number"
@@ -275,7 +288,7 @@ const Auth = () => {
                       />
                     </div>
                     <p className="text-xs text-vintage-brown/70 mt-2">
-                      Решите простой математический пример
+                      Решите простой математический пример или обновите его
                     </p>
                   </div>
                   
