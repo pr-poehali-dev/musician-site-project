@@ -33,6 +33,8 @@ const AlbumDetail = ({ album, token, onBack }: AlbumDetailProps) => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddTrackOpen, setIsAddTrackOpen] = useState(false);
+  const [isEditTrackOpen, setIsEditTrackOpen] = useState(false);
+  const [editingTrack, setEditingTrack] = useState<Track | null>(null);
   const { toast } = useToast();
 
   const USER_MUSIC_API = 'https://functions.poehali.dev/user-music';
@@ -93,6 +95,49 @@ const AlbumDetail = ({ album, token, onBack }: AlbumDetailProps) => {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleEditTrack = async (trackData: TrackFormData) => {
+    if (!editingTrack) return;
+
+    try {
+      const response = await fetch(`${USER_MUSIC_API}?path=tracks&id=${editingTrack.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token,
+        },
+        body: JSON.stringify(trackData),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Трек обновлён!',
+          description: 'Изменения сохранены',
+        });
+        setIsEditTrackOpen(false);
+        setEditingTrack(null);
+        fetchTracks();
+      } else {
+        const error = await response.json();
+        toast({
+          title: 'Ошибка',
+          description: error.message || 'Не удалось обновить трек',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Произошла ошибка при обновлении трека',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const openEditDialog = (track: Track) => {
+    setEditingTrack(track);
+    setIsEditTrackOpen(true);
   };
 
   const handleDeleteTrack = async (trackId: number) => {
@@ -197,14 +242,24 @@ const AlbumDetail = ({ album, token, onBack }: AlbumDetailProps) => {
                 {track.preview_url && (
                   <audio src={track.preview_url} controls className="max-w-xs" />
                 )}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleDeleteTrack(track.id)}
-                  className="border-red-300 text-red-600 hover:bg-red-50"
-                >
-                  <Icon name="Trash2" size={16} />
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openEditDialog(track)}
+                    className="border-vintage-brown/30 hover:bg-vintage-brown/10"
+                  >
+                    <Icon name="Edit" size={16} />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDeleteTrack(track.id)}
+                    className="border-red-300 text-red-600 hover:bg-red-50"
+                  >
+                    <Icon name="Trash2" size={16} />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -221,6 +276,33 @@ const AlbumDetail = ({ album, token, onBack }: AlbumDetailProps) => {
             onSubmit={handleAddTrack}
             onCancel={() => setIsAddTrackOpen(false)}
           />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditTrackOpen} onOpenChange={setIsEditTrackOpen}>
+        <DialogContent className="bg-vintage-cream border-vintage-brown/30">
+          <DialogHeader>
+            <DialogTitle className="text-vintage-dark-brown">Редактировать трек</DialogTitle>
+          </DialogHeader>
+          {editingTrack && (
+            <TrackForm
+              albumId={album.id}
+              onSubmit={handleEditTrack}
+              onCancel={() => {
+                setIsEditTrackOpen(false);
+                setEditingTrack(null);
+              }}
+              initialData={{
+                title: editingTrack.title,
+                album_id: album.id,
+                duration: editingTrack.duration,
+                preview_url: editingTrack.preview_url || '',
+                file_url: editingTrack.file_url || '',
+                price: editingTrack.price,
+              }}
+              isEditing
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

@@ -9,6 +9,8 @@ interface TrackFormProps {
   onSubmit: (trackData: TrackFormData) => Promise<void>;
   onCancel: () => void;
   albumId: number;
+  initialData?: TrackFormData;
+  isEditing?: boolean;
 }
 
 export interface TrackFormData {
@@ -20,15 +22,17 @@ export interface TrackFormData {
   price: number;
 }
 
-const TrackForm = ({ onSubmit, onCancel, albumId }: TrackFormProps) => {
-  const [formData, setFormData] = useState<TrackFormData>({
-    title: '',
-    album_id: albumId,
-    duration: 0,
-    preview_url: '',
-    file_url: '',
-    price: 0,
-  });
+const TrackForm = ({ onSubmit, onCancel, albumId, initialData, isEditing = false }: TrackFormProps) => {
+  const [formData, setFormData] = useState<TrackFormData>(
+    initialData || {
+      title: '',
+      album_id: albumId,
+      duration: 0,
+      preview_url: '',
+      file_url: '',
+      price: 0,
+    }
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -205,8 +209,8 @@ const TrackForm = ({ onSubmit, onCancel, albumId }: TrackFormProps) => {
             </>
           ) : (
             <>
-              <Icon name="Plus" size={20} className="mr-2" />
-              Добавить трек
+              <Icon name={isEditing ? "Save" : "Plus"} size={20} className="mr-2" />
+              {isEditing ? 'Сохранить' : 'Добавить трек'}
             </>
           )}
         </Button>
