@@ -113,6 +113,20 @@ const TrackForm = ({ onSubmit, onCancel, albumId }: TrackFormProps) => {
             />
           </div>
         </div>
+        {formData.preview_url && (
+          <div className="mt-3 p-4 bg-vintage-brown/5 rounded-lg border border-vintage-brown/20">
+            <div className="flex items-center gap-3 mb-2">
+              <Icon name="Play" size={16} className="text-vintage-warm" />
+              <span className="text-sm font-medium text-vintage-dark-brown">Предпросмотр превью</span>
+            </div>
+            <audio 
+              src={formData.preview_url} 
+              controls 
+              className="w-full"
+              style={{ height: '40px' }}
+            />
+          </div>
+        )}
       </div>
 
       <div>
@@ -146,6 +160,20 @@ const TrackForm = ({ onSubmit, onCancel, albumId }: TrackFormProps) => {
             />
           </div>
         </div>
+        {formData.file_url && (
+          <div className="mt-3 p-4 bg-vintage-brown/5 rounded-lg border border-vintage-brown/20">
+            <div className="flex items-center gap-3 mb-2">
+              <Icon name="Music" size={16} className="text-vintage-warm" />
+              <span className="text-sm font-medium text-vintage-dark-brown">Предпросмотр полного трека</span>
+            </div>
+            <audio 
+              src={formData.file_url} 
+              controls 
+              className="w-full"
+              style={{ height: '40px' }}
+            />
+          </div>
+        )}
       </div>
 
       <div>
