@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import Logo from '@/components/Logo';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
+import AlbumForm, { AlbumFormData } from '@/components/AlbumForm';
 
 interface Album {
   id: number;
@@ -21,6 +23,9 @@ const Dashboard = () => {
   const { toast } = useToast();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loadingAlbums, setLoadingAlbums] = useState(true);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingAlbum, setEditingAlbum] = useState<Album | null>(null);
 
   const USER_MUSIC_API = 'https://functions.poehali.dev/user-music';
 
@@ -53,6 +58,117 @@ const Dashboard = () => {
     } finally {
       setLoadingAlbums(false);
     }
+  };
+
+  const handleCreateAlbum = async (albumData: AlbumFormData) => {
+    try {
+      const response = await fetch(`${USER_MUSIC_API}?path=albums`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token!,
+        },
+        body: JSON.stringify(albumData),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Альбом создан!',
+          description: 'Ваш альбом успешно добавлен',
+        });
+        setIsCreateDialogOpen(false);
+        fetchAlbums();
+      } else {
+        const error = await response.json();
+        toast({
+          title: 'Ошибка',
+          description: error.message || 'Не удалось создать альбом',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Произошла ошибка при создании альбома',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleEditAlbum = async (albumData: AlbumFormData) => {
+    if (!editingAlbum) return;
+
+    try {
+      const response = await fetch(`${USER_MUSIC_API}?path=albums/${editingAlbum.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token!,
+        },
+        body: JSON.stringify(albumData),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Альбом обновлён!',
+          description: 'Изменения сохранены',
+        });
+        setIsEditDialogOpen(false);
+        setEditingAlbum(null);
+        fetchAlbums();
+      } else {
+        const error = await response.json();
+        toast({
+          title: 'Ошибка',
+          description: error.message || 'Не удалось обновить альбом',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Произошла ошибка при обновлении альбома',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteAlbum = async (albumId: number) => {
+    if (!confirm('Вы уверены, что хотите удалить этот альбом?')) return;
+
+    try {
+      const response = await fetch(`${USER_MUSIC_API}?path=albums/${albumId}`, {
+        method: 'DELETE',
+        headers: {
+          'X-Auth-Token': token!,
+        },
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Альбом удалён',
+          description: 'Альбом успешно удалён',
+        });
+        fetchAlbums();
+      } else {
+        toast({
+          title: 'Ошибка',
+          description: 'Не удалось удалить альбом',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Произошла ошибка при удалении альбома',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const openEditDialog = (album: Album) => {
+    setEditingAlbum(album);
+    setIsEditDialogOpen(true);
   };
 
   const handleLogout = async () => {
@@ -157,7 +273,10 @@ const Dashboard = () => {
                 Создавайте и управляйте своими альбомами
               </CardDescription>
             </div>
-            <Button className="bg-vintage-warm hover:bg-vintage-brown text-vintage-cream">
+            <Button 
+              onClick={() => setIsCreateDialogOpen(true)}
+              className="bg-vintage-warm hover:bg-vintage-brown text-vintage-cream"
+            >
               <Icon name="Plus" size={20} className="mr-2" />
               Создать альбом
             </Button>
@@ -169,7 +288,10 @@ const Dashboard = () => {
               <div className="text-center py-12">
                 <Icon name="Disc" size={48} className="mx-auto mb-4 text-vintage-brown/40" />
                 <p className="text-vintage-brown mb-4">У вас пока нет альбомов</p>
-                <Button className="bg-vintage-warm hover:bg-vintage-brown text-vintage-cream">
+                <Button 
+                  onClick={() => setIsCreateDialogOpen(true)}
+                  className="bg-vintage-warm hover:bg-vintage-brown text-vintage-cream"
+                >
                   <Icon name="Plus" size={20} className="mr-2" />
                   Создать первый альбом
                 </Button>
@@ -189,12 +311,22 @@ const Dashboard = () => {
                       <h3 className="font-bold text-vintage-dark-brown mb-1">{album.title}</h3>
                       <p className="text-sm text-vintage-brown mb-3">{album.price} ₽</p>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="flex-1 border-vintage-brown/30">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => openEditDialog(album)}
+                          className="flex-1 border-vintage-brown/30 hover:bg-vintage-brown/10"
+                        >
                           <Icon name="Edit" size={16} className="mr-1" />
                           Редактировать
                         </Button>
-                        <Button size="sm" variant="outline" className="border-vintage-brown/30">
-                          <Icon name="ExternalLink" size={16} />
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleDeleteAlbum(album.id)}
+                          className="border-red-300 text-red-600 hover:bg-red-50"
+                        >
+                          <Icon name="Trash2" size={16} />
                         </Button>
                       </div>
                     </CardContent>
@@ -205,6 +337,42 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </main>
+
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="bg-vintage-cream border-vintage-brown/30">
+          <DialogHeader>
+            <DialogTitle className="text-vintage-dark-brown">Создать новый альбом</DialogTitle>
+          </DialogHeader>
+          <AlbumForm
+            onSubmit={handleCreateAlbum}
+            onCancel={() => setIsCreateDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="bg-vintage-cream border-vintage-brown/30">
+          <DialogHeader>
+            <DialogTitle className="text-vintage-dark-brown">Редактировать альбом</DialogTitle>
+          </DialogHeader>
+          {editingAlbum && (
+            <AlbumForm
+              onSubmit={handleEditAlbum}
+              onCancel={() => {
+                setIsEditDialogOpen(false);
+                setEditingAlbum(null);
+              }}
+              initialData={{
+                title: editingAlbum.title,
+                description: '',
+                price: editingAlbum.price,
+                cover_url: editingAlbum.cover_url || '',
+              }}
+              isEditing
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
