@@ -20,6 +20,7 @@ export interface TrackFormData {
   preview_url: string;
   file_url: string;
   price: number;
+  label?: string;
 }
 
 const TrackForm = ({ onSubmit, onCancel, albumId, initialData, isEditing = false }: TrackFormProps) => {
@@ -31,6 +32,7 @@ const TrackForm = ({ onSubmit, onCancel, albumId, initialData, isEditing = false
       preview_url: '',
       file_url: '',
       price: 0,
+      label: '',
     }
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -178,6 +180,22 @@ const TrackForm = ({ onSubmit, onCancel, albumId, initialData, isEditing = false
             />
           </div>
         )}
+      </div>
+
+      <div>
+        <Label htmlFor="label" className="text-vintage-dark-brown">
+          Лейбл
+        </Label>
+        <Input
+          id="label"
+          value={formData.label || ''}
+          onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+          placeholder="Например: Universal Music, Sony Music"
+          className="border-vintage-brown/30 focus:border-vintage-warm"
+        />
+        <p className="text-xs text-vintage-brown/60 mt-1">
+          Необязательное поле
+        </p>
       </div>
 
       <div>

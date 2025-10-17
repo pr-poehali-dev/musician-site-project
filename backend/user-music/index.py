@@ -98,7 +98,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 if album_id:
                     cur.execute('''
                         SELECT t.id, t.title, t.duration, t.preview_url, t.file_url, t.price,
-                               t.album_id, t.created_at, u.username, u.display_name
+                               t.label, t.album_id, t.created_at, u.username, u.display_name
                         FROM tracks t
                         JOIN users u ON t.user_id = u.id
                         WHERE t.album_id = %s
@@ -107,7 +107,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 elif username:
                     cur.execute('''
                         SELECT t.id, t.title, t.duration, t.preview_url, t.file_url, t.price,
-                               t.album_id, t.created_at
+                               t.label, t.album_id, t.created_at
                         FROM tracks t
                         JOIN users u ON t.user_id = u.id
                         WHERE u.username = %s
@@ -115,7 +115,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     ''', (username,))
                 elif user_id:
                     cur.execute('''
-                        SELECT id, title, duration, preview_url, file_url, price, album_id, created_at
+                        SELECT id, title, duration, preview_url, file_url, price, label, album_id, created_at
                         FROM tracks
                         WHERE user_id = %s
                         ORDER BY created_at DESC
@@ -178,6 +178,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 preview_url = body.get('preview_url')
                 file_url = body.get('file_url')
                 price = body.get('price', 0)
+                label = body.get('label')
                 
                 if not title or not album_id:
                     return {
@@ -195,10 +196,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     }
                 
                 cur.execute('''
-                    INSERT INTO tracks (user_id, album_id, title, duration, preview_url, file_url, price, created_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
-                    RETURNING id, title, duration, preview_url, file_url, price, album_id, created_at
-                ''', (user_id, album_id, title, duration, preview_url, file_url, price))
+                    INSERT INTO tracks (user_id, album_id, title, duration, preview_url, file_url, price, label, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                    RETURNING id, title, duration, preview_url, file_url, price, label, album_id, created_at
+                ''', (user_id, album_id, title, duration, preview_url, file_url, price, label))
                 track = cur.fetchone()
                 conn.commit()
                 
@@ -260,6 +261,95 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'statusCode': 200,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
                     'body': json.dumps(dict(album), default=str)
+                }
+            
+            # PUT /tracks?id=... - Обновить трек
+            if method == 'PUT' and path == 'tracks':
+                track_id = event.get('queryStringParameters', {}).get('id')
+                body = json.loads(event.get('body', '{}'))
+                
+                if not track_id:
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'Track ID is required'})
+                    }
+                
+                cur.execute('SELECT id FROM tracks WHERE id = %s AND user_id = %s', (track_id, user_id))
+                if not cur.fetchone():
+                    return {
+                        'statusCode': 403,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'Track not found or access denied'})
+                    }
+                
+                updates = []
+                params = []
+                if 'title' in body:
+                    updates.append('title = %s')
+                    params.append(body['title'])
+                if 'duration' in body:
+                    updates.append('duration = %s')
+                    params.append(body['duration'])
+                if 'preview_url' in body:
+                    updates.append('preview_url = %s')
+                    params.append(body['preview_url'])
+                if 'file_url' in body:
+                    updates.append('file_url = %s')
+                    params.append(body['file_url'])
+                if 'price' in body:
+                    updates.append('price = %s')
+                    params.append(body['price'])
+                if 'label' in body:
+                    updates.append('label = %s')
+                    params.append(body['label'])
+                
+                if not updates:
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'No fields to update'})
+                    }
+                
+                params.append(track_id)
+                cur.execute(f'''
+                    UPDATE tracks SET {', '.join(updates)}, updated_at = NOW()
+                    WHERE id = %s
+                    RETURNING id, title, duration, preview_url, file_url, price, label, album_id, created_at, updated_at
+                ''', params)
+                track = cur.fetchone()
+                conn.commit()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps(dict(track), default=str)
+                }
+            
+            # DELETE /tracks?id=... - Удалить трек
+            if method == 'DELETE' and path == 'tracks':
+                track_id = event.get('queryStringParameters', {}).get('id')
+                
+                if not track_id:
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'Track ID is required'})
+                    }
+                
+                cur.execute('DELETE FROM tracks WHERE id = %s AND user_id = %s', (track_id, user_id))
+                if cur.rowcount == 0:
+                    return {
+                        'statusCode': 403,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'Track not found or access denied'})
+                    }
+                
+                conn.commit()
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'message': 'Track deleted successfully'})
                 }
             
             # DELETE /albums?id=... - Удалить альбом

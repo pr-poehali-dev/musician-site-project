@@ -13,6 +13,7 @@ interface Track {
   preview_url?: string;
   file_url?: string;
   price: number;
+  label?: string;
   created_at: string;
 }
 
@@ -235,6 +236,12 @@ const AlbumDetail = ({ album, token, onBack }: AlbumDetailProps) => {
                 <span className="text-vintage-brown/60 font-mono w-8">{index + 1}</span>
                 <div className="flex-1">
                   <h3 className="font-semibold text-vintage-dark-brown">{track.title}</h3>
+                  {track.label && (
+                    <p className="text-xs text-vintage-warm mb-1">
+                      <Icon name="Tag" size={12} className="inline mr-1" />
+                      {track.label}
+                    </p>
+                  )}
                   <p className="text-sm text-vintage-brown">
                     {track.duration > 0 ? formatDuration(track.duration) : '—'} • {track.price} ₽
                   </p>
@@ -299,6 +306,7 @@ const AlbumDetail = ({ album, token, onBack }: AlbumDetailProps) => {
                 preview_url: editingTrack.preview_url || '',
                 file_url: editingTrack.file_url || '',
                 price: editingTrack.price,
+                label: editingTrack.label || '',
               }}
               isEditing
             />
