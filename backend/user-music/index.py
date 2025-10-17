@@ -98,27 +98,33 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 if album_id:
                     cur.execute('''
                         SELECT t.id, t.title, t.duration, t.preview_url, t.file_url, t.price,
-                               t.label, t.genre, t.album_id, t.created_at, u.username, u.display_name
+                               t.label, t.genre, t.album_id, t.created_at, u.username, u.display_name,
+                               COALESCE(ts.plays_count, 0) as plays_count
                         FROM tracks t
                         JOIN users u ON t.user_id = u.id
+                        LEFT JOIN track_stats ts ON t.id = ts.track_id
                         WHERE t.album_id = %s
                         ORDER BY t.created_at ASC
                     ''', (album_id,))
                 elif username:
                     cur.execute('''
                         SELECT t.id, t.title, t.duration, t.preview_url, t.file_url, t.price,
-                               t.label, t.genre, t.album_id, t.created_at
+                               t.label, t.genre, t.album_id, t.created_at,
+                               COALESCE(ts.plays_count, 0) as plays_count
                         FROM tracks t
                         JOIN users u ON t.user_id = u.id
+                        LEFT JOIN track_stats ts ON t.id = ts.track_id
                         WHERE u.username = %s
                         ORDER BY t.created_at DESC
                     ''', (username,))
                 elif user_id:
                     cur.execute('''
-                        SELECT id, title, duration, preview_url, file_url, price, label, genre, album_id, created_at
-                        FROM tracks
-                        WHERE user_id = %s
-                        ORDER BY created_at DESC
+                        SELECT t.id, t.title, t.duration, t.preview_url, t.file_url, t.price, t.label, t.genre, t.album_id, t.created_at,
+                               COALESCE(ts.plays_count, 0) as plays_count
+                        FROM tracks t
+                        LEFT JOIN track_stats ts ON t.id = ts.track_id
+                        WHERE t.user_id = %s
+                        ORDER BY t.created_at DESC
                     ''', (user_id,))
                 else:
                     return {
@@ -354,6 +360,47 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'statusCode': 200,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
                     'body': json.dumps({'message': 'Track deleted successfully'})
+                }
+            
+            # POST /track-play - Увеличить счётчик прослушиваний
+            if method == 'POST' and path == 'track-play':
+                body = json.loads(event.get('body', '{}'))
+                track_id = body.get('track_id')
+                
+                if not track_id:
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'Track ID is required'})
+                    }
+                
+                # Проверяем существование трека
+                cur.execute('SELECT id FROM tracks WHERE id = %s', (track_id,))
+                if not cur.fetchone():
+                    return {
+                        'statusCode': 404,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'Track not found'})
+                    }
+                
+                # Создаем запись статистики если её нет, или увеличиваем счётчик
+                cur.execute('''
+                    INSERT INTO track_stats (track_id, plays_count, last_played_at, created_at, updated_at)
+                    VALUES (%s, 1, NOW(), NOW(), NOW())
+                    ON CONFLICT (track_id) 
+                    DO UPDATE SET 
+                        plays_count = track_stats.plays_count + 1,
+                        last_played_at = NOW(),
+                        updated_at = NOW()
+                    RETURNING plays_count
+                ''', (track_id,))
+                result = cur.fetchone()
+                conn.commit()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'plays_count': result['plays_count']})
                 }
             
             # DELETE /albums?id=... - Удалить альбом

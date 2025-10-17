@@ -27,6 +27,7 @@ interface Track {
   album_id: number;
   label?: string;
   genre?: string;
+  plays_count?: number;
 }
 
 interface Artist {
@@ -101,8 +102,32 @@ const Artist = () => {
     }
   };
 
-  const playTrack = (track: Track) => {
+  const playTrack = async (track: Track) => {
     setCurrentTrack(track);
+    
+    // Увеличиваем счётчик прослушиваний
+    try {
+      await fetch(`${USER_MUSIC_API}?path=track-play`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ track_id: track.id }),
+      });
+      
+      // Обновляем локальное значение счётчика
+      setTracks(prevTracks => {
+        const updatedTracks = { ...prevTracks };
+        if (updatedTracks[track.album_id]) {
+          updatedTracks[track.album_id] = updatedTracks[track.album_id].map(t =>
+            t.id === track.id ? { ...t, plays_count: (t.plays_count || 0) + 1 } : t
+          );
+        }
+        return updatedTracks;
+      });
+    } catch (error) {
+      console.error('Error updating play count:', error);
+    }
   };
 
   if (loading) {
@@ -234,6 +259,12 @@ const Artist = () => {
                                       <p className="text-xs text-vintage-brown/70">
                                         <Icon name="Tag" size={12} className="inline mr-1" />
                                         {track.label}
+                                      </p>
+                                    )}
+                                    {track.plays_count !== undefined && track.plays_count > 0 && (
+                                      <p className="text-xs text-vintage-brown/70">
+                                        <Icon name="Headphones" size={12} className="inline mr-1" />
+                                        {track.plays_count}
                                       </p>
                                     )}
                                   </div>

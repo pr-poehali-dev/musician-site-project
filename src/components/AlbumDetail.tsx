@@ -15,6 +15,7 @@ interface Track {
   price: number;
   label?: string;
   genre?: string;
+  plays_count?: number;
   created_at: string;
 }
 
@@ -237,13 +238,27 @@ const AlbumDetail = ({ album, token, onBack }: AlbumDetailProps) => {
                 <span className="text-vintage-brown/60 font-mono w-8">{index + 1}</span>
                 <div className="flex-1">
                   <h3 className="font-semibold text-vintage-dark-brown">{track.title}</h3>
-                  {track.label && (
-                    <p className="text-xs text-vintage-warm mb-1">
-                      <Icon name="Tag" size={12} className="inline mr-1" />
-                      {track.label}
-                    </p>
-                  )}
-                  <p className="text-sm text-vintage-brown">
+                  <div className="flex gap-3 items-center mt-1">
+                    {track.genre && (
+                      <p className="text-xs text-vintage-warm">
+                        <Icon name="Music" size={12} className="inline mr-1" />
+                        {track.genre}
+                      </p>
+                    )}
+                    {track.label && (
+                      <p className="text-xs text-vintage-brown/70">
+                        <Icon name="Tag" size={12} className="inline mr-1" />
+                        {track.label}
+                      </p>
+                    )}
+                    {track.plays_count !== undefined && track.plays_count > 0 && (
+                      <p className="text-xs text-vintage-brown/70">
+                        <Icon name="Headphones" size={12} className="inline mr-1" />
+                        {track.plays_count}
+                      </p>
+                    )}
+                  </div>
+                  <p className="text-sm text-vintage-brown mt-1">
                     {track.duration > 0 ? formatDuration(track.duration) : '—'} • {track.price} ₽
                   </p>
                 </div>
