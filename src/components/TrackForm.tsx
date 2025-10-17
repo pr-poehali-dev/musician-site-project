@@ -59,17 +59,27 @@ const TrackForm = ({ onSubmit, onCancel, albumId }: TrackFormProps) => {
 
       <div>
         <Label htmlFor="duration" className="text-vintage-dark-brown">
-          Длительность (секунды)
+          Длительность {formData.duration > 0 && (
+            <span className="text-vintage-brown font-normal">
+              ({Math.floor(formData.duration / 60)}:{(formData.duration % 60).toString().padStart(2, '0')})
+            </span>
+          )}
         </Label>
         <Input
           id="duration"
           type="number"
           value={formData.duration}
           onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 0 })}
-          placeholder="180"
+          placeholder="Определится автоматически"
           min="0"
           className="border-vintage-brown/30 focus:border-vintage-warm"
         />
+        {formData.duration > 0 && (
+          <p className="text-xs text-green-600 mt-1 flex items-center">
+            <Icon name="CheckCircle" size={12} className="mr-1" />
+            Длительность определена автоматически
+          </p>
+        )}
       </div>
 
       <div>
@@ -79,7 +89,13 @@ const TrackForm = ({ onSubmit, onCancel, albumId }: TrackFormProps) => {
         <div className="space-y-3">
           <AudioUploader
             label="Загрузить превью"
-            onUploadComplete={(url) => setFormData({ ...formData, preview_url: url })}
+            onUploadComplete={(url, duration) => {
+              const updates: Partial<TrackFormData> = { preview_url: url };
+              if (duration && formData.duration === 0) {
+                updates.duration = duration;
+              }
+              setFormData({ ...formData, ...updates });
+            }}
             accept="audio/*"
           />
           <div className="text-sm text-vintage-brown/60 text-center">или</div>
@@ -106,7 +122,13 @@ const TrackForm = ({ onSubmit, onCancel, albumId }: TrackFormProps) => {
         <div className="space-y-3">
           <AudioUploader
             label="Загрузить полный трек"
-            onUploadComplete={(url) => setFormData({ ...formData, file_url: url })}
+            onUploadComplete={(url, duration) => {
+              const updates: Partial<TrackFormData> = { file_url: url };
+              if (duration && formData.duration === 0) {
+                updates.duration = duration;
+              }
+              setFormData({ ...formData, ...updates });
+            }}
             accept="audio/*"
           />
           <div className="text-sm text-vintage-brown/60 text-center">или</div>

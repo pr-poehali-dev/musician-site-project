@@ -6,7 +6,7 @@ import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 
 interface AudioUploaderProps {
-  onUploadComplete: (url: string) => void;
+  onUploadComplete: (url: string, duration?: number) => void;
   label?: string;
   accept?: string;
 }
@@ -16,6 +16,25 @@ const AudioUploader = ({ onUploadComplete, label = 'Аудиофайл', accept 
   const [fileName, setFileName] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const getAudioDuration = (file: File): Promise<number> => {
+    return new Promise((resolve) => {
+      const audio = new Audio();
+      const url = URL.createObjectURL(file);
+      
+      audio.addEventListener('loadedmetadata', () => {
+        URL.revokeObjectURL(url);
+        resolve(Math.round(audio.duration));
+      });
+      
+      audio.addEventListener('error', () => {
+        URL.revokeObjectURL(url);
+        resolve(0);
+      });
+      
+      audio.src = url;
+    });
+  };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,6 +53,17 @@ const AudioUploader = ({ onUploadComplete, label = 'Аудиофайл', accept 
     setUploading(true);
 
     try {
+      let audioDuration = 0;
+      if (file.type.startsWith('audio/')) {
+        audioDuration = await getAudioDuration(file);
+        if (audioDuration > 0) {
+          toast({
+            title: 'Длительность определена',
+            description: `${Math.floor(audioDuration / 60)}:${(audioDuration % 60).toString().padStart(2, '0')}`,
+          });
+        }
+      }
+
       const reader = new FileReader();
       reader.onload = async () => {
         const base64 = (reader.result as string).split(',')[1];
@@ -52,7 +82,7 @@ const AudioUploader = ({ onUploadComplete, label = 'Аудиофайл', accept 
 
         if (response.ok) {
           const data = await response.json();
-          onUploadComplete(data.url);
+          onUploadComplete(data.url, audioDuration > 0 ? audioDuration : undefined);
           toast({
             title: 'Файл загружен!',
             description: `${file.name} успешно загружен`,
@@ -65,6 +95,7 @@ const AudioUploader = ({ onUploadComplete, label = 'Аудиофайл', accept 
             variant: 'destructive',
           });
         }
+        setUploading(false);
       };
 
       reader.onerror = () => {
@@ -83,7 +114,6 @@ const AudioUploader = ({ onUploadComplete, label = 'Аудиофайл', accept 
         description: 'Произошла ошибка при загрузке файла',
         variant: 'destructive',
       });
-    } finally {
       setUploading(false);
     }
   };
