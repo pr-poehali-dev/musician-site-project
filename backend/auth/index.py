@@ -36,6 +36,86 @@ def verify_session(token: str) -> Optional[Dict[str, Any]]:
     finally:
         conn.close()
 
+def check_registration_rate_limit(ip_address: str) -> tuple[bool, Optional[str]]:
+    '''
+    Проверяет ограничение на количество регистраций с IP.
+    Возвращает (allowed: bool, error_message: Optional[str])
+    Лимиты: 3 попытки в час, блокировка на 1 час после превышения
+    '''
+    MAX_ATTEMPTS = 3
+    BLOCK_DURATION_MINUTES = 60
+    TIME_WINDOW_MINUTES = 60
+    
+    conn = get_db_connection()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            # Получаем запись для данного IP
+            cur.execute('''
+                SELECT attempt_count, first_attempt_at, last_attempt_at, blocked_until
+                FROM registration_attempts
+                WHERE ip_address = %s
+            ''', (ip_address,))
+            record = cur.fetchone()
+            
+            now = datetime.now()
+            
+            # Если записи нет - создаем новую
+            if not record:
+                cur.execute('''
+                    INSERT INTO registration_attempts (ip_address, attempt_count, first_attempt_at, last_attempt_at)
+                    VALUES (%s, 1, NOW(), NOW())
+                ''', (ip_address,))
+                conn.commit()
+                return (True, None)
+            
+            # Проверяем блокировку
+            if record['blocked_until'] and record['blocked_until'] > now:
+                minutes_left = int((record['blocked_until'] - now).total_seconds() / 60)
+                return (False, f'Слишком много попыток регистрации. Попробуйте через {minutes_left} мин.')
+            
+            # Проверяем временное окно
+            time_since_first = (now - record['first_attempt_at']).total_seconds() / 60
+            
+            # Если прошло больше TIME_WINDOW_MINUTES - сбрасываем счетчик
+            if time_since_first > TIME_WINDOW_MINUTES:
+                cur.execute('''
+                    UPDATE registration_attempts
+                    SET attempt_count = 1, first_attempt_at = NOW(), last_attempt_at = NOW(), blocked_until = NULL
+                    WHERE ip_address = %s
+                ''', (ip_address,))
+                conn.commit()
+                return (True, None)
+            
+            # Увеличиваем счетчик
+            new_count = record['attempt_count'] + 1
+            
+            # Если превышен лимит - блокируем
+            if new_count > MAX_ATTEMPTS:
+                blocked_until = now + timedelta(minutes=BLOCK_DURATION_MINUTES)
+                cur.execute('''
+                    UPDATE registration_attempts
+                    SET attempt_count = %s, last_attempt_at = NOW(), blocked_until = %s
+                    WHERE ip_address = %s
+                ''', (new_count, blocked_until, ip_address))
+                conn.commit()
+                return (False, f'Превышен лимит попыток регистрации ({MAX_ATTEMPTS} в час). Попробуйте через {BLOCK_DURATION_MINUTES} мин.')
+            
+            # Обновляем счетчик
+            cur.execute('''
+                UPDATE registration_attempts
+                SET attempt_count = %s, last_attempt_at = NOW()
+                WHERE ip_address = %s
+            ''', (new_count, ip_address))
+            conn.commit()
+            
+            attempts_left = MAX_ATTEMPTS - new_count
+            if attempts_left == 0:
+                return (True, None)
+            
+            return (True, None)
+    finally:
+        conn.close()
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
     
@@ -55,6 +135,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     
     # POST /register - Регистрация нового пользователя
     if method == 'POST' and path == 'register':
+        # Получаем IP адрес
+        ip_address = event.get('requestContext', {}).get('identity', {}).get('sourceIp', 'unknown')
+        
+        # Проверяем rate limit
+        allowed, error_msg = check_registration_rate_limit(ip_address)
+        if not allowed:
+            return {
+                'statusCode': 429,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': error_msg})
+            }
+        
         body = json.loads(event.get('body', '{}'))
         email = body.get('email')
         password = body.get('password')
