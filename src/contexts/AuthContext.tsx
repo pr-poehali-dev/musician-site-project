@@ -32,7 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const AUTH_API = 'https://functions.poehali.dev/auth';
+  const AUTH_API = 'https://functions.poehali.dev/aeda9f90-d98a-4834-9f61-abbcbf0270d4';
 
   useEffect(() => {
     const storedToken = localStorage.getItem('auth_token');

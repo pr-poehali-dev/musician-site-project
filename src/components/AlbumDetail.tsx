@@ -40,7 +40,7 @@ const AlbumDetail = ({ album, token, onBack }: AlbumDetailProps) => {
   const [editingTrack, setEditingTrack] = useState<Track | null>(null);
   const { toast } = useToast();
 
-  const USER_MUSIC_API = 'https://functions.poehali.dev/user-music';
+  const USER_MUSIC_API = 'https://functions.poehali.dev/52119c2a-82db-4422-894d-e3d5db04d16a';
 
   useEffect(() => {
     fetchTracks();

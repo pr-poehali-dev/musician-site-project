@@ -29,7 +29,7 @@ const Dashboard = () => {
   const [editingAlbum, setEditingAlbum] = useState<Album | null>(null);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
 
-  const USER_MUSIC_API = 'https://functions.poehali.dev/user-music';
+  const USER_MUSIC_API = 'https://functions.poehali.dev/52119c2a-82db-4422-894d-e3d5db04d16a';
 
   useEffect(() => {
     if (!loading && !user) {
