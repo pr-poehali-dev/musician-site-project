@@ -1,0 +1,22 @@
+{
+  "tests": [
+    {
+      "name": "Get user albums",
+      "method": "GET",
+      "path": "/?path=albums&username=testuser",
+      "expectedStatus": 200,
+      "expectedBody": [],
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Create album requires auth",
+      "method": "POST",
+      "path": "/?path=albums",
+      "body": {
+        "title": "Test Album"
+      },
+      "expectedStatus": 401,
+      "bodyMatcher": "partial"
+    }
+  ]
+}
