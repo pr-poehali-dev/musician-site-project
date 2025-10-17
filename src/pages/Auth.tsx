@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +23,51 @@ const Auth = () => {
     displayName: '' 
   });
   const [loading, setLoading] = useState(false);
+  
+  // Капча
+  const [captchaQuestion, setCaptchaQuestion] = useState('');
+  const [captchaAnswer, setCaptchaAnswer] = useState(0);
+  const [userCaptchaAnswer, setUserCaptchaAnswer] = useState('');
+  
+  // Генерация новой капчи
+  const generateCaptcha = () => {
+    const num1 = Math.floor(Math.random() * 10) + 1;
+    const num2 = Math.floor(Math.random() * 10) + 1;
+    const operations = ['+', '-', '*'];
+    const operation = operations[Math.floor(Math.random() * operations.length)];
+    
+    let answer = 0;
+    let question = '';
+    
+    switch(operation) {
+      case '+':
+        answer = num1 + num2;
+        question = `${num1} + ${num2}`;
+        break;
+      case '-':
+        // Делаем так, чтобы результат был положительным
+        const larger = Math.max(num1, num2);
+        const smaller = Math.min(num1, num2);
+        answer = larger - smaller;
+        question = `${larger} - ${smaller}`;
+        break;
+      case '*':
+        // Уменьшаем числа для умножения
+        const smallNum1 = Math.floor(Math.random() * 5) + 1;
+        const smallNum2 = Math.floor(Math.random() * 5) + 1;
+        answer = smallNum1 * smallNum2;
+        question = `${smallNum1} × ${smallNum2}`;
+        break;
+    }
+    
+    setCaptchaQuestion(question);
+    setCaptchaAnswer(answer);
+  };
+  
+  // Генерируем капчу при загрузке компонента
+  useEffect(() => {
+    generateCaptcha();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +93,19 @@ const Auth = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Проверка капчи
+    if (parseInt(userCaptchaAnswer) !== captchaAnswer) {
+      toast({
+        title: 'Неверный ответ',
+        description: 'Решите математический пример правильно',
+        variant: 'destructive',
+      });
+      generateCaptcha(); // Генерируем новую капчу
+      setUserCaptchaAnswer('');
+      return;
+    }
+    
     setLoading(true);
     
     try {
@@ -68,6 +126,8 @@ const Auth = () => {
         description: error instanceof Error ? error.message : 'Проверьте введенные данные',
         variant: 'destructive',
       });
+      generateCaptcha(); // Генерируем новую капчу при ошибке
+      setUserCaptchaAnswer('');
     } finally {
       setLoading(false);
     }
@@ -191,6 +251,34 @@ const Auth = () => {
                       className="border-vintage-brown/30 focus:border-vintage-warm"
                     />
                   </div>
+                  
+                  {/* Капча */}
+                  <div className="p-4 bg-vintage-brown/10 rounded-lg border border-vintage-brown/30">
+                    <Label htmlFor="captcha" className="text-vintage-dark-brown flex items-center gap-2 mb-2">
+                      <Icon name="ShieldCheck" size={16} className="text-vintage-warm" />
+                      Подтвердите, что вы человек
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 bg-vintage-cream p-3 rounded border border-vintage-brown/20 text-center">
+                        <span className="text-2xl font-bold text-vintage-dark-brown font-mono">
+                          {captchaQuestion} = ?
+                        </span>
+                      </div>
+                      <Input
+                        id="captcha"
+                        type="number"
+                        placeholder="Ответ"
+                        value={userCaptchaAnswer}
+                        onChange={(e) => setUserCaptchaAnswer(e.target.value)}
+                        required
+                        className="w-24 border-vintage-brown/30 focus:border-vintage-warm text-center text-lg font-semibold"
+                      />
+                    </div>
+                    <p className="text-xs text-vintage-brown/70 mt-2">
+                      Решите простой математический пример
+                    </p>
+                  </div>
+                  
                   <Button 
                     type="submit" 
                     className="w-full bg-vintage-warm hover:bg-vintage-brown text-vintage-cream"
