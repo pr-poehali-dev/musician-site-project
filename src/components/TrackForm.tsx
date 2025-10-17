@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
+import AudioUploader from '@/components/AudioUploader';
 
 interface TrackFormProps {
   onSubmit: (trackData: TrackFormData) => Promise<void>;
@@ -72,31 +73,57 @@ const TrackForm = ({ onSubmit, onCancel, albumId }: TrackFormProps) => {
       </div>
 
       <div>
-        <Label htmlFor="preview_url" className="text-vintage-dark-brown">
-          Превью аудио (URL)
+        <Label className="text-vintage-dark-brown mb-3 block">
+          Превью аудио
         </Label>
-        <Input
-          id="preview_url"
-          value={formData.preview_url}
-          onChange={(e) => setFormData({ ...formData, preview_url: e.target.value })}
-          placeholder="https://example.com/preview.mp3"
-          type="url"
-          className="border-vintage-brown/30 focus:border-vintage-warm"
-        />
+        <div className="space-y-3">
+          <AudioUploader
+            label="Загрузить превью"
+            onUploadComplete={(url) => setFormData({ ...formData, preview_url: url })}
+            accept="audio/*"
+          />
+          <div className="text-sm text-vintage-brown/60 text-center">или</div>
+          <div>
+            <Label htmlFor="preview_url" className="text-sm text-vintage-brown">
+              Вставить ссылку
+            </Label>
+            <Input
+              id="preview_url"
+              value={formData.preview_url}
+              onChange={(e) => setFormData({ ...formData, preview_url: e.target.value })}
+              placeholder="https://example.com/preview.mp3"
+              type="url"
+              className="border-vintage-brown/30 focus:border-vintage-warm mt-1"
+            />
+          </div>
+        </div>
       </div>
 
       <div>
-        <Label htmlFor="file_url" className="text-vintage-dark-brown">
-          Полный файл (URL)
+        <Label className="text-vintage-dark-brown mb-3 block">
+          Полный файл
         </Label>
-        <Input
-          id="file_url"
-          value={formData.file_url}
-          onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
-          placeholder="https://example.com/track.mp3"
-          type="url"
-          className="border-vintage-brown/30 focus:border-vintage-warm"
-        />
+        <div className="space-y-3">
+          <AudioUploader
+            label="Загрузить полный трек"
+            onUploadComplete={(url) => setFormData({ ...formData, file_url: url })}
+            accept="audio/*"
+          />
+          <div className="text-sm text-vintage-brown/60 text-center">или</div>
+          <div>
+            <Label htmlFor="file_url" className="text-sm text-vintage-brown">
+              Вставить ссылку
+            </Label>
+            <Input
+              id="file_url"
+              value={formData.file_url}
+              onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
+              placeholder="https://example.com/track.mp3"
+              type="url"
+              className="border-vintage-brown/30 focus:border-vintage-warm mt-1"
+            />
+          </div>
+        </div>
       </div>
 
       <div>

@@ -1,0 +1,32 @@
+{
+  "tests": [
+    {
+      "name": "Upload audio file",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "file": "SGVsbG8gV29ybGQ=",
+        "filename": "test-audio.mp3",
+        "contentType": "audio/mpeg"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "url": "string",
+        "filename": "string",
+        "size": "number"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Missing file data",
+      "method": "POST",
+      "path": "/",
+      "body": {},
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

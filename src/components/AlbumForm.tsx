@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
+import AudioUploader from '@/components/AudioUploader';
 
 interface AlbumFormProps {
   onSubmit: (albumData: AlbumFormData) => Promise<void>;
@@ -70,17 +71,30 @@ const AlbumForm = ({ onSubmit, onCancel, initialData, isEditing = false }: Album
       </div>
 
       <div>
-        <Label htmlFor="cover_url" className="text-vintage-dark-brown">
-          Обложка (URL)
+        <Label className="text-vintage-dark-brown mb-3 block">
+          Обложка альбома
         </Label>
-        <Input
-          id="cover_url"
-          value={formData.cover_url}
-          onChange={(e) => setFormData({ ...formData, cover_url: e.target.value })}
-          placeholder="https://example.com/cover.jpg"
-          type="url"
-          className="border-vintage-brown/30 focus:border-vintage-warm"
-        />
+        <div className="space-y-3">
+          <AudioUploader
+            label="Загрузить обложку"
+            onUploadComplete={(url) => setFormData({ ...formData, cover_url: url })}
+            accept="image/*"
+          />
+          <div className="text-sm text-vintage-brown/60 text-center">или</div>
+          <div>
+            <Label htmlFor="cover_url" className="text-sm text-vintage-brown">
+              Вставить ссылку
+            </Label>
+            <Input
+              id="cover_url"
+              value={formData.cover_url}
+              onChange={(e) => setFormData({ ...formData, cover_url: e.target.value })}
+              placeholder="https://example.com/cover.jpg"
+              type="url"
+              className="border-vintage-brown/30 focus:border-vintage-warm mt-1"
+            />
+          </div>
+        </div>
         {formData.cover_url && (
           <div className="mt-3">
             <img
