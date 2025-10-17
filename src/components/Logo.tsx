@@ -5,15 +5,15 @@ const Logo = () => {
 
   return (
     <div 
-      className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+      className="flex items-center gap-4 cursor-pointer hover:opacity-80 transition-opacity"
       onClick={() => navigate('/')}
     >
       <img 
         src="https://cdn.poehali.dev/files/35bf3198-6bc5-4049-9328-baf39a81cdb5.jpg" 
         alt="Shmelidze&Co - логотип"
-        className="h-16 w-16 object-contain"
+        className="h-14 w-14 md:h-16 md:w-16 object-contain"
       />
-      <span className="text-2xl font-bold text-vintage-dark-brown">Shmelidze&Co</span>
+      <span className="text-xl md:text-3xl font-bold bg-gradient-to-r from-vintage-warm via-vintage-brown to-vintage-dark-brown bg-clip-text text-transparent tracking-tight">Shmelidze&Co</span>
     </div>
   );
 };
