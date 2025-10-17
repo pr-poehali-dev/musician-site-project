@@ -82,6 +82,14 @@ const Dashboard = () => {
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Logo />
           <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate(`/@${user.username}`)}
+              className="text-vintage-brown hover:text-vintage-dark-brown"
+            >
+              <Icon name="ExternalLink" size={16} className="mr-2" />
+              Моя страница
+            </Button>
             <span className="text-vintage-dark-brown">
               Привет, <strong>{user.display_name}</strong>!
             </span>
