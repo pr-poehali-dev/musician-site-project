@@ -1,5 +1,6 @@
 {
   "auth": "https://functions.poehali.dev/aeda9f90-d98a-4834-9f61-abbcbf0270d4",
+  "file-upload": "https://functions.poehali.dev/15202c1a-1d34-41bc-8b60-e11745141147",
   "user-music": "https://functions.poehali.dev/52119c2a-82db-4422-894d-e3d5db04d16a",
   "music-api": "https://functions.poehali.dev/25aac639-cf81-4eb7-80fc-aa9a157a25e6"
 }

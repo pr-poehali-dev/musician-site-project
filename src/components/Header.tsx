@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -93,9 +93,12 @@ const Header: React.FC<HeaderProps> = ({
                   <Icon name="Settings" size={20} />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-vintage-cream border-vintage-brown/20">
+              <DialogContent className="bg-vintage-cream border-vintage-brown/20" aria-describedby="admin-login-description">
                 <DialogHeader>
                   <DialogTitle className="text-vintage-warm">Вход в админ панель</DialogTitle>
+                  <DialogDescription id="admin-login-description">
+                    Введите пароль для доступа к админ панели
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>

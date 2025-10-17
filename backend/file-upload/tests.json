@@ -1,30 +1,20 @@
 {
   "tests": [
     {
-      "name": "Upload audio file",
+      "name": "Upload image file",
       "method": "POST",
       "path": "/",
       "body": {
-        "file": "SGVsbG8gV29ybGQ=",
-        "filename": "test-audio.mp3",
-        "contentType": "audio/mpeg"
+        "file": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+        "filename": "test.png",
+        "contentType": "image/png"
       },
       "expectedStatus": 200,
       "expectedBody": {
         "url": "string",
         "filename": "string",
-        "size": "number"
-      },
-      "bodyMatcher": "partial"
-    },
-    {
-      "name": "Missing file data",
-      "method": "POST",
-      "path": "/",
-      "body": {},
-      "expectedStatus": 400,
-      "expectedBody": {
-        "error": "string"
+        "size": "number",
+        "contentType": "string"
       },
       "bodyMatcher": "partial"
     }

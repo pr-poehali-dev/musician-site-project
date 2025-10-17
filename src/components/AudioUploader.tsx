@@ -68,7 +68,7 @@ const AudioUploader = ({ onUploadComplete, label = 'Аудиофайл', accept 
       reader.onload = async () => {
         const base64 = (reader.result as string).split(',')[1];
 
-        const response = await fetch('https://functions.poehali.dev/file-upload', {
+        const response = await fetch('https://functions.poehali.dev/15202c1a-1d34-41bc-8b60-e11745141147', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
