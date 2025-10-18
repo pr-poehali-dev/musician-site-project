@@ -25,66 +25,79 @@ const AlbumView: React.FC<AlbumViewProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const handlePlayTrack = (track: Track) => {
+  const handlePlayTrack = async (track: Track) => {
     if (!track.file || track.file.trim() === '') {
       console.warn('⚠️ Трек не имеет аудиофайла:', track.title);
       alert(`Для трека "${track.title}" не загружен аудиофайл. Загрузите файл в админ-панели.`);
       return;
     }
 
+    const audio = audioRef.current;
+    if (!audio) return;
+
     if (currentTrack?.id === track.id) {
-      const audio = audioRef.current;
-      if (audio) {
-        if (isPlaying) {
-          audio.pause();
-        } else {
-          audio.play().catch(error => console.warn('Ошибка воспроизведения:', error));
+      if (isPlaying) {
+        audio.pause();
+        setIsPlaying(false);
+      } else {
+        try {
+          await audio.play();
+          setIsPlaying(true);
+        } catch (error) {
+          console.warn('Ошибка воспроизведения:', error);
+          setIsPlaying(false);
         }
       }
-      setIsPlaying(!isPlaying);
     } else {
-      setCurrentTrack(track);
-      setIsPlaying(true);
-      setCurrentTime(0);
+      try {
+        let audioUrl = track.file;
+        
+        if (audioUrl.startsWith('audio_')) {
+          audioUrl = await getAudioFromIndexedDB(audioUrl);
+        }
+        
+        audio.src = audioUrl;
+        audio.load();
+        setCurrentTrack(track);
+        setCurrentTime(0);
+        setDuration(0);
+        
+        await audio.play();
+        setIsPlaying(true);
+      } catch (error) {
+        console.error('❌ Ошибка загрузки/воспроизведения трека:', track.title, error);
+        setIsPlaying(false);
+      }
     }
   };
 
-  const playNext = () => {
+  const playNext = async () => {
     if (!currentTrack || !album.trackList) return;
-    const currentIndex = album.trackList.findIndex(t => t.id === currentTrack.id);
     const playableTracks = album.trackList.filter(t => t.file && t.file.trim() !== '');
-    const nextPlayableTrack = playableTracks.find((_, idx, arr) => {
-      const currentPlayableIndex = arr.findIndex(t => t.id === currentTrack.id);
-      return idx > currentPlayableIndex;
-    });
+    const currentPlayableIndex = playableTracks.findIndex(t => t.id === currentTrack.id);
     
-    if (nextPlayableTrack) {
-      setCurrentTrack(nextPlayableTrack);
-      setIsPlaying(true);
-      setCurrentTime(0);
+    if (currentPlayableIndex < playableTracks.length - 1) {
+      const nextTrack = playableTracks[currentPlayableIndex + 1];
+      await handlePlayTrack(nextTrack);
     }
   };
 
-  const playPrevious = () => {
+  const playPrevious = async () => {
     if (!currentTrack || !album.trackList) return;
     const playableTracks = album.trackList.filter(t => t.file && t.file.trim() !== '');
     const currentPlayableIndex = playableTracks.findIndex(t => t.id === currentTrack.id);
     
     if (currentPlayableIndex > 0) {
       const prevTrack = playableTracks[currentPlayableIndex - 1];
-      setCurrentTrack(prevTrack);
-      setIsPlaying(true);
-      setCurrentTime(0);
+      await handlePlayTrack(prevTrack);
     }
   };
 
-  const playAlbum = () => {
+  const playAlbum = async () => {
     if (album.trackList && album.trackList.length > 0) {
       const firstPlayableTrack = album.trackList.find(t => t.file && t.file.trim() !== '');
       if (firstPlayableTrack) {
-        setCurrentTrack(firstPlayableTrack);
-        setIsPlaying(true);
-        setCurrentTime(0);
+        await handlePlayTrack(firstPlayableTrack);
       } else {
         alert('В этом альбоме нет загруженных аудиофайлов. Добавьте файлы в админ-панели.');
       }
@@ -93,37 +106,17 @@ const AlbumView: React.FC<AlbumViewProps> = ({
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (audio && currentTrack?.file) {
-      const loadAudio = async () => {
-        try {
-          let audioUrl = currentTrack.file;
-          
-          if (audioUrl.startsWith('audio_')) {
-            audioUrl = await getAudioFromIndexedDB(audioUrl);
-          }
-          
-          audio.src = audioUrl;
-          audio.load();
-          setCurrentTime(0);
-          setDuration(0);
-          
-          if (isPlaying) {
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-              playPromise.catch(() => {
-                setIsPlaying(false);
-              });
-            }
-          }
-        } catch (error) {
-          console.error('❌ Ошибка загрузки аудио для трека:', currentTrack.title, error);
-          setIsPlaying(false);
-        }
+    if (audio) {
+      const handleEnded = () => {
+        playNext();
       };
       
-      loadAudio();
+      audio.addEventListener('ended', handleEnded);
+      return () => {
+        audio.removeEventListener('ended', handleEnded);
+      };
     }
-  }, [currentTrack, isPlaying]);
+  }, [currentTrack, album.trackList]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -137,26 +130,16 @@ const AlbumView: React.FC<AlbumViewProps> = ({
     if (audio) {
       const updateTime = () => setCurrentTime(audio.currentTime);
       const updateDuration = () => setDuration(audio.duration);
-      const handleEnded = () => {
-        const currentIndex = album.trackList.findIndex(t => t.id === currentTrack?.id);
-        if (currentIndex < album.trackList.length - 1) {
-          playNext();
-        } else {
-          setIsPlaying(false);
-        }
-      };
       
       audio.addEventListener('timeupdate', updateTime);
       audio.addEventListener('loadedmetadata', updateDuration);
-      audio.addEventListener('ended', handleEnded);
       
       return () => {
         audio.removeEventListener('timeupdate', updateTime);
         audio.removeEventListener('loadedmetadata', updateDuration);
-        audio.removeEventListener('ended', handleEnded);
       };
     }
-  }, [currentTrack, album.trackList]);
+  }, []);
 
   const formatTime = (time: number) => {
     if (isNaN(time)) return '0:00';
