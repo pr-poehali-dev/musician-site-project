@@ -106,20 +106,20 @@ const AlbumGrid: React.FC<AlbumGridProps> = ({
   const [albums, setAlbums] = useState<Album[]>(initialAlbums);
 
   useEffect(() => {
+    setAlbums(initialAlbums);
+  }, [initialAlbums]);
+
+  useEffect(() => {
     const loadAlbums = () => {
       const savedAlbums = localStorage.getItem('albums');
       if (savedAlbums) {
         setAlbums(JSON.parse(savedAlbums));
-      } else {
-        setAlbums(initialAlbums);
       }
     };
 
-    loadAlbums();
-
     window.addEventListener('albumsUpdated', loadAlbums);
     return () => window.removeEventListener('albumsUpdated', loadAlbums);
-  }, [initialAlbums]);
+  }, []);
 
   const handleAddToCart = useCallback((album: Album, e: React.MouseEvent) => {
     e.stopPropagation();
