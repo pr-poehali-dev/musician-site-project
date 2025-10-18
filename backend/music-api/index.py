@@ -319,6 +319,7 @@ def save_media_file(cursor, conn, file_id: str, file_type: str, data: str) -> st
     return file_id
 
 def create_album(cursor, conn, data: Dict) -> Dict:
+    print(f'[DEBUG] create_album called with data: {data}')
     album_id = data.get('id', str(int(datetime.now().timestamp() * 1000))).replace("'", "''")
     title = data['title'].replace("'", "''")
     artist = data['artist'].replace("'", "''")
@@ -327,18 +328,24 @@ def create_album(cursor, conn, data: Dict) -> Dict:
     description = data.get('description', '').replace("'", "''")
     now = datetime.now().isoformat()
     
+    print(f'[DEBUG] Album fields - id: {album_id}, title: {title}, artist: {artist}')
+    
     cover_id = ''
     if cover_data and len(cover_data) > 100:
         cover_id = f"cover_{album_id}"
+        print(f'[DEBUG] Saving cover image with id: {cover_id}')
         save_media_file(cursor, conn, cover_id, 'image', cover_data)
     
+    print(f'[DEBUG] Inserting album into database...')
     cursor.execute(f'''
-        INSERT INTO albums (id, title, artist, cover, price, description, tracks_count, created_at)
-        VALUES ('{album_id}', '{title}', '{artist}', '{cover_id}', {price}, '{description}', 0, '{now}')
+        INSERT INTO albums (id, title, artist, cover, price, description, tracks_count, created_at, user_id)
+        VALUES ('{album_id}', '{title}', '{artist}', '{cover_id}', {price}, '{description}', 0, '{now}', 0)
         RETURNING *
     ''')
     conn.commit()
-    return cursor.fetchone()
+    result = cursor.fetchone()
+    print(f'[DEBUG] Album created successfully: {result}')
+    return result
 
 def create_track(cursor, conn, data: Dict) -> Dict:
     track_id = data.get('id', str(int(datetime.now().timestamp() * 1000))).replace("'", "''")
