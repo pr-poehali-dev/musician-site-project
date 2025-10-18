@@ -118,6 +118,8 @@ export const useTrackManagement = (albums: Album[], setAlbums: (albums: Album[])
     tracks,
     setTracks,
     removeTrack,
-    editTrack
+    editTrack,
+    isOnline: true,
+    lastSyncTime: new Date()
   };
 };
