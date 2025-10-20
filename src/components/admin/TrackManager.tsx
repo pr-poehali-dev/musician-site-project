@@ -100,8 +100,14 @@ const TrackManager: React.FC<TrackManagerProps> = ({
     setFileError(null);
     
     try {
+      // Даем UI время на обновление перед началом конвертации
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const filename = generateAudioFilename(uploadedFile.name, newTrack.title);
       const base64Audio = await saveAudioFile(uploadedFile, filename, { title: newTrack.title, duration: newTrack.duration });
+      
+      // Даем браузеру время после конвертации
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       setNewTrack(prev => ({ ...prev, file: base64Audio }));
       setSavedFilePath(base64Audio);

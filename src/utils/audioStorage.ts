@@ -32,15 +32,24 @@ export const saveAudioToIndexedDB = async (file: File, filename: string): Promis
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     
-    reader.onload = () => {
-      const base64Data = reader.result as string;
-      resolve(base64Data);
+    reader.onload = async () => {
+      try {
+        const base64Data = reader.result as string;
+        
+        // Даем браузеру время на отрисовку UI
+        await new Promise(r => setTimeout(r, 10));
+        
+        resolve(base64Data);
+      } catch (error) {
+        reject(error);
+      }
     };
     
     reader.onerror = () => {
       reject(reader.error);
     };
     
+    // Используем readAsDataURL для конвертации в base64
     reader.readAsDataURL(file);
   });
 };
