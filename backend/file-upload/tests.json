@@ -13,7 +13,7 @@
       "expectedBody": {
         "url": "string",
         "filename": "string",
-        "size": "number",
+        "fileId": "string",
         "contentType": "string"
       },
       "bodyMatcher": "partial"

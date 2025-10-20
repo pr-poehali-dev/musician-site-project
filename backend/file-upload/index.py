@@ -1,16 +1,21 @@
+'''
+Business: File upload to database storage (images, audio, documents)
+Args: event - dict with httpMethod, body (base64 file); context - object with request_id
+Returns: HTTP response with file ID for retrieval
+'''
+
 import json
-import base64
+import os
 import time
 import random
 import string
 from typing import Dict, Any
+import psycopg2
+
+def get_db_connection():
+    return psycopg2.connect(os.environ['DATABASE_URL'])
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
-    '''
-    Business: File upload to cloud storage (images, audio, documents)
-    Args: event - dict with httpMethod, body (base64 file); context - object with request_id
-    Returns: HTTP response with uploaded file URL
-    '''
     method: str = event.get('httpMethod', 'POST')
     
     if method == 'OPTIONS':
@@ -53,24 +58,34 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'isBase64Encoded': False
         }
     
-    file_bytes = base64.b64decode(file_data)
     file_extension = filename.split('.')[-1] if '.' in filename else 'bin'
     random_str = ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
-    unique_filename = f"{int(time.time() * 1000)}-{random_str}.{file_extension}"
+    unique_id = f"{int(time.time() * 1000)}-{random_str}"
     
-    uploaded_url = f"https://storage.poehali.dev/uploads/{unique_filename}"
-    
-    return {
-        'statusCode': 200,
-        'headers': {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        },
-        'body': json.dumps({
-            'url': uploaded_url,
-            'filename': unique_filename,
-            'size': len(file_bytes),
-            'contentType': content_type
-        }),
-        'isBase64Encoded': False
-    }
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute('''
+                INSERT INTO t_p39135821_musician_site_projec.media_files (id, file_type, data)
+                VALUES (%s, %s, %s)
+            ''', (unique_id, content_type, file_data))
+            conn.commit()
+            
+            file_url = f"https://storage.poehali.dev/uploads/{unique_id}.{file_extension}"
+            
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({
+                    'url': file_url,
+                    'filename': f"{unique_id}.{file_extension}",
+                    'fileId': unique_id,
+                    'contentType': content_type
+                }),
+                'isBase64Encoded': False
+            }
+    finally:
+        conn.close()
