@@ -236,6 +236,7 @@ const AlbumView: React.FC<AlbumViewProps> = ({
               <h3 className="text-xl font-bold text-vintage-warm mb-4">Треки</h3>
               {album.trackList.map((track, index) => {
                 const hasAudioFile = track.file && track.file.trim() !== '';
+                console.log(`🎵 [AlbumView] Трек "${track.title}": hasAudioFile=${hasAudioFile}, file=${track.file ? track.file.substring(0, 50) + '...' : 'NULL'}`);
                 return (
                   <div
                     key={track.id}
