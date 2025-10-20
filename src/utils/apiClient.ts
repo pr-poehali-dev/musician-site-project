@@ -76,6 +76,15 @@ export const apiClient = {
     });
     
     try {
+      const jsonBody = JSON.stringify(requestData);
+      const bodySizeMB = (jsonBody.length / 1024 / 1024).toFixed(2);
+      console.log(`📤 [saveTrackToServer] Размер JSON тела запроса: ${bodySizeMB} MB`);
+      
+      if (jsonBody.length > 3000000) {
+        console.error('❌ [saveTrackToServer] JSON слишком большой! Проверьте поле cover');
+        throw new Error('Размер данных превышает лимит Cloud Functions (3MB)');
+      }
+      
       // Для больших файлов увеличиваем keepalive
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 секунд
@@ -83,7 +92,7 @@ export const apiClient = {
       const response = await fetch(`${API_URL}?path=track`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestData),
+        body: jsonBody,
         keepalive: true,
         signal: controller.signal
       });
