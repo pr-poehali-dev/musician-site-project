@@ -388,18 +388,24 @@ const AlbumView: React.FC<AlbumViewProps> = ({
                     {Math.round((isMuted ? 0 : volume) * 100)}%
                   </span>
                 </div>
-
-                {/* Скрытый аудио элемент */}
-                <audio
-                  ref={audioRef}
-                  preload="metadata"
-                  onError={() => console.warn('Ошибка загрузки аудиофайла')}
-                />
               </div>
             )}
           </div>
         </CardContent>
       </Card>
+      
+      {/* Скрытый аудио элемент - вне условия currentTrack */}
+      <audio
+        ref={audioRef}
+        preload="metadata"
+        onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
+        onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
+        onEnded={() => {
+          setIsPlaying(false);
+          playNext();
+        }}
+        onError={(e) => console.error('❌ Ошибка загрузки аудиофайла:', e)}
+      />
     </div>
   );
 };
