@@ -102,32 +102,27 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 if album_id:
                     cur.execute('''
-                        SELECT t.id, t.title, t.duration, t.preview_url, t.file_url, t.price,
-                               t.label, t.genre, t.album_id, t.created_at, u.username, u.display_name,
-                               COALESCE(ts.plays_count, 0) as plays_count
-                        FROM tracks t
-                        JOIN users u ON t.user_id = u.id
-                        LEFT JOIN track_stats ts ON t.id = ts.track_id
+                        SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
+                               t.label, t.genre, t.album_id, t.created_at, u.username, u.display_name
+                        FROM t_p39135821_musician_site_projec.tracks t
+                        JOIN t_p39135821_musician_site_projec.users u ON t.user_id = u.id
                         WHERE t.album_id = %s
-                        ORDER BY t.created_at ASC
+                        ORDER BY t.track_order ASC, t.created_at ASC
                     ''', (album_id,))
                 elif username:
                     cur.execute('''
-                        SELECT t.id, t.title, t.duration, t.preview_url, t.file_url, t.price,
-                               t.label, t.genre, t.album_id, t.created_at,
-                               COALESCE(ts.plays_count, 0) as plays_count
-                        FROM tracks t
-                        JOIN users u ON t.user_id = u.id
-                        LEFT JOIN track_stats ts ON t.id = ts.track_id
+                        SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
+                               t.label, t.genre, t.album_id, t.created_at
+                        FROM t_p39135821_musician_site_projec.tracks t
+                        JOIN t_p39135821_musician_site_projec.users u ON t.user_id = u.id
                         WHERE u.username = %s
                         ORDER BY t.created_at DESC
                     ''', (username,))
                 elif user_id:
                     cur.execute('''
-                        SELECT t.id, t.title, t.duration, t.preview_url, t.file_url, t.price, t.label, t.genre, t.album_id, t.created_at,
-                               COALESCE(ts.plays_count, 0) as plays_count
-                        FROM tracks t
-                        LEFT JOIN track_stats ts ON t.id = ts.track_id
+                        SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
+                               t.label, t.genre, t.album_id, t.created_at
+                        FROM t_p39135821_musician_site_projec.tracks t
                         WHERE t.user_id = %s
                         ORDER BY t.created_at DESC
                     ''', (user_id,))
@@ -188,12 +183,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 body = json.loads(event.get('body', '{}'))
                 title = body.get('title')
                 album_id = body.get('album_id')
-                duration = body.get('duration', 0)
-                preview_url = body.get('preview_url')
-                file_url = body.get('file_url')
-                price = body.get('price', 0)
-                label = body.get('label')
-                genre = body.get('genre')
+                duration = body.get('duration', '0:00')
+                file = body.get('file_url', '')
+                cover = body.get('cover', '')
+                price = body.get('price', 129)
+                label = body.get('label', '')
+                genre = body.get('genre', '')
                 
                 if not title or not album_id:
                     return {
@@ -202,7 +197,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'body': json.dumps({'error': 'Title and album_id are required'})
                     }
                 
-                cur.execute('SELECT id FROM albums WHERE id = %s AND user_id = %s', (album_id, user_id))
+                cur.execute('SELECT id FROM t_p39135821_musician_site_projec.albums WHERE id = %s AND user_id = %s', (album_id, user_id))
                 if not cur.fetchone():
                     return {
                         'statusCode': 403,
@@ -211,10 +206,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     }
                 
                 cur.execute('''
-                    INSERT INTO tracks (user_id, album_id, title, duration, preview_url, file_url, price, label, genre, created_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-                    RETURNING id, title, duration, preview_url, file_url, price, label, genre, album_id, created_at
-                ''', (user_id, album_id, title, duration, preview_url, file_url, price, label, genre))
+                    INSERT INTO t_p39135821_musician_site_projec.tracks 
+                    (id, user_id, album_id, title, duration, file, cover, price, label, genre, created_at)
+                    VALUES (gen_random_uuid()::text, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                    RETURNING id, title, duration, file, cover, price, label, genre, album_id, created_at
+                ''', (user_id, album_id, title, duration, file, cover, price, label, genre))
                 track = cur.fetchone()
                 conn.commit()
                 
