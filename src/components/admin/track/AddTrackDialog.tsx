@@ -193,7 +193,7 @@ const AddTrackDialog: React.FC<AddTrackDialogProps> = ({
           
           <Button 
             onClick={onAddTrack}
-            disabled={!newTrack.title || !newTrack.duration || !newTrack.file || !selectedAlbum}
+            disabled={!newTrack.title || !newTrack.duration || (!newTrack.file && !savedFilePath) || !selectedAlbum}
             className="w-full bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Добавить трек
