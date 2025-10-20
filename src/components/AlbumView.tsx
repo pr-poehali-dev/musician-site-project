@@ -25,6 +25,8 @@ const AlbumView: React.FC<AlbumViewProps> = ({
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const handlePlayTrack = async (track: Track) => {
+    console.log('🔘 [AlbumView] handlePlayTrack вызван для:', track.title);
+    
     if (!track.file || track.file.trim() === '') {
       console.warn('⚠️ Трек не имеет аудиофайла:', track.title);
       alert(`Для трека "${track.title}" не загружен аудиофайл. Загрузите файл в админ-панели.`);
@@ -32,7 +34,10 @@ const AlbumView: React.FC<AlbumViewProps> = ({
     }
 
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio) {
+      console.error('❌ [AlbumView] audioRef.current пустой!');
+      return;
+    }
 
     if (currentTrack?.id === track.id) {
       if (isPlaying) {
