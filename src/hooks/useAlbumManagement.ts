@@ -169,6 +169,13 @@ export const useAlbumManagement = () => {
         albumId
       };
       
+      console.log('🚀🚀🚀 [addTrackToAlbum] ПЕРЕД saveTrackToServer, трек:', {
+        title: newTrack.title,
+        hasFile: !!newTrack.file,
+        fileLength: newTrack.file?.length || 0,
+        filePreview: newTrack.file?.substring(0, 50)
+      });
+      
       await apiClient.saveTrackToServer(newTrack);
       
       await loadAlbums();
