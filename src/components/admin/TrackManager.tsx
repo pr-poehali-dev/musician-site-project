@@ -145,8 +145,19 @@ const TrackManager: React.FC<TrackManagerProps> = ({
   };
 
   const handleAddTrack = async () => {
+    console.log('🎵 [handleAddTrack] ========== НАЧАЛО ==========');
+    console.log('🎵 [handleAddTrack] newTrack:', {
+      title: newTrack.title,
+      duration: newTrack.duration,
+      hasFile: !!newTrack.file,
+      fileLength: newTrack.file?.length || 0
+    });
+    console.log('🎵 [handleAddTrack] savedFilePath:', savedFilePath ? `${savedFilePath.substring(0, 50)}... (${savedFilePath.length} chars)` : 'NULL');
+    console.log('🎵 [handleAddTrack] selectedAlbum:', selectedAlbum);
+    
     if (newTrack.title && newTrack.duration && newTrack.file && selectedAlbum) {
       if (!savedFilePath && uploadedFile) {
+        console.error('❌ [handleAddTrack] Аудиофайл не сохранён!');
         setFileError('Необходимо сохранить аудиофайл перед добавлением трека');
         return;
       }
