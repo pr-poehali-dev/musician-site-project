@@ -65,8 +65,14 @@ export const apiClient = {
     
     console.log('📤 [saveTrackToServer] URL:', `${API_URL}?path=track`);
     console.log('📤 [saveTrackToServer] Данные для отправки:', {
-      ...requestData,
-      file: requestData.file.startsWith('audio_') ? `${requestData.file} (ID)` : 'EMPTY'
+      id: requestData.id,
+      album_id: requestData.album_id,
+      title: requestData.title,
+      duration: requestData.duration,
+      file: requestData.file.startsWith('audio_') ? `${requestData.file} (ID)` : 'EMPTY',
+      price: requestData.price,
+      cover: requestData.cover.length > 100 ? `${requestData.cover.substring(0, 30)}... (${requestData.cover.length} chars)` : requestData.cover || 'EMPTY',
+      track_order: requestData.track_order
     });
     
     try {
