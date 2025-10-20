@@ -155,12 +155,23 @@ const TrackManager: React.FC<TrackManagerProps> = ({
     console.log('🎵 [handleAddTrack] savedFilePath:', savedFilePath ? `${savedFilePath.substring(0, 50)}... (${savedFilePath.length} chars)` : 'NULL');
     console.log('🎵 [handleAddTrack] selectedAlbum:', selectedAlbum);
     
+    console.log('🎵 [handleAddTrack] Проверка условий:', {
+      hasTitle: !!newTrack.title,
+      hasDuration: !!newTrack.duration,
+      hasFile: !!newTrack.file,
+      hasAlbum: !!selectedAlbum
+    });
+    
     if (newTrack.title && newTrack.duration && newTrack.file && selectedAlbum) {
+      console.log('🎵 [handleAddTrack] Все условия выполнены, проверяем savedFilePath');
+      
       if (!savedFilePath && uploadedFile) {
         console.error('❌ [handleAddTrack] Аудиофайл не сохранён!');
         setFileError('Необходимо сохранить аудиофайл перед добавлением трека');
         return;
       }
+      
+      console.log('🎵 [handleAddTrack] savedFilePath проверен, создаём trackToSave');
       
       let coverUrl = newTrack.cover;
       if (coverFile) {
@@ -173,6 +184,11 @@ const TrackManager: React.FC<TrackManagerProps> = ({
         file: savedFilePath || newTrack.file, // Убедимся что используем base64
         cover: coverUrl
       };
+      
+      console.log('🎵 [handleAddTrack] trackToSave создан:', {
+        file: trackToSave.file ? `${trackToSave.file.substring(0, 30)}...` : 'EMPTY',
+        fileLength: trackToSave.file?.length || 0
+      });
       
       console.log('🎵 Сохраняем трек с аудиофайлом:', {
         title: trackToSave.title,
