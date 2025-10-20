@@ -4,6 +4,15 @@ const API_URL = 'https://functions.poehali.dev/25aac639-cf81-4eb7-80fc-aa9a157a2
 
 export const apiClient = {
   async saveTrackToServer(track: Track): Promise<void> {
+    console.log('📤 [saveTrackToServer] ========== НАЧАЛО ==========');
+    console.log('📤 [saveTrackToServer] Входящий трек:', {
+      id: track.id,
+      title: track.title,
+      hasFile: !!track.file,
+      fileLength: track.file?.length || 0,
+      filePreview: track.file?.substring(0, 50)
+    });
+    
     // Отправляем все данные трека включая аудиофайл
     const requestData = {
       id: track.id,
@@ -16,9 +25,11 @@ export const apiClient = {
       track_order: 0
     };
     
-    console.log('📤 [saveTrackToServer] Начинаем сохранение трека');
     console.log('📤 [saveTrackToServer] URL:', `${API_URL}?path=track`);
-    console.log('📤 [saveTrackToServer] Данные:', requestData);
+    console.log('📤 [saveTrackToServer] Данные для отправки:', {
+      ...requestData,
+      file: requestData.file ? `${requestData.file.substring(0, 50)}... (${requestData.file.length} chars)` : 'EMPTY'
+    });
     
     try {
       const response = await fetch(`${API_URL}?path=track`, {
