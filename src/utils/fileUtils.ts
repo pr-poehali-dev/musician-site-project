@@ -38,10 +38,11 @@ export const validateAudioFile = (file: File): { isValid: boolean; error?: strin
     return { isValid: false, error: 'Выбранный файл не является аудиофайлом' };
   }
   
-  // Проверяем размер файла (максимум 50МБ)
-  const maxSize = 50 * 1024 * 1024; // 50MB
+  // Проверяем размер файла (максимум 2МБ для base64 загрузки)
+  // base64 увеличивает размер на ~33%, поэтому 2MB файл = ~2.7MB base64
+  const maxSize = 2 * 1024 * 1024; // 2MB
   if (file.size > maxSize) {
-    return { isValid: false, error: 'Размер файла превышает 50МБ' };
+    return { isValid: false, error: 'Размер файла превышает 2МБ. Пожалуйста, сожмите файл или уменьшите качество аудио.' };
   }
   
   // Проверяем поддерживаемые форматы
