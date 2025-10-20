@@ -28,6 +28,7 @@ def verify_session(token: str) -> Optional[int]:
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
+    print(f'[DEBUG] Method: {method}, Headers: {event.get("headers", {})}')
     
     if method == 'OPTIONS':
         return {
@@ -44,7 +45,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     token = event.get('headers', {}).get('x-auth-token')
     path = event.get('queryStringParameters', {}).get('path', '')
     
+    print(f'[DEBUG] Token: {token[:20] if token else "NONE"}..., Path: {path}')
+    
     if not token and method != 'GET':
+        print('[DEBUG] No token for non-GET request - returning 401')
         return {
             'statusCode': 401,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
@@ -52,6 +56,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
     
     user_id = verify_session(token) if token else None
+    print(f'[DEBUG] User ID from token: {user_id}')
     
     conn = get_db_connection()
     try:
@@ -62,17 +67,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 if username:
                     cur.execute('''
-                        SELECT a.id, a.title, a.cover_url, a.price, a.created_at,
-                               u.username, u.display_name, u.avatar_url
-                        FROM albums a
-                        JOIN users u ON a.user_id = u.id
-                        WHERE u.username = %s
+                        SELECT a.id, a.title, a.cover, a.price, a.created_at,
+                               a.artist, a.description
+                        FROM t_p39135821_musician_site_projec.albums a
+                        WHERE a.artist = %s
                         ORDER BY a.created_at DESC
                     ''', (username,))
                 elif user_id:
                     cur.execute('''
-                        SELECT id, title, cover_url, price, created_at
-                        FROM albums
+                        SELECT id, title, cover, price, created_at, artist, description
+                        FROM t_p39135821_musician_site_projec.albums
                         WHERE user_id = %s
                         ORDER BY created_at DESC
                     ''', (user_id,))
