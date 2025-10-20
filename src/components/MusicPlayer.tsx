@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Track } from '@/types';
-import { getAudioFromIndexedDB } from '@/utils/audioStorage';
+import { apiClient } from '@/utils/apiClient';
 import { incrementPlays } from '@/utils/trackStats';
 import FloatingPlayer from '@/components/player/FloatingPlayer';
 import PlayerCard from '@/components/player/PlayerCard';
@@ -116,8 +116,13 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         try {
           let audioUrl = currentTrack.file;
           
+          console.log('🎵 [MusicPlayer] Загрузка трека:', currentTrack.title, 'file:', audioUrl);
+          
+          // Если это ID файла из БД (audio_xxxxx), загружаем из базы данных
           if (audioUrl.startsWith('audio_')) {
-            audioUrl = await getAudioFromIndexedDB(audioUrl);
+            console.log('🔍 [MusicPlayer] Загрузка аудио из БД:', audioUrl);
+            audioUrl = await apiClient.loadMediaFile(audioUrl);
+            console.log('✅ [MusicPlayer] Аудио загружено из БД');
           }
           
           audio.src = audioUrl;
@@ -127,14 +132,14 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
           
           if (isPlaying) {
             audio.play().catch(error => {
-              console.warn('Ошибка автовоспроизведения:', error);
+              console.warn('❌ [MusicPlayer] Ошибка автовоспроизведения:', error);
               setIsPlaying(false);
             });
             
             incrementPlays(currentTrack.id);
           }
         } catch (error) {
-          console.error('Ошибка загрузки аудио:', error);
+          console.error('❌ [MusicPlayer] Ошибка загрузки аудио:', error);
           setIsPlaying(false);
         }
       };
