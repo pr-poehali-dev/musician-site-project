@@ -156,7 +156,20 @@ const TrackManager: React.FC<TrackManagerProps> = ({
         coverUrl = await saveCoverImage(coverFile);
       }
       
-      onAddTrack(selectedAlbum, { ...newTrack, cover: coverUrl });
+      // Используем savedFilePath (base64) вместо blob URL
+      const trackToSave = {
+        ...newTrack,
+        file: savedFilePath || newTrack.file, // Убедимся что используем base64
+        cover: coverUrl
+      };
+      
+      console.log('🎵 Сохраняем трек с аудиофайлом:', {
+        title: trackToSave.title,
+        hasFile: !!trackToSave.file,
+        fileLength: trackToSave.file?.length || 0
+      });
+      
+      onAddTrack(selectedAlbum, trackToSave);
       resetTrackForm();
       setShowAddTrack(false);
     } else {
