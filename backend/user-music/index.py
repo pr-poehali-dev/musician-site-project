@@ -156,8 +156,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if method == 'POST' and path == 'albums':
                 body = json.loads(event.get('body', '{}'))
                 title = body.get('title')
-                cover_url = body.get('cover_url')
+                artist = body.get('artist', '')
+                cover = body.get('cover_url', '')
                 price = body.get('price', 0)
+                description = body.get('description', '')
                 
                 if not title:
                     return {
@@ -167,10 +169,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     }
                 
                 cur.execute('''
-                    INSERT INTO albums (user_id, title, cover_url, price, created_at)
-                    VALUES (%s, %s, %s, %s, NOW())
-                    RETURNING id, title, cover_url, price, created_at
-                ''', (user_id, title, cover_url, price))
+                    INSERT INTO t_p39135821_musician_site_projec.albums 
+                    (id, user_id, title, artist, cover, price, description, created_at)
+                    VALUES (gen_random_uuid()::text, %s, %s, %s, %s, %s, %s, NOW())
+                    RETURNING id, title, artist, cover, price, description, created_at
+                ''', (user_id, title, artist, cover, price, description))
                 album = cur.fetchone()
                 conn.commit()
                 
