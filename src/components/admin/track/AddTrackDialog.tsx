@@ -53,6 +53,18 @@ const AddTrackDialog: React.FC<AddTrackDialogProps> = ({
   onAddTrack,
   fileInputKey
 }) => {
+  const isButtonDisabled = !newTrack.title || !newTrack.duration || (!newTrack.file && !savedFilePath) || !selectedAlbum;
+  
+  console.log('🔘 [AddTrackDialog] Состояние кнопки "Добавить трек":', {
+    disabled: isButtonDisabled,
+    hasTitle: !!newTrack.title,
+    hasDuration: !!newTrack.duration,
+    hasFile: !!newTrack.file,
+    hasSavedFilePath: !!savedFilePath,
+    savedFilePathLength: savedFilePath?.length || 0,
+    hasAlbum: !!selectedAlbum
+  });
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
@@ -193,7 +205,7 @@ const AddTrackDialog: React.FC<AddTrackDialogProps> = ({
           
           <Button 
             onClick={onAddTrack}
-            disabled={!newTrack.title || !newTrack.duration || (!newTrack.file && !savedFilePath) || !selectedAlbum}
+            disabled={isButtonDisabled}
             className="w-full bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Добавить трек
