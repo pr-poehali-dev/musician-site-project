@@ -104,6 +104,25 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             elif path == 'track':
                 print(f'[DEBUG] Creating track with data: {body}')
                 result = create_track(cursor, conn, body)
+            elif path == 'media':
+                media_id = body.get('id')
+                file_type = body.get('file_type', 'audio')
+                data = body.get('data', '')
+                if not media_id or not data:
+                    return error_response('Media ID and data are required', 400)
+                print(f'[DEBUG] Saving media file: {media_id}, type: {file_type}, size: {len(data)}')
+                result = save_media_file(cursor, conn, media_id, file_type, data)
+                cursor.close()
+                conn.close()
+                return {
+                    'statusCode': 201,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'isBase64Encoded': False,
+                    'body': json.dumps({'id': result}, default=str)
+                }
             elif path == 'stat':
                 result = update_stat(cursor, conn, body)
             elif path == 'order':

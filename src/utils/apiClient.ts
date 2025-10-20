@@ -3,6 +3,29 @@ import { Album, Track } from '@/types';
 const API_URL = 'https://functions.poehali.dev/25aac639-cf81-4eb7-80fc-aa9a157a25e6';
 
 export const apiClient = {
+  async saveMediaFile(mediaId: string, fileType: string, data: string): Promise<string> {
+    console.log(`📤 [saveMediaFile] Сохранение ${fileType} файла ${mediaId}, размер: ${data.length} chars`);
+    
+    const response = await fetch(`${API_URL}?path=media`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: mediaId,
+        file_type: fileType,
+        data: data
+      })
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ [saveMediaFile] Ошибка сохранения медиафайла:`, errorText);
+      throw new Error(`Ошибка сохранения медиафайла: ${response.status}`);
+    }
+    
+    console.log(`✅ [saveMediaFile] Медиафайл ${mediaId} сохранён`);
+    return mediaId;
+  },
+
   async saveTrackToServer(track: Track): Promise<void> {
     console.log('📤 [saveTrackToServer] ========== НАЧАЛО ==========');
     console.log('📤 [saveTrackToServer] Входящий трек:', {
@@ -13,13 +36,28 @@ export const apiClient = {
       filePreview: track.file?.substring(0, 50)
     });
     
-    // Отправляем все данные трека включая аудиофайл
+    // Если файл большой (>1MB base64), сохраняем его отдельно
+    let fileId = track.file || '';
+    if (track.file && track.file.length > 100) {
+      console.log('📤 [saveTrackToServer] Файл большой, сохраняем отдельно...');
+      fileId = `audio_${track.id}`;
+      
+      try {
+        await this.saveMediaFile(fileId, 'audio', track.file);
+        console.log('✅ [saveTrackToServer] Аудиофайл сохранён отдельно:', fileId);
+      } catch (error) {
+        console.error('❌ [saveTrackToServer] Ошибка сохранения аудио:', error);
+        throw new Error('Не удалось загрузить аудиофайл');
+      }
+    }
+    
+    // Отправляем данные трека с ID файла вместо base64
     const requestData = {
       id: track.id,
       album_id: track.albumId || '',
       title: track.title,
       duration: track.duration,
-      file: track.file || '', // Сохраняем аудио в базу
+      file: fileId, // Теперь это ID файла, а не base64
       price: track.price,
       cover: track.cover || '',
       track_order: 0
@@ -28,7 +66,7 @@ export const apiClient = {
     console.log('📤 [saveTrackToServer] URL:', `${API_URL}?path=track`);
     console.log('📤 [saveTrackToServer] Данные для отправки:', {
       ...requestData,
-      file: requestData.file ? `${requestData.file.substring(0, 50)}... (${requestData.file.length} chars)` : 'EMPTY'
+      file: requestData.file.startsWith('audio_') ? `${requestData.file} (ID)` : 'EMPTY'
     });
     
     try {
