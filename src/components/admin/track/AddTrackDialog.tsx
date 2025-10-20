@@ -119,7 +119,7 @@ const AddTrackDialog: React.FC<AddTrackDialogProps> = ({
                     {savedFilePath && (
                       <div className="flex items-center gap-1 mt-1">
                         <Icon name="CheckCircle" size={12} className="text-green-600" />
-                        <span className="text-xs text-green-600">Сохранено: {savedFilePath}</span>
+                        <span className="text-xs text-green-600">Файл сохранён</span>
                       </div>
                     )}
                   </div>
