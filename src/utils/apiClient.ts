@@ -32,11 +32,19 @@ export const apiClient = {
     });
     
     try {
+      // Для больших файлов увеличиваем keepalive
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 секунд
+      
       const response = await fetch(`${API_URL}?path=track`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestData)
+        body: JSON.stringify(requestData),
+        keepalive: true,
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       
       console.log('📥 [saveTrackToServer] Получен ответ, статус:', response.status);
       
