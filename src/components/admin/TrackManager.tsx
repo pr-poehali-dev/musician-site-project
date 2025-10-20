@@ -173,16 +173,11 @@ const TrackManager: React.FC<TrackManagerProps> = ({
       
       console.log('🎵 [handleAddTrack] savedFilePath проверен, создаём trackToSave');
       
-      let coverUrl = newTrack.cover;
-      if (coverFile) {
-        coverUrl = await saveCoverImage(coverFile);
-      }
-      
       // Используем savedFilePath (base64) вместо blob URL
       const trackToSave = {
         ...newTrack,
         file: savedFilePath || newTrack.file, // Убедимся что используем base64
-        cover: coverUrl
+        cover: '' // Треки не имеют своей обложки - используется обложка альбома
       };
       
       console.log('🎵 [handleAddTrack] trackToSave создан:', {
