@@ -4,13 +4,13 @@ const API_URL = 'https://functions.poehali.dev/25aac639-cf81-4eb7-80fc-aa9a157a2
 
 export const apiClient = {
   async saveTrackToServer(track: Track): Promise<void> {
-    // На сервер отправляем только метаданные (БЕЗ аудио - слишком большой файл)
+    // Отправляем все данные трека включая аудиофайл
     const requestData = {
       id: track.id,
       album_id: track.albumId || '',
       title: track.title,
       duration: track.duration,
-      file: '', // Аудио НЕ сохраняем (только в памяти браузера)
+      file: track.file || '', // Сохраняем аудио в базу
       price: track.price,
       cover: track.cover || '',
       track_order: 0
@@ -120,19 +120,28 @@ export const apiClient = {
           }
         }
         
-        const processedTracks = (album.trackList || []).map((track: any) => {
+        const processedTracks = await Promise.all((album.trackList || []).map(async (track: any) => {
           const trackCover = track.cover || coverUrl;
+          
+          // Загружаем аудиофайл из базы данных
+          let audioFile = track.file || '';
+          if (audioFile && audioFile.startsWith('audio_')) {
+            const audioData = await this.getMediaFile(audioFile);
+            if (audioData) {
+              audioFile = audioData;
+            }
+          }
           
           return {
             id: track.id,
             title: track.title,
             duration: track.duration,
-            file: '', // Аудио не загружаем с сервера (хранится только локально)
+            file: audioFile,
             price: track.price,
             cover: trackCover,
             albumId: album.id
           };
-        });
+        }));
         
         return {
           id: album.id,
