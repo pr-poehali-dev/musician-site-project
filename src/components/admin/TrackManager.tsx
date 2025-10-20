@@ -181,8 +181,12 @@ const TrackManager: React.FC<TrackManagerProps> = ({
       };
       
       console.log('🎵 [handleAddTrack] trackToSave создан:', {
+        title: trackToSave.title,
+        duration: trackToSave.duration,
+        price: trackToSave.price,
         file: trackToSave.file ? `${trackToSave.file.substring(0, 30)}...` : 'EMPTY',
-        fileLength: trackToSave.file?.length || 0
+        fileLength: trackToSave.file?.length || 0,
+        cover: trackToSave.cover ? `${trackToSave.cover.substring(0, 30)}... (${trackToSave.cover.length} chars)` : 'EMPTY'
       });
       
       console.log('🎵 Сохраняем трек с аудиофайлом:', {
