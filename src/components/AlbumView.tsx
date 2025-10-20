@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Icon from '@/components/ui/icon';
 import { Album, Track } from '@/types';
-import { getAudioFromIndexedDB } from '@/utils/audioStorage';
 
 interface AlbumViewProps {
   album: Album;
@@ -50,10 +49,16 @@ const AlbumView: React.FC<AlbumViewProps> = ({
       }
     } else {
       try {
-        let audioUrl = track.file;
+        console.log('🎵 [AlbumView] Запуск нового трека:', track.title);
+        console.log('🎵 [AlbumView] Файл трека:', track.file ? `${track.file.substring(0, 50)}... (${track.file.length} chars)` : 'ПУСТО');
         
-        if (audioUrl.startsWith('audio_')) {
-          audioUrl = await getAudioFromIndexedDB(audioUrl);
+        // track.file уже содержит base64 (загружен при загрузке альбома)
+        const audioUrl = track.file;
+        
+        if (!audioUrl || audioUrl.trim() === '') {
+          console.error('❌ [AlbumView] Файл трека пустой!');
+          alert(`Для трека "${track.title}" не загружен аудиофайл.`);
+          return;
         }
         
         audio.src = audioUrl;
@@ -62,10 +67,12 @@ const AlbumView: React.FC<AlbumViewProps> = ({
         setCurrentTime(0);
         setDuration(0);
         
+        console.log('✅ [AlbumView] Трек загружен, начинаем воспроизведение');
         await audio.play();
         setIsPlaying(true);
+        console.log('✅ [AlbumView] Воспроизведение началось');
       } catch (error) {
-        console.error('❌ Ошибка загрузки/воспроизведения трека:', track.title, error);
+        console.error('❌ [AlbumView] Ошибка загрузки/воспроизведения трека:', track.title, error);
         setIsPlaying(false);
       }
     }
