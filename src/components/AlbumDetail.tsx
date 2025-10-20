@@ -9,9 +9,9 @@ import { useToast } from '@/hooks/use-toast';
 interface Track {
   id: number;
   title: string;
-  duration: number;
-  preview_url?: string;
-  file_url?: string;
+  duration: string;
+  file?: string;
+  cover?: string;
   price: number;
   label?: string;
   genre?: string;
@@ -259,11 +259,11 @@ const AlbumDetail = ({ album, token, onBack }: AlbumDetailProps) => {
                     )}
                   </div>
                   <p className="text-sm text-vintage-brown mt-1">
-                    {track.duration > 0 ? formatDuration(track.duration) : '—'} • {track.price} ₽
+                    {track.duration || '—'} • {track.price} ₽
                   </p>
                 </div>
-                {track.preview_url && (
-                  <audio src={track.preview_url} controls className="max-w-xs" />
+                {track.file && (
+                  <audio src={track.file} controls className="max-w-xs" />
                 )}
                 <div className="flex gap-2">
                   <Button
@@ -318,9 +318,8 @@ const AlbumDetail = ({ album, token, onBack }: AlbumDetailProps) => {
               initialData={{
                 title: editingTrack.title,
                 album_id: album.id,
-                duration: editingTrack.duration,
-                preview_url: editingTrack.preview_url || '',
-                file_url: editingTrack.file_url || '',
+                duration: editingTrack.duration?.toString() || '0',
+                file_url: editingTrack.file || '',
                 price: editingTrack.price,
                 label: editingTrack.label || '',
               }}
