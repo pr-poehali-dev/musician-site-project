@@ -42,7 +42,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'body': ''
         }
     
-    token = event.get('headers', {}).get('x-auth-token')
+    headers = event.get('headers', {})
+    token = headers.get('X-Auth-Token') or headers.get('x-auth-token')
     path = event.get('queryStringParameters', {}).get('path', '')
     
     print(f'[DEBUG] Token: {token[:20] if token else "NONE"}..., Path: {path}')
