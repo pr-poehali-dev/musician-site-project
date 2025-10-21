@@ -295,9 +295,20 @@ def get_track_file(cursor, track_id: str) -> Optional[Dict]:
     safe_id = track_id.replace("'", "''")
     cursor.execute(f"SELECT file FROM tracks WHERE id = '{safe_id}'")
     result = cursor.fetchone()
-    if result:
-        return {'file': result['file']}
-    return None
+    if not result or not result['file']:
+        return None
+    
+    file_ref = result['file']
+    
+    # Если file начинается с audio_ - это ID медиафайла, загружаем из media_files
+    if file_ref.startswith('audio_'):
+        media_file = get_media_file(cursor, file_ref)
+        if media_file:
+            return {'file': media_file['data']}
+        return None
+    
+    # Иначе это прямая ссылка или base64
+    return {'file': file_ref}
 
 def get_media_file(cursor, media_id: str) -> Optional[Dict]:
     safe_id = media_id.replace("'", "''")
