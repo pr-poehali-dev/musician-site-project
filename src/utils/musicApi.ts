@@ -146,5 +146,17 @@ export const musicApi = {
     } catch (error) {
       console.error('Ошибка записи скачивания:', error);
     }
+  },
+
+  async getTrackFile(trackId: string): Promise<string | null> {
+    try {
+      const response = await fetch(`${API_URL}?path=track-file&id=${trackId}`);
+      if (!response.ok) throw new Error('Failed to fetch track file');
+      const data = await response.json();
+      return data.file || null;
+    } catch (error) {
+      console.error('Ошибка загрузки файла трека:', error);
+      return null;
+    }
   }
 };

@@ -63,6 +63,22 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             elif path == 'tracks':
                 album_id = event.get('queryStringParameters', {}).get('album_id')
                 result = get_tracks(cursor, album_id)
+            elif path == 'track-file':
+                track_id = event.get('queryStringParameters', {}).get('id')
+                if not track_id:
+                    return error_response('Track ID is required', 400)
+                result = get_track_file(cursor, track_id)
+                if not result:
+                    return error_response('Track file not found', 404)
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'isBase64Encoded': False,
+                    'body': json.dumps(result, default=str)
+                }
             elif path == 'stats':
                 track_id = event.get('queryStringParameters', {}).get('track_id')
                 result = get_stats(cursor, track_id)
@@ -241,21 +257,26 @@ def get_albums(cursor) -> List[Dict]:
         ORDER BY a.created_at DESC
         LIMIT 100
     ''')
-    albums = cursor.fetchall()
-    print(f'[DEBUG] Found {len(albums)} albums')
+    albums_raw = cursor.fetchall()
+    print(f'[DEBUG] Found {len(albums_raw)} albums')
     
-    for album in albums:
+    albums = []
+    for album_row in albums_raw:
         try:
+            album = dict(album_row)
             album_id = str(album['id']).replace("'", "''")
             print(f'[DEBUG] Getting tracks for album: {album_id}')
-            cursor.execute(f"SELECT id, album_id, title, duration, file, price, cover, track_order, created_at FROM tracks WHERE album_id = '{album_id}' ORDER BY track_order, created_at LIMIT 50")
-            tracks = cursor.fetchall()
+            cursor.execute(f"SELECT id, album_id, title, duration, price, cover, track_order, created_at FROM tracks WHERE album_id = '{album_id}' ORDER BY track_order, created_at LIMIT 50")
+            tracks_raw = cursor.fetchall()
             
-            album['trackList'] = tracks if tracks else []
-            print(f'[DEBUG] Found {len(tracks) if tracks else 0} tracks for album {album_id}')
+            album['trackList'] = [dict(track) for track in tracks_raw] if tracks_raw else []
+            print(f'[DEBUG] Found {len(tracks_raw) if tracks_raw else 0} tracks for album {album_id}')
+            albums.append(album)
         except Exception as e:
             print(f'[ERROR] Failed to get tracks for album: {e}')
+            album = dict(album_row)
             album['trackList'] = []
+            albums.append(album)
     
     print(f'[DEBUG] Returning albums with tracks')
     return albums
@@ -263,11 +284,20 @@ def get_albums(cursor) -> List[Dict]:
 def get_tracks(cursor, album_id: Optional[str] = None) -> List[Dict]:
     if album_id:
         safe_id = album_id.replace("'", "''")
-        cursor.execute(f"SELECT id, album_id, title, duration, file, price, cover, track_order, created_at FROM tracks WHERE album_id = '{safe_id}' ORDER BY track_order, created_at LIMIT 50")
+        cursor.execute(f"SELECT id, album_id, title, duration, price, cover, track_order, created_at FROM tracks WHERE album_id = '{safe_id}' ORDER BY track_order, created_at LIMIT 50")
     else:
-        cursor.execute("SELECT id, album_id, title, duration, file, price, cover, track_order, created_at FROM tracks ORDER BY created_at DESC LIMIT 100")
+        cursor.execute("SELECT id, album_id, title, duration, price, cover, track_order, created_at FROM tracks ORDER BY created_at DESC LIMIT 100")
     
-    return cursor.fetchall()
+    tracks_raw = cursor.fetchall()
+    return [dict(track) for track in tracks_raw] if tracks_raw else []
+
+def get_track_file(cursor, track_id: str) -> Optional[Dict]:
+    safe_id = track_id.replace("'", "''")
+    cursor.execute(f"SELECT file FROM tracks WHERE id = '{safe_id}'")
+    result = cursor.fetchone()
+    if result:
+        return {'file': result['file']}
+    return None
 
 def get_media_file(cursor, media_id: str) -> Optional[Dict]:
     safe_id = media_id.replace("'", "''")
