@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Icon from '@/components/ui/icon';
 import { Album, Track } from '@/types';
+import { musicApi } from '@/utils/musicApi';
 
 interface AlbumViewProps {
   album: Album;
@@ -26,12 +27,6 @@ const AlbumView: React.FC<AlbumViewProps> = ({
 
   const handlePlayTrack = async (track: Track) => {
     console.log('🔘 [AlbumView] handlePlayTrack вызван для:', track.title);
-    
-    if (!track.file || track.file.trim() === '') {
-      console.warn('⚠️ Трек не имеет аудиофайла:', track.title);
-      alert(`Для трека "${track.title}" не загружен аудиофайл. Загрузите файл в админ-панели.`);
-      return;
-    }
 
     const audio = audioRef.current;
     if (!audio) {
@@ -55,16 +50,18 @@ const AlbumView: React.FC<AlbumViewProps> = ({
     } else {
       try {
         console.log('🎵 [AlbumView] Запуск нового трека:', track.title);
-        console.log('🎵 [AlbumView] Файл трека:', track.file ? `${track.file.substring(0, 50)}... (${track.file.length} chars)` : 'ПУСТО');
         
-        // track.file уже содержит base64 (загружен при загрузке альбома)
-        const audioUrl = track.file;
+        // Загружаем файл трека отдельно
+        console.log('🔍 [AlbumView] Загрузка файла трека из API...');
+        const audioUrl = await musicApi.getTrackFile(track.id);
         
         if (!audioUrl || audioUrl.trim() === '') {
-          console.error('❌ [AlbumView] Файл трека пустой!');
-          alert(`Для трека "${track.title}" не загружен аудиофайл.`);
+          console.error('❌ [AlbumView] Файл трека не найден!');
+          alert(`Для трека "${track.title}" не загружен аудиофайл. Загрузите файл в админ-панели.`);
           return;
         }
+        
+        console.log('✅ [AlbumView] Файл получен, размер:', audioUrl.length, 'символов');
         
         audio.src = audioUrl;
         audio.load();
@@ -85,34 +82,27 @@ const AlbumView: React.FC<AlbumViewProps> = ({
 
   const playNext = async () => {
     if (!currentTrack || !album.trackList) return;
-    const playableTracks = album.trackList.filter(t => t.file && t.file.trim() !== '');
-    const currentPlayableIndex = playableTracks.findIndex(t => t.id === currentTrack.id);
+    const currentIndex = album.trackList.findIndex(t => t.id === currentTrack.id);
     
-    if (currentPlayableIndex < playableTracks.length - 1) {
-      const nextTrack = playableTracks[currentPlayableIndex + 1];
+    if (currentIndex < album.trackList.length - 1) {
+      const nextTrack = album.trackList[currentIndex + 1];
       await handlePlayTrack(nextTrack);
     }
   };
 
   const playPrevious = async () => {
     if (!currentTrack || !album.trackList) return;
-    const playableTracks = album.trackList.filter(t => t.file && t.file.trim() !== '');
-    const currentPlayableIndex = playableTracks.findIndex(t => t.id === currentTrack.id);
+    const currentIndex = album.trackList.findIndex(t => t.id === currentTrack.id);
     
-    if (currentPlayableIndex > 0) {
-      const prevTrack = playableTracks[currentPlayableIndex - 1];
+    if (currentIndex > 0) {
+      const prevTrack = album.trackList[currentIndex - 1];
       await handlePlayTrack(prevTrack);
     }
   };
 
   const playAlbum = async () => {
     if (album.trackList && album.trackList.length > 0) {
-      const firstPlayableTrack = album.trackList.find(t => t.file && t.file.trim() !== '');
-      if (firstPlayableTrack) {
-        await handlePlayTrack(firstPlayableTrack);
-      } else {
-        alert('В этом альбоме нет загруженных аудиофайлов. Добавьте файлы в админ-панели.');
-      }
+      await handlePlayTrack(album.trackList[0]);
     }
   };
 
