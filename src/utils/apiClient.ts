@@ -116,17 +116,23 @@ export const apiClient = {
   },
 
   async saveAlbumToServer(album: Album): Promise<void> {
+    const albumData: any = {
+      id: album.id,
+      title: album.title,
+      artist: album.artist,
+      price: album.price,
+      description: album.description || ''
+    };
+    
+    // Отправляем обложку только если она есть
+    if (album.cover && album.cover.length > 0) {
+      albumData.cover = album.cover;
+    }
+    
     const response = await fetch(`${API_URL}?path=album`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: album.id,
-        title: album.title,
-        artist: album.artist,
-        cover: '', // НЕ отправляем обложку (слишком большой размер)
-        price: album.price,
-        description: album.description || ''
-      })
+      body: JSON.stringify(albumData)
     });
     
     if (!response.ok) {
@@ -149,17 +155,23 @@ export const apiClient = {
   },
 
   async updateAlbumOnServer(albumId: string, albumData: Omit<Album, 'id'>): Promise<void> {
+    const updateData: any = {
+      id: albumId,
+      title: albumData.title,
+      artist: albumData.artist,
+      price: albumData.price,
+      description: albumData.description || ''
+    };
+    
+    // Отправляем обложку только если она есть
+    if (albumData.cover && albumData.cover.length > 0) {
+      updateData.cover = albumData.cover;
+    }
+    
     const response = await fetch(`${API_URL}?path=album`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: albumId,
-        title: albumData.title,
-        artist: albumData.artist,
-        cover: '', // НЕ отправляем обложку (слишком большой размер)
-        price: albumData.price,
-        description: albumData.description || ''
-      })
+      body: JSON.stringify(updateData)
     });
     
     if (!response.ok) {
