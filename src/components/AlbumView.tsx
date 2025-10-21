@@ -230,8 +230,6 @@ const AlbumView: React.FC<AlbumViewProps> = ({
             <div className="space-y-3">
               <h3 className="text-xl font-bold text-vintage-warm mb-4">Треки</h3>
               {album.trackList.map((track, index) => {
-                const hasAudioFile = track.file && track.file.trim() !== '';
-                console.log(`🎵 [AlbumView] Трек "${track.title}": hasAudioFile=${hasAudioFile}, file=${track.file ? track.file.substring(0, 50) + '...' : 'NULL'}`);
                 return (
                   <div
                     key={track.id}
@@ -239,7 +237,7 @@ const AlbumView: React.FC<AlbumViewProps> = ({
                       currentTrack?.id === track.id
                         ? 'bg-vintage-dark-brown/20 border border-vintage-dark-brown/30'
                         : 'bg-vintage-brown/10 hover:bg-vintage-brown/15'
-                    } ${!hasAudioFile ? 'opacity-50' : ''}`}
+                    }`}
                   >
                     <div className="flex items-center gap-4 flex-1">
                       <div className="text-vintage-warm/60 w-8 text-center font-mono">
@@ -249,9 +247,8 @@ const AlbumView: React.FC<AlbumViewProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => handlePlayTrack(track)}
-                        disabled={!hasAudioFile}
-                        className="text-vintage-dark-brown hover:bg-vintage-brown/20 w-10 h-10 rounded-full disabled:opacity-30"
-                        title={!hasAudioFile ? 'Аудиофайл не загружен' : 'Воспроизвести'}
+                        className="text-vintage-dark-brown hover:bg-vintage-brown/20 w-10 h-10 rounded-full"
+                        title="Воспроизвести"
                       >
                         {currentTrack?.id === track.id && isPlaying ? (
                           <Icon name="Pause" size={16} />
@@ -260,14 +257,7 @@ const AlbumView: React.FC<AlbumViewProps> = ({
                         )}
                       </Button>
                       <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-vintage-warm">{track.title}</p>
-                          {!hasAudioFile && (
-                            <Badge variant="outline" className="text-xs bg-red-500/10 text-red-700 border-red-300">
-                              Нет файла
-                            </Badge>
-                          )}
-                        </div>
+                        <p className="font-medium text-vintage-warm">{track.title}</p>
                         <p className="text-sm text-vintage-warm/60">{track.duration}</p>
                       </div>
                     </div>
