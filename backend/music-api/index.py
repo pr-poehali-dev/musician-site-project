@@ -389,7 +389,7 @@ def create_album(cursor, conn, data: Dict) -> Dict:
     cover_value = f"'{cover_id}'" if cover_id else 'NULL'
     cursor.execute(f'''
         INSERT INTO albums (id, title, artist, cover, price, description, tracks_count, created_at, user_id)
-        VALUES ('{album_id}', '{title}', '{artist}', {cover_value}, {price}, '{description}', 0, '{now}', 0)
+        VALUES ('{album_id}', '{title}', '{artist}', {cover_value}, {price}, '{description}', 0, '{now}', NULL)
         RETURNING *
     ''')
     conn.commit()
