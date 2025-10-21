@@ -379,16 +379,17 @@ def create_album(cursor, conn, data: Dict) -> Dict:
     
     print(f'[DEBUG] Album fields - id: {album_id}, title: {title}, artist: {artist}')
     
-    cover_id = ''
+    cover_id = None
     if cover_data and len(cover_data) > 100:
         cover_id = f"cover_{album_id}"
         print(f'[DEBUG] Saving cover image with id: {cover_id}')
         save_media_file(cursor, conn, cover_id, 'image', cover_data)
     
     print(f'[DEBUG] Inserting album into database...')
+    cover_value = f"'{cover_id}'" if cover_id else 'NULL'
     cursor.execute(f'''
         INSERT INTO albums (id, title, artist, cover, price, description, tracks_count, created_at, user_id)
-        VALUES ('{album_id}', '{title}', '{artist}', '{cover_id}', {price}, '{description}', 0, '{now}', 0)
+        VALUES ('{album_id}', '{title}', '{artist}', {cover_value}, {price}, '{description}', 0, '{now}', 0)
         RETURNING *
     ''')
     conn.commit()
@@ -407,19 +408,25 @@ def create_track(cursor, conn, data: Dict) -> Dict:
     track_order = data.get('track_order', 0)
     now = datetime.now().isoformat()
     
-    file_id = file_data if len(file_data) < 100 else ''
+    file_id = None
     if file_data and len(file_data) > 100:
         file_id = f"audio_{track_id}"
         save_media_file(cursor, conn, file_id, 'audio', file_data)
+    elif file_data and len(file_data) > 0 and len(file_data) < 100:
+        file_id = file_data
     
-    cover_id = cover_data if len(cover_data) < 100 else ''
+    cover_id = None
     if cover_data and len(cover_data) > 100:
         cover_id = f"cover_{track_id}"
         save_media_file(cursor, conn, cover_id, 'image', cover_data)
+    elif cover_data and len(cover_data) > 0 and len(cover_data) < 100:
+        cover_id = cover_data
     
+    file_value = f"'{file_id}'" if file_id else 'NULL'
+    cover_value = f"'{cover_id}'" if cover_id else 'NULL'
     cursor.execute(f'''
         INSERT INTO tracks (id, album_id, title, duration, file, price, cover, track_order, created_at)
-        VALUES ('{track_id}', '{album_id}', '{title}', '{duration}', '{file_id}', {price}, '{cover_id}', {track_order}, '{now}')
+        VALUES ('{track_id}', '{album_id}', '{title}', '{duration}', {file_value}, {price}, {cover_value}, {track_order}, '{now}')
         RETURNING *
     ''')
     new_track = cursor.fetchone()
@@ -444,14 +451,17 @@ def update_album(cursor, conn, album_id: str, data: Dict) -> Dict:
     description = data.get('description', '').replace("'", "''")
     now = datetime.now().isoformat()
     
-    cover_id = cover_data if len(cover_data) < 100 else ''
+    cover_id = None
     if cover_data and len(cover_data) > 100:
         cover_id = f"cover_{album_id}"
         save_media_file(cursor, conn, cover_id, 'image', cover_data)
+    elif cover_data and len(cover_data) > 0 and len(cover_data) < 100:
+        cover_id = cover_data
     
+    cover_value = f"'{cover_id}'" if cover_id else 'NULL'
     cursor.execute(f'''
         UPDATE albums 
-        SET title = '{title}', artist = '{artist}', cover = '{cover_id}', price = {price}, description = '{description}', updated_at = '{now}'
+        SET title = '{title}', artist = '{artist}', cover = {cover_value}, price = {price}, description = '{description}', updated_at = '{now}'
         WHERE id = '{safe_id}'
         RETURNING *
     ''')
@@ -462,14 +472,22 @@ def update_track(cursor, conn, track_id: str, data: Dict) -> Dict:
     safe_id = track_id.replace("'", "''")
     title = data['title'].replace("'", "''")
     duration = data['duration'].replace("'", "''")
-    file_path = data.get('file', '').replace("'", "''")
+    file_data = data.get('file', '')
     price = data.get('price', 0)
     track_order = data.get('track_order', 0)
     now = datetime.now().isoformat()
     
+    file_id = None
+    if file_data and len(file_data) > 100:
+        file_id = f"audio_{track_id}"
+        save_media_file(cursor, conn, file_id, 'audio', file_data)
+    elif file_data and len(file_data) > 0 and len(file_data) < 100:
+        file_id = file_data
+    
+    file_value = f"'{file_id}'" if file_id else 'NULL'
     cursor.execute(f'''
         UPDATE tracks 
-        SET title = '{title}', duration = '{duration}', file = '{file_path}', price = {price}, track_order = {track_order}, updated_at = '{now}'
+        SET title = '{title}', duration = '{duration}', file = {file_value}, price = {price}, track_order = {track_order}, updated_at = '{now}'
         WHERE id = '{safe_id}'
         RETURNING *
     ''')
