@@ -310,13 +310,25 @@ const AlbumView: React.FC<AlbumViewProps> = ({
                     <p className="font-medium text-vintage-warm">{currentTrack.title}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-sm text-vintage-warm/60">{formatTime(currentTime)}</span>
-                      <div className="flex-1 bg-vintage-brown/20 rounded-full h-1">
-                        <div
-                          className="bg-vintage-dark-brown h-1 rounded-full transition-all duration-300"
-                          style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
-                        />
-                      </div>
-                      <span className="text-sm text-vintage-warm/60">{currentTrack.duration}</span>
+                      <input
+                        type="range"
+                        min="0"
+                        max={duration || 0}
+                        step="0.1"
+                        value={currentTime}
+                        onChange={(e) => {
+                          const newTime = parseFloat(e.target.value);
+                          setCurrentTime(newTime);
+                          if (audioRef.current) {
+                            audioRef.current.currentTime = newTime;
+                          }
+                        }}
+                        className="flex-1 h-1 bg-vintage-brown/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-vintage-dark-brown [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-vintage-dark-brown [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer"
+                        style={{
+                          background: `linear-gradient(to right, rgb(var(--vintage-dark-brown)) 0%, rgb(var(--vintage-dark-brown)) ${(currentTime / (duration || 1)) * 100}%, rgb(var(--vintage-brown) / 0.2) ${(currentTime / (duration || 1)) * 100}%, rgb(var(--vintage-brown) / 0.2) 100%)`
+                        }}
+                      />
+                      <span className="text-sm text-vintage-warm/60">{formatTime(duration)}</span>
                     </div>
                   </div>
                 </div>
