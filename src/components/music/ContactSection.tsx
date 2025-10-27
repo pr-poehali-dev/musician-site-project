@@ -40,7 +40,7 @@ const ContactSection: React.FC = () => {
             <p>+7 (999) 123-45-67</p>
           </div>
           <div>
-            <h4 className="text-xl font-semibold mb-2 text-vintage-warm">Социальные сети</h4>
+            <h4 className="text-xl font-semibold mb-2 text-vintage-warm">Telegram</h4>
             <p>@vintage_soul_music</p>
           </div>
         </div>
