@@ -79,17 +79,23 @@ const Shop: React.FC<ShopProps> = ({
   return (
     <>
       <section id="shop" className="py-16 px-6 bg-vintage-warm/5">
-        <div className="max-w-6xl mx-auto">
-          <TopTracks 
-            limit={5} 
-            onTrackClick={handleAlbumClickById}
-          />
-          
-          <AlbumGrid
-            albums={albums}
-            onAlbumClick={handleAlbumClick}
-            onAddToCart={handleAddToCart}
-          />
+        <div className="max-w-7xl mx-auto">
+          <div className="flex gap-8 items-start">
+            <div className="flex-1">
+              <AlbumGrid
+                albums={albums}
+                onAlbumClick={handleAlbumClick}
+                onAddToCart={handleAddToCart}
+              />
+            </div>
+            
+            <div className="w-96 flex-shrink-0 sticky top-24">
+              <TopTracks 
+                limit={5} 
+                onTrackClick={handleAlbumClickById}
+              />
+            </div>
+          </div>
         </div>
       </section>
 
