@@ -228,7 +228,7 @@ const AlbumView: React.FC<AlbumViewProps> = ({
 
             {/* Список треков */}
             <div className="space-y-3">
-              <h3 className="text-xl font-bold text-vintage-warm mb-4">Треки</h3>
+              <h3 className="text-xl font-bold text-vintage-warm mb-4">Для прослушивания треков в хорошем качестве для личного пользования добавьте трек в корзину. </h3>
               {album.trackList.map((track, index) => {
                 return (
                   <div
