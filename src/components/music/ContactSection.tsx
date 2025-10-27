@@ -41,7 +41,7 @@ const ContactSection: React.FC = () => {
           </div>
           <div>
             <h4 className="text-xl font-semibold mb-2 text-vintage-warm">Telegram</h4>
-            <p>@vintage_soul_music</p>
+            <p>@dshmelidze</p>
           </div>
         </div>
       </div>
