@@ -99,20 +99,59 @@ const MusicPage = () => {
     return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
-  const handleAdminLogin = () => {
-    if (adminPassword === 'admin123') {
+  const handleAdminLogin = async () => {
+    try {
+      const API_URL = 'https://functions.poehali.dev/d77ee4d0-ba39-4a98-a764-c8f09e40bc53';
+      
+      const response = await fetch(`${API_URL}?path=login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ password: adminPassword })
+      });
+
+      if (!response.ok) {
+        throw new Error('Неверный пароль');
+      }
+
+      const data = await response.json();
+      
+      // Сохраняем токен в localStorage
+      localStorage.setItem('authToken', data.token);
+      
       setIsAdmin(true);
       setShowAdminLogin(false);
       setShowAdminPanel(true);
       setAdminPassword('');
-    } else {
-      alert('Неверный пароль');
+      
+      toast({
+        title: "Добро пожаловать!",
+        description: "Вы вошли в админ-панель",
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('❌ Ошибка авторизации:', error);
+      toast({
+        title: "Ошибка входа",
+        description: (error as Error).message,
+        variant: "destructive",
+        duration: 3000,
+      });
     }
   };
 
   const handleAdminLogout = () => {
+    // Удаляем токен из localStorage
+    localStorage.removeItem('authToken');
     setIsAdmin(false);
     setShowAdminPanel(false);
+    
+    toast({
+      title: "До встречи!",
+      description: "Вы вышли из админ-панели",
+      duration: 2000,
+    });
   };
 
   const handleTrackSelect = (track: Track) => {
