@@ -76,8 +76,10 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ tracks }) => {
   const handleResetStats = async () => {
     if (window.confirm('Вы уверены, что хотите сбросить всю статистику? Это действие нельзя отменить.')) {
       try {
-        // Сброс локальной статистики
+        // Сброс локальной статистики в localStorage
         resetStats();
+        // Сброс статистики в базе данных через API
+        await apiClient.resetStats();
         // Перезагрузка данных с сервера
         await loadStats();
         toast({

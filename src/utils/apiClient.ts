@@ -267,6 +267,32 @@ export const apiClient = {
     }
   },
 
+  async resetStats(): Promise<void> {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('Требуется авторизация');
+      }
+
+      const response = await fetch(`${API_URL}?path=stats/reset`, {
+        method: 'DELETE',
+        headers: {
+          'X-Auth-Token': token,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Ошибка сброса статистики');
+      }
+
+      console.log('🔄 Статистика в БД сброшена');
+    } catch (error) {
+      console.error('❌ Ошибка сброса статистики:', error);
+      throw error;
+    }
+  },
+
   async getMediaFile(mediaId: string): Promise<string> {
     try {
       if (!mediaId || mediaId.length < 5) {

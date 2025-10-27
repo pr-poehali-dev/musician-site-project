@@ -529,6 +529,24 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({'message': 'Album deleted successfully'})
                 }
             
+            # DELETE /stats/reset - Сбросить всю статистику треков
+            if method == 'DELETE' and path == 'stats/reset':
+                if not user_id:
+                    return {
+                        'statusCode': 401,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'Authentication required'})
+                    }
+                
+                cur.execute('TRUNCATE TABLE t_p39135821_musician_site_projec.track_stats')
+                conn.commit()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'message': 'All stats reset successfully'})
+                }
+            
             return {
                 'statusCode': 404,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
