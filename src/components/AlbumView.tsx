@@ -25,6 +25,25 @@ const AlbumView: React.FC<AlbumViewProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  const incrementPlayCount = async (trackId: string) => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/52119c2a-82db-4422-894d-e3d5db04d16a?path=track/play', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ track_id: trackId })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ [AlbumView] Счётчик прослушиваний обновлён:', data.plays_count);
+      }
+    } catch (error) {
+      console.warn('⚠️ [AlbumView] Ошибка обновления счётчика:', error);
+    }
+  };
+
   const handlePlayTrack = async (track: Track) => {
     console.log('🔘 [AlbumView] handlePlayTrack вызван для:', track.title);
 
@@ -51,8 +70,6 @@ const AlbumView: React.FC<AlbumViewProps> = ({
       try {
         console.log('🎵 [AlbumView] Запуск нового трека:', track.title);
         
-        // Загружаем файл трека отдельно
-        console.log('🔍 [AlbumView] Загрузка файла трека из API...');
         const audioUrl = await musicApi.getTrackFile(track.id);
         
         if (!audioUrl || audioUrl.trim() === '') {
@@ -72,6 +89,9 @@ const AlbumView: React.FC<AlbumViewProps> = ({
         console.log('✅ [AlbumView] Трек загружен, начинаем воспроизведение');
         await audio.play();
         setIsPlaying(true);
+        
+        await incrementPlayCount(track.id);
+        
         console.log('✅ [AlbumView] Воспроизведение началось');
       } catch (error) {
         console.error('❌ [AlbumView] Ошибка загрузки/воспроизведения трека:', track.title, error);

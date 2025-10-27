@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import Icon from '@/components/ui/icon';
 import AlbumView from '@/components/AlbumView';
 import AlbumGrid from '@/components/AlbumGrid';
+import TopTracks from '@/components/TopTracks';
 import { Track, Album } from '@/types';
 
 interface ShopProps {
@@ -64,6 +65,13 @@ const Shop: React.FC<ShopProps> = ({
     setSelectedAlbum(album);
   };
 
+  const handleAlbumClickById = (albumId: string) => {
+    const album = albums.find(a => a.id === albumId);
+    if (album) {
+      setSelectedAlbum(album);
+    }
+  };
+
   const handleCloseAlbum = () => {
     setSelectedAlbum(null);
   };
@@ -72,7 +80,11 @@ const Shop: React.FC<ShopProps> = ({
     <>
       <section id="shop" className="py-16 px-6 bg-vintage-warm/5">
         <div className="max-w-6xl mx-auto">
-          {/* Альбомы */}
+          <TopTracks 
+            limit={5} 
+            onTrackClick={handleAlbumClickById}
+          />
+          
           <AlbumGrid
             albums={albums}
             onAlbumClick={handleAlbumClick}

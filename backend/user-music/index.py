@@ -103,26 +103,32 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 if album_id:
                     cur.execute('''
                         SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
-                               t.label, t.genre, t.album_id, t.created_at, u.username, u.display_name
+                               t.label, t.genre, t.album_id, t.created_at, u.username, u.display_name,
+                               COALESCE(ts.plays_count, 0) as plays_count
                         FROM t_p39135821_musician_site_projec.tracks t
                         JOIN t_p39135821_musician_site_projec.users u ON t.user_id = u.id
+                        LEFT JOIN t_p39135821_musician_site_projec.track_stats ts ON t.id = ts.track_id
                         WHERE t.album_id = %s
                         ORDER BY t.track_order ASC, t.created_at ASC
                     ''', (album_id,))
                 elif username:
                     cur.execute('''
                         SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
-                               t.label, t.genre, t.album_id, t.created_at
+                               t.label, t.genre, t.album_id, t.created_at,
+                               COALESCE(ts.plays_count, 0) as plays_count
                         FROM t_p39135821_musician_site_projec.tracks t
                         JOIN t_p39135821_musician_site_projec.users u ON t.user_id = u.id
+                        LEFT JOIN t_p39135821_musician_site_projec.track_stats ts ON t.id = ts.track_id
                         WHERE u.username = %s
                         ORDER BY t.created_at DESC
                     ''', (username,))
                 elif user_id:
                     cur.execute('''
                         SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
-                               t.label, t.genre, t.album_id, t.created_at
+                               t.label, t.genre, t.album_id, t.created_at,
+                               COALESCE(ts.plays_count, 0) as plays_count
                         FROM t_p39135821_musician_site_projec.tracks t
+                        LEFT JOIN t_p39135821_musician_site_projec.track_stats ts ON t.id = ts.track_id
                         WHERE t.user_id = %s
                         ORDER BY t.created_at DESC
                     ''', (user_id,))
@@ -138,6 +144,80 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'statusCode': 200,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
                     'body': json.dumps([dict(t) for t in tracks], default=str)
+                }
+            
+            # GET /tracks/top?limit=10 - Получить топ треков по прослушиваниям
+            if method == 'GET' and path == 'tracks/top':
+                limit = int(event.get('queryStringParameters', {}).get('limit', 10))
+                username = event.get('queryStringParameters', {}).get('username')
+                
+                if username:
+                    cur.execute('''
+                        SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
+                               t.label, t.genre, t.album_id, t.created_at,
+                               COALESCE(ts.plays_count, 0) as plays_count,
+                               u.username, u.display_name,
+                               a.title as album_title
+                        FROM t_p39135821_musician_site_projec.tracks t
+                        JOIN t_p39135821_musician_site_projec.users u ON t.user_id = u.id
+                        LEFT JOIN t_p39135821_musician_site_projec.track_stats ts ON t.id = ts.track_id
+                        LEFT JOIN t_p39135821_musician_site_projec.albums a ON t.album_id = a.id
+                        WHERE u.username = %s
+                        ORDER BY COALESCE(ts.plays_count, 0) DESC, t.created_at DESC
+                        LIMIT %s
+                    ''', (username, limit))
+                else:
+                    cur.execute('''
+                        SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
+                               t.label, t.genre, t.album_id, t.created_at,
+                               COALESCE(ts.plays_count, 0) as plays_count,
+                               u.username, u.display_name,
+                               a.title as album_title
+                        FROM t_p39135821_musician_site_projec.tracks t
+                        JOIN t_p39135821_musician_site_projec.users u ON t.user_id = u.id
+                        LEFT JOIN t_p39135821_musician_site_projec.track_stats ts ON t.id = ts.track_id
+                        LEFT JOIN t_p39135821_musician_site_projec.albums a ON t.album_id = a.id
+                        ORDER BY COALESCE(ts.plays_count, 0) DESC, t.created_at DESC
+                        LIMIT %s
+                    ''', (limit,))
+                
+                tracks = cur.fetchall()
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps([dict(t) for t in tracks], default=str)
+                }
+            
+            # POST /track/play - Увеличить счётчик прослушиваний
+            if method == 'POST' and path == 'track/play':
+                body = json.loads(event.get('body', '{}'))
+                track_id = body.get('track_id')
+                
+                if not track_id:
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'track_id is required'})
+                    }
+                
+                cur.execute('''
+                    INSERT INTO t_p39135821_musician_site_projec.track_stats 
+                    (track_id, plays_count, last_played_at, created_at, updated_at)
+                    VALUES (%s, 1, NOW(), NOW(), NOW())
+                    ON CONFLICT (track_id) 
+                    DO UPDATE SET 
+                        plays_count = t_p39135821_musician_site_projec.track_stats.plays_count + 1,
+                        last_played_at = NOW(),
+                        updated_at = NOW()
+                    RETURNING plays_count
+                ''', (track_id,))
+                result = cur.fetchone()
+                conn.commit()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'plays_count': result['plays_count']})
                 }
             
             if not user_id:
