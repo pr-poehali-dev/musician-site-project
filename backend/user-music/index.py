@@ -49,6 +49,29 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     
     print(f'[DEBUG] Token: {token[:20] if token else "NONE"}..., Path: {path}')
     
+    # POST /admin-login - Простая авторизация админки по паролю
+    if method == 'POST' and path == 'admin-login':
+        body = json.loads(event.get('body', '{}'))
+        password = body.get('password')
+        
+        ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'music2025admin')
+        
+        if password == ADMIN_PASSWORD:
+            import secrets
+            admin_token = secrets.token_urlsafe(32)
+            
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'token': admin_token, 'role': 'admin'})
+            }
+        else:
+            return {
+                'statusCode': 401,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'Неверный пароль'})
+            }
+    
     if not token and method != 'GET':
         print('[DEBUG] No token for non-GET request - returning 401')
         return {

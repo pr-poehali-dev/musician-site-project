@@ -101,9 +101,9 @@ const MusicPage = () => {
 
   const handleAdminLogin = async () => {
     try {
-      const API_URL = 'https://functions.poehali.dev/d77ee4d0-ba39-4a98-a764-c8f09e40bc53';
+      const API_URL = 'https://functions.poehali.dev/52119c2a-82db-4422-894d-e3d5db04d16a';
       
-      const response = await fetch(`${API_URL}?path=login`, {
+      const response = await fetch(`${API_URL}?path=admin-login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -112,7 +112,8 @@ const MusicPage = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Неверный пароль');
+        const error = await response.json();
+        throw new Error(error.error || 'Неверный пароль');
       }
 
       const data = await response.json();
