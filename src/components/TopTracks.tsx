@@ -71,7 +71,7 @@ const TopTracks = ({ username, limit = 5, onTrackClick }: TopTracksProps) => {
   return (
     <section className="py-16 px-6">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
           <h3 className="text-3xl font-bold text-vintage-warm mb-2">🔥 Топ треков</h3>
           <p className="text-vintage-warm/70">Самые популярные композиции</p>
         </div>
@@ -80,7 +80,8 @@ const TopTracks = ({ username, limit = 5, onTrackClick }: TopTracksProps) => {
           {tracks.map((track, index) => (
             <Card 
               key={track.id}
-              className="bg-vintage-cream/95 backdrop-blur-sm border-vintage-brown/20 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group"
+              className="bg-vintage-cream/95 backdrop-blur-sm border-vintage-brown/20 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group animate-in fade-in slide-in-from-bottom-4"
+              style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'backwards' }}
               onClick={() => onTrackClick && track.album_id && onTrackClick(track.album_id)}
             >
               <CardContent className="p-4">
