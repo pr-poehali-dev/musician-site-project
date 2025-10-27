@@ -17,10 +17,11 @@ def verify_session(token: str) -> Optional[int]:
     conn = get_db_connection()
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute('''
+            token_escaped = token.replace("'", "''")
+            cur.execute(f'''
                 SELECT user_id FROM sessions 
-                WHERE token = %s AND expires_at > NOW()
-            ''', (token,))
+                WHERE token = '{token_escaped}' AND expires_at > NOW()
+            ''')
             result = cur.fetchone()
             return result['user_id'] if result else None
     finally:
@@ -67,20 +68,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 username = event.get('queryStringParameters', {}).get('username')
                 
                 if username:
-                    cur.execute('''
+                    username_escaped = username.replace("'", "''")
+                    cur.execute(f'''
                         SELECT a.id, a.title, a.cover, a.price, a.created_at,
                                a.artist, a.description
                         FROM t_p39135821_musician_site_projec.albums a
-                        WHERE a.artist = %s
+                        WHERE a.artist = '{username_escaped}'
                         ORDER BY a.created_at DESC
-                    ''', (username,))
+                    ''')
                 elif user_id:
-                    cur.execute('''
+                    cur.execute(f'''
                         SELECT id, title, cover, price, created_at, artist, description
                         FROM t_p39135821_musician_site_projec.albums
-                        WHERE user_id = %s
+                        WHERE user_id = {int(user_id)}
                         ORDER BY created_at DESC
-                    ''', (user_id,))
+                    ''')
                 else:
                     return {
                         'statusCode': 400,
@@ -101,37 +103,39 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 username = event.get('queryStringParameters', {}).get('username')
                 
                 if album_id:
-                    cur.execute('''
+                    album_id_escaped = album_id.replace("'", "''")
+                    cur.execute(f'''
                         SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
                                t.label, t.genre, t.album_id, t.created_at, u.username, u.display_name,
                                COALESCE(ts.plays_count, 0) as plays_count
                         FROM t_p39135821_musician_site_projec.tracks t
                         JOIN t_p39135821_musician_site_projec.users u ON t.user_id = u.id
                         LEFT JOIN t_p39135821_musician_site_projec.track_stats ts ON t.id = ts.track_id
-                        WHERE t.album_id = %s
+                        WHERE t.album_id = '{album_id_escaped}'
                         ORDER BY t.track_order ASC, t.created_at ASC
-                    ''', (album_id,))
+                    ''')
                 elif username:
-                    cur.execute('''
+                    username_escaped = username.replace("'", "''")
+                    cur.execute(f'''
                         SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
                                t.label, t.genre, t.album_id, t.created_at,
                                COALESCE(ts.plays_count, 0) as plays_count
                         FROM t_p39135821_musician_site_projec.tracks t
                         JOIN t_p39135821_musician_site_projec.users u ON t.user_id = u.id
                         LEFT JOIN t_p39135821_musician_site_projec.track_stats ts ON t.id = ts.track_id
-                        WHERE u.username = %s
+                        WHERE u.username = '{username_escaped}'
                         ORDER BY t.created_at DESC
-                    ''', (username,))
+                    ''')
                 elif user_id:
-                    cur.execute('''
+                    cur.execute(f'''
                         SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
                                t.label, t.genre, t.album_id, t.created_at,
                                COALESCE(ts.plays_count, 0) as plays_count
                         FROM t_p39135821_musician_site_projec.tracks t
                         LEFT JOIN t_p39135821_musician_site_projec.track_stats ts ON t.id = ts.track_id
-                        WHERE t.user_id = %s
+                        WHERE t.user_id = {int(user_id)}
                         ORDER BY t.created_at DESC
-                    ''', (user_id,))
+                    ''')
                 else:
                     return {
                         'statusCode': 400,
@@ -152,34 +156,35 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 username = event.get('queryStringParameters', {}).get('username')
                 
                 if username:
-                    cur.execute('''
+                    username_escaped = username.replace("'", "''")
+                    cur.execute(f'''
                         SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
                                t.label, t.genre, t.album_id, t.created_at,
                                COALESCE(ts.plays_count, 0) as plays_count,
                                u.username, u.display_name,
                                a.title as album_title
                         FROM t_p39135821_musician_site_projec.tracks t
-                        JOIN t_p39135821_musician_site_projec.users u ON t.user_id = u.id
+                        LEFT JOIN t_p39135821_musician_site_projec.users u ON t.user_id = u.id
                         LEFT JOIN t_p39135821_musician_site_projec.track_stats ts ON t.id = ts.track_id
                         LEFT JOIN t_p39135821_musician_site_projec.albums a ON t.album_id = a.id
-                        WHERE u.username = %s
+                        WHERE u.username = '{username_escaped}'
                         ORDER BY COALESCE(ts.plays_count, 0) DESC, t.created_at DESC
-                        LIMIT %s
-                    ''', (username, limit))
+                        LIMIT {int(limit)}
+                    ''')
                 else:
-                    cur.execute('''
+                    cur.execute(f'''
                         SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
                                t.label, t.genre, t.album_id, t.created_at,
                                COALESCE(ts.plays_count, 0) as plays_count,
                                u.username, u.display_name,
                                a.title as album_title
                         FROM t_p39135821_musician_site_projec.tracks t
-                        JOIN t_p39135821_musician_site_projec.users u ON t.user_id = u.id
+                        LEFT JOIN t_p39135821_musician_site_projec.users u ON t.user_id = u.id
                         LEFT JOIN t_p39135821_musician_site_projec.track_stats ts ON t.id = ts.track_id
                         LEFT JOIN t_p39135821_musician_site_projec.albums a ON t.album_id = a.id
                         ORDER BY COALESCE(ts.plays_count, 0) DESC, t.created_at DESC
-                        LIMIT %s
-                    ''', (limit,))
+                        LIMIT {int(limit)}
+                    ''')
                 
                 tracks = cur.fetchall()
                 return {
@@ -200,17 +205,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'body': json.dumps({'error': 'track_id is required'})
                     }
                 
-                cur.execute('''
+                track_id_escaped = str(track_id).replace("'", "''")
+                cur.execute(f'''
                     INSERT INTO t_p39135821_musician_site_projec.track_stats 
                     (track_id, plays_count, last_played_at, created_at, updated_at)
-                    VALUES (%s, 1, NOW(), NOW(), NOW())
+                    VALUES ('{track_id_escaped}', 1, NOW(), NOW(), NOW())
                     ON CONFLICT (track_id) 
                     DO UPDATE SET 
                         plays_count = t_p39135821_musician_site_projec.track_stats.plays_count + 1,
                         last_played_at = NOW(),
                         updated_at = NOW()
                     RETURNING plays_count
-                ''', (track_id,))
+                ''')
                 result = cur.fetchone()
                 conn.commit()
                 
@@ -243,12 +249,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'body': json.dumps({'error': 'Title is required'})
                     }
                 
-                cur.execute('''
+                title_escaped = title.replace("'", "''")
+                artist_escaped = artist.replace("'", "''")
+                cover_escaped = cover.replace("'", "''")
+                description_escaped = description.replace("'", "''")
+                cur.execute(f'''
                     INSERT INTO t_p39135821_musician_site_projec.albums 
                     (id, user_id, title, artist, cover, price, description, created_at)
-                    VALUES (gen_random_uuid()::text, %s, %s, %s, %s, %s, %s, NOW())
+                    VALUES (gen_random_uuid()::text, {int(user_id)}, '{title_escaped}', '{artist_escaped}', '{cover_escaped}', {float(price)}, '{description_escaped}', NOW())
                     RETURNING id, title, artist, cover, price, description, created_at
-                ''', (user_id, title, artist, cover, price, description))
+                ''')
                 album = cur.fetchone()
                 conn.commit()
                 
@@ -277,7 +287,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'body': json.dumps({'error': 'Title and album_id are required'})
                     }
                 
-                cur.execute('SELECT id FROM t_p39135821_musician_site_projec.albums WHERE id = %s AND user_id = %s', (album_id, user_id))
+                album_id_escaped = album_id.replace("'", "''")
+                cur.execute(f"SELECT id FROM t_p39135821_musician_site_projec.albums WHERE id = '{album_id_escaped}' AND user_id = {int(user_id)}")
                 if not cur.fetchone():
                     return {
                         'statusCode': 403,
@@ -285,12 +296,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'body': json.dumps({'error': 'Album not found or access denied'})
                     }
                 
-                cur.execute('''
+                title_escaped = title.replace("'", "''")
+                duration_escaped = duration.replace("'", "''")
+                file_escaped = file.replace("'", "''")
+                cover_escaped = cover.replace("'", "''")
+                label_escaped = label.replace("'", "''")
+                genre_escaped = genre.replace("'", "''")
+                cur.execute(f'''
                     INSERT INTO t_p39135821_musician_site_projec.tracks 
                     (id, user_id, album_id, title, duration, file, cover, price, label, genre, created_at)
-                    VALUES (gen_random_uuid()::text, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                    VALUES (gen_random_uuid()::text, {int(user_id)}, '{album_id_escaped}', '{title_escaped}', '{duration_escaped}', '{file_escaped}', '{cover_escaped}', {float(price)}, '{label_escaped}', '{genre_escaped}', NOW())
                     RETURNING id, title, duration, file, cover, price, label, genre, album_id, created_at
-                ''', (user_id, album_id, title, duration, file, cover, price, label, genre))
+                ''')
                 track = cur.fetchone()
                 conn.commit()
                 
@@ -312,7 +329,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'body': json.dumps({'error': 'Album ID is required'})
                     }
                 
-                cur.execute('SELECT id FROM albums WHERE id = %s AND user_id = %s', (album_id, user_id))
+                album_id_escaped = album_id.replace("'", "''")
+                cur.execute(f"SELECT id FROM albums WHERE id = '{album_id_escaped}' AND user_id = {int(user_id)}")
                 if not cur.fetchone():
                     return {
                         'statusCode': 403,
@@ -321,16 +339,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     }
                 
                 updates = []
-                params = []
                 if 'title' in body:
-                    updates.append('title = %s')
-                    params.append(body['title'])
+                    title_escaped = body['title'].replace("'", "''")
+                    updates.append(f"title = '{title_escaped}'")
                 if 'cover_url' in body:
-                    updates.append('cover_url = %s')
-                    params.append(body['cover_url'])
+                    cover_url_escaped = body['cover_url'].replace("'", "''")
+                    updates.append(f"cover_url = '{cover_url_escaped}'")
                 if 'price' in body:
-                    updates.append('price = %s')
-                    params.append(body['price'])
+                    updates.append(f"price = {float(body['price'])}")
                 
                 if not updates:
                     return {
@@ -339,12 +355,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'body': json.dumps({'error': 'No fields to update'})
                     }
                 
-                params.append(album_id)
                 cur.execute(f'''
                     UPDATE albums SET {', '.join(updates)}, updated_at = NOW()
-                    WHERE id = %s
+                    WHERE id = '{album_id_escaped}'
                     RETURNING id, title, cover_url, price, created_at, updated_at
-                ''', params)
+                ''')
                 album = cur.fetchone()
                 conn.commit()
                 
@@ -366,7 +381,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'body': json.dumps({'error': 'Track ID is required'})
                     }
                 
-                cur.execute('SELECT id FROM tracks WHERE id = %s AND user_id = %s', (track_id, user_id))
+                track_id_escaped = track_id.replace("'", "''")
+                cur.execute(f"SELECT id FROM tracks WHERE id = '{track_id_escaped}' AND user_id = {int(user_id)}")
                 if not cur.fetchone():
                     return {
                         'statusCode': 403,
@@ -375,28 +391,26 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     }
                 
                 updates = []
-                params = []
                 if 'title' in body:
-                    updates.append('title = %s')
-                    params.append(body['title'])
+                    title_escaped = body['title'].replace("'", "''")
+                    updates.append(f"title = '{title_escaped}'")
                 if 'duration' in body:
-                    updates.append('duration = %s')
-                    params.append(body['duration'])
+                    duration_escaped = body['duration'].replace("'", "''")
+                    updates.append(f"duration = '{duration_escaped}'")
                 if 'preview_url' in body:
-                    updates.append('preview_url = %s')
-                    params.append(body['preview_url'])
+                    preview_url_escaped = body['preview_url'].replace("'", "''")
+                    updates.append(f"preview_url = '{preview_url_escaped}'")
                 if 'file_url' in body:
-                    updates.append('file_url = %s')
-                    params.append(body['file_url'])
+                    file_url_escaped = body['file_url'].replace("'", "''")
+                    updates.append(f"file_url = '{file_url_escaped}'")
                 if 'price' in body:
-                    updates.append('price = %s')
-                    params.append(body['price'])
+                    updates.append(f"price = {float(body['price'])}")
                 if 'label' in body:
-                    updates.append('label = %s')
-                    params.append(body['label'])
+                    label_escaped = body['label'].replace("'", "''")
+                    updates.append(f"label = '{label_escaped}'")
                 if 'genre' in body:
-                    updates.append('genre = %s')
-                    params.append(body['genre'])
+                    genre_escaped = body['genre'].replace("'", "''")
+                    updates.append(f"genre = '{genre_escaped}'")
                 
                 if not updates:
                     return {
@@ -405,12 +419,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'body': json.dumps({'error': 'No fields to update'})
                     }
                 
-                params.append(track_id)
                 cur.execute(f'''
                     UPDATE tracks SET {', '.join(updates)}, updated_at = NOW()
-                    WHERE id = %s
+                    WHERE id = '{track_id_escaped}'
                     RETURNING id, title, duration, preview_url, file_url, price, label, album_id, created_at, updated_at
-                ''', params)
+                ''')
                 track = cur.fetchone()
                 conn.commit()
                 
@@ -431,7 +444,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'body': json.dumps({'error': 'Track ID is required'})
                     }
                 
-                cur.execute('DELETE FROM tracks WHERE id = %s AND user_id = %s', (track_id, user_id))
+                track_id_escaped = track_id.replace("'", "''")
+                cur.execute(f"DELETE FROM tracks WHERE id = '{track_id_escaped}' AND user_id = {int(user_id)}")
                 if cur.rowcount == 0:
                     return {
                         'statusCode': 403,
@@ -459,7 +473,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     }
                 
                 # Проверяем существование трека
-                cur.execute('SELECT id FROM tracks WHERE id = %s', (track_id,))
+                track_id_escaped = str(track_id).replace("'", "''")
+                cur.execute(f"SELECT id FROM tracks WHERE id = '{track_id_escaped}'")
                 if not cur.fetchone():
                     return {
                         'statusCode': 404,
@@ -468,16 +483,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     }
                 
                 # Создаем запись статистики если её нет, или увеличиваем счётчик
-                cur.execute('''
+                cur.execute(f'''
                     INSERT INTO track_stats (track_id, plays_count, last_played_at, created_at, updated_at)
-                    VALUES (%s, 1, NOW(), NOW(), NOW())
+                    VALUES ('{track_id_escaped}', 1, NOW(), NOW(), NOW())
                     ON CONFLICT (track_id) 
                     DO UPDATE SET 
                         plays_count = track_stats.plays_count + 1,
                         last_played_at = NOW(),
                         updated_at = NOW()
                     RETURNING plays_count
-                ''', (track_id,))
+                ''')
                 result = cur.fetchone()
                 conn.commit()
                 
@@ -498,7 +513,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'body': json.dumps({'error': 'Album ID is required'})
                     }
                 
-                cur.execute('DELETE FROM albums WHERE id = %s AND user_id = %s', (album_id, user_id))
+                album_id_escaped = album_id.replace("'", "''")
+                cur.execute(f"DELETE FROM albums WHERE id = '{album_id_escaped}' AND user_id = {int(user_id)}")
                 if cur.rowcount == 0:
                     return {
                         'statusCode': 403,
