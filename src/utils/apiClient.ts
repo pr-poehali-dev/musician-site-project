@@ -216,7 +216,7 @@ export const apiClient = {
             }
           }
           
-          return {
+          const processedTrack = {
             id: track.id,
             title: track.title,
             duration: track.duration,
@@ -226,6 +226,10 @@ export const apiClient = {
             albumId: album.id,
             plays_count: track.plays_count || 0
           };
+          
+          console.log(`🎵 Трек "${track.title}" - plays_count:`, track.plays_count);
+          
+          return processedTrack;
         }));
         
         return {

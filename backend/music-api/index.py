@@ -266,7 +266,15 @@ def get_albums(cursor) -> List[Dict]:
             album = dict(album_row)
             album_id = str(album['id']).replace("'", "''")
             print(f'[DEBUG] Getting tracks for album: {album_id}')
-            cursor.execute(f"SELECT id, album_id, title, duration, price, cover, track_order, created_at FROM tracks WHERE album_id = '{album_id}' ORDER BY track_order, created_at LIMIT 50")
+            cursor.execute(f"""
+                SELECT t.id, t.album_id, t.title, t.duration, t.price, t.cover, t.track_order, t.created_at,
+                       COALESCE(ts.plays_count, 0) as plays_count
+                FROM tracks t
+                LEFT JOIN track_stats ts ON t.id = ts.track_id
+                WHERE t.album_id = '{album_id}'
+                ORDER BY t.track_order, t.created_at
+                LIMIT 50
+            """)
             tracks_raw = cursor.fetchall()
             
             album['trackList'] = [dict(track) for track in tracks_raw] if tracks_raw else []
@@ -284,9 +292,24 @@ def get_albums(cursor) -> List[Dict]:
 def get_tracks(cursor, album_id: Optional[str] = None) -> List[Dict]:
     if album_id:
         safe_id = album_id.replace("'", "''")
-        cursor.execute(f"SELECT id, album_id, title, duration, price, cover, track_order, created_at FROM tracks WHERE album_id = '{safe_id}' ORDER BY track_order, created_at LIMIT 50")
+        cursor.execute(f"""
+            SELECT t.id, t.album_id, t.title, t.duration, t.price, t.cover, t.track_order, t.created_at,
+                   COALESCE(ts.plays_count, 0) as plays_count
+            FROM tracks t
+            LEFT JOIN track_stats ts ON t.id = ts.track_id
+            WHERE t.album_id = '{safe_id}'
+            ORDER BY t.track_order, t.created_at
+            LIMIT 50
+        """)
     else:
-        cursor.execute("SELECT id, album_id, title, duration, price, cover, track_order, created_at FROM tracks ORDER BY created_at DESC LIMIT 100")
+        cursor.execute("""
+            SELECT t.id, t.album_id, t.title, t.duration, t.price, t.cover, t.track_order, t.created_at,
+                   COALESCE(ts.plays_count, 0) as plays_count
+            FROM tracks t
+            LEFT JOIN track_stats ts ON t.id = ts.track_id
+            ORDER BY t.created_at DESC
+            LIMIT 100
+        """)
     
     tracks_raw = cursor.fetchall()
     return [dict(track) for track in tracks_raw] if tracks_raw else []
