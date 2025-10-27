@@ -33,7 +33,7 @@ const ContactSection: React.FC = () => {
         <div className="grid md:grid-cols-3 gap-8 text-vintage-cream/80">
           <div>
             <h4 className="text-xl font-semibold mb-2 text-vintage-warm">Email</h4>
-            <p>vintage.soul@music.com</p>
+            <p>d.shmelidze@mail.ru</p>
           </div>
           <div>
             <h4 className="text-xl font-semibold mb-2 text-vintage-warm">Телефон</h4>
