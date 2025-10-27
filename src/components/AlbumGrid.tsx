@@ -140,6 +140,13 @@ const AlbumGrid: React.FC<AlbumGridProps> = ({
           <p className="text-vintage-warm/70 text-lg">Выберите альбом для прослушивания треков</p>
         </div>
 
+        <div className="bg-vintage-warm/10 border border-vintage-brown/20 rounded-lg p-4 mb-8 max-w-3xl mx-auto">
+          <p className="text-vintage-dark-brown text-center">
+            <Icon name="Info" size={18} className="inline mr-2" />
+            Для прослушивания трека в хорошем качестве добавьте трек в корзину. Скачивая треки в хорошем качестве, вы поддерживаете автора
+          </p>
+        </div>
+
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           {albums.map((album) => (
             <AlbumCard
