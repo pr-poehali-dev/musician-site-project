@@ -37,7 +37,7 @@ const ContactSection: React.FC = () => {
           </div>
           <div>
             <h4 className="text-xl font-semibold mb-2 text-vintage-warm">Телефон</h4>
-            <p>+7 (999) 123-45-67</p>
+            <p>+7 (985)-  -  -  </p>
           </div>
           <div>
             <h4 className="text-xl font-semibold mb-2 text-vintage-warm">Telegram</h4>
