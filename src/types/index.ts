@@ -16,6 +16,7 @@ export interface Track {
   albumId?: string;
   downloads?: number;
   plays?: number;
+  plays_count?: number;
 }
 
 export interface Album {

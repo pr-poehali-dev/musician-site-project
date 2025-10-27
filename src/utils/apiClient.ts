@@ -223,7 +223,8 @@ export const apiClient = {
             file: audioFile,
             price: track.price,
             cover: trackCover,
-            albumId: album.id
+            albumId: album.id,
+            plays_count: track.plays_count || 0
           };
         }));
         
