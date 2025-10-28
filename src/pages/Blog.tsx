@@ -199,6 +199,16 @@ const Blog = () => {
               <Icon name="Home" size={20} className="mr-2" />
               Главная
             </Button>
+            {!user && (
+              <Button 
+                variant="outline"
+                className="border-vintage-warm text-vintage-warm hover:bg-vintage-warm hover:text-vintage-cream"
+                onClick={() => navigate('/auth')}
+              >
+                <Icon name="LogIn" size={20} className="mr-2" />
+                Войти
+              </Button>
+            )}
             {isAdmin && (
               <Button 
                 className="bg-vintage-warm hover:bg-vintage-brown text-vintage-cream"
