@@ -3,9 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Logo from '@/components/Logo';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import ProfileEditForm, { ProfileFormData } from '@/components/ProfileEditForm';
 
 interface Album {
   id: number;
@@ -34,6 +37,7 @@ interface Artist {
   username: string;
   display_name: string;
   avatar_url?: string;
+  banner_url?: string;
   bio?: string;
 }
 
@@ -41,6 +45,7 @@ const Artist = () => {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, token } = useAuth();
   
   const [artist, setArtist] = useState<Artist | null>(null);
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -48,6 +53,8 @@ const Artist = () => {
   const [loading, setLoading] = useState(true);
   const [selectedAlbum, setSelectedAlbum] = useState<number | null>(null);
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const USER_MUSIC_API = 'https://functions.poehali.dev/52119c2a-82db-4422-894d-e3d5db04d16a';
 
@@ -76,6 +83,7 @@ const Artist = () => {
         username: profileData.username,
         display_name: profileData.display_name,
         avatar_url: profileData.avatar_url,
+        banner_url: profileData.banner_url,
         bio: profileData.profile_bio || profileData.bio,
       });
 
@@ -133,6 +141,44 @@ const Artist = () => {
     }
   };
 
+  const handleUpdateProfile = async (profileData: ProfileFormData) => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`${USER_MUSIC_API}?path=profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token!,
+        },
+        body: JSON.stringify(profileData),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Профиль обновлён!',
+          description: 'Изменения успешно сохранены',
+        });
+        setIsEditDialogOpen(false);
+        fetchArtistData();
+      } else {
+        const error = await response.json();
+        toast({
+          title: 'Ошибка',
+          description: error.message || 'Не удалось обновить профиль',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Произошла ошибка при обновлении профиля',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-brown to-vintage-dark-brown flex items-center justify-center">
@@ -145,26 +191,48 @@ const Artist = () => {
     return null;
   }
 
+  const isOwnProfile = user?.username === artist?.username;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-brown to-vintage-dark-brown">
       <header className="p-6 backdrop-blur-sm bg-vintage-cream/80 border-b border-vintage-brown/20">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Logo />
           <div className="flex gap-3">
-            <Button 
-              variant="outline"
-              className="border-vintage-brown/30 text-vintage-brown hover:bg-vintage-brown hover:text-vintage-cream"
-              onClick={() => navigate('/auth')}
-            >
-              <Icon name="LogIn" size={16} className="mr-2" />
-              Вход
-            </Button>
+            {user ? (
+              <Button 
+                variant="outline"
+                className="border-vintage-brown/30 text-vintage-brown hover:bg-vintage-brown hover:text-vintage-cream"
+                onClick={() => navigate('/dashboard')}
+              >
+                <Icon name="LayoutDashboard" size={16} className="mr-2" />
+                Панель управления
+              </Button>
+            ) : (
+              <Button 
+                variant="outline"
+                className="border-vintage-brown/30 text-vintage-brown hover:bg-vintage-brown hover:text-vintage-cream"
+                onClick={() => navigate('/auth')}
+              >
+                <Icon name="LogIn" size={16} className="mr-2" />
+                Вход
+              </Button>
+            )}
           </div>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto p-6">
         <div className="mb-12">
+          {artist.banner_url && (
+            <div className="mb-6 -mx-6 -mt-6">
+              <img 
+                src={artist.banner_url} 
+                alt="Баннер"
+                className="w-full h-64 object-cover"
+              />
+            </div>
+          )}
           <div className="flex items-center gap-6 mb-6">
             {artist.avatar_url ? (
               <img 
@@ -177,8 +245,21 @@ const Artist = () => {
                 <Icon name="User" size={48} className="text-vintage-warm" />
               </div>
             )}
-            <div>
-              <h1 className="text-5xl font-bold text-vintage-dark-brown mb-2">{artist.display_name}</h1>
+            <div className="flex-1">
+              <div className="flex items-center gap-4 mb-2">
+                <h1 className="text-5xl font-bold text-vintage-dark-brown">{artist.display_name}</h1>
+                {isOwnProfile && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditDialogOpen(true)}
+                    className="border-vintage-brown/30 text-vintage-brown hover:bg-vintage-brown hover:text-vintage-cream"
+                  >
+                    <Icon name="Settings" size={16} className="mr-2" />
+                    Редактировать
+                  </Button>
+                )}
+              </div>
               <p className="text-xl text-vintage-brown mb-2">@{artist.username}</p>
               {artist.bio && (
                 <p className="text-vintage-brown/80 max-w-2xl">{artist.bio}</p>
@@ -395,6 +476,27 @@ const Artist = () => {
           </div>
         )}
       </main>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="bg-vintage-cream border-vintage-brown/30 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-vintage-dark-brown text-2xl">
+              Редактировать профиль
+            </DialogTitle>
+          </DialogHeader>
+          <ProfileEditForm
+            initialData={{
+              display_name: artist?.display_name || '',
+              bio: artist?.bio || '',
+              avatar_url: artist?.avatar_url || '',
+              banner_url: artist?.banner_url || '',
+            }}
+            onSubmit={handleUpdateProfile}
+            onCancel={() => setIsEditDialogOpen(false)}
+            isSubmitting={isSubmitting}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

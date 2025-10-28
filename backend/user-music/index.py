@@ -604,6 +604,53 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({'message': 'All stats reset successfully'})
                 }
             
+            # PUT /profile - Обновить профиль пользователя
+            if method == 'PUT' and path == 'profile':
+                if not user_id:
+                    return {
+                        'statusCode': 401,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'Authentication required'})
+                    }
+                
+                body = json.loads(event.get('body', '{}'))
+                
+                updates = []
+                if 'display_name' in body:
+                    display_name_escaped = body['display_name'].replace("'", "''")
+                    updates.append(f"display_name = '{display_name_escaped}'")
+                if 'bio' in body:
+                    bio_escaped = body['bio'].replace("'", "''")
+                    updates.append(f"profile_bio = '{bio_escaped}'")
+                if 'avatar_url' in body:
+                    avatar_url_escaped = body['avatar_url'].replace("'", "''")
+                    updates.append(f"avatar_url = '{avatar_url_escaped}'")
+                if 'banner_url' in body:
+                    banner_url_escaped = body['banner_url'].replace("'", "''")
+                    updates.append(f"banner_url = '{banner_url_escaped}'")
+                
+                if not updates:
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'No fields to update'})
+                    }
+                
+                cur.execute(f'''
+                    UPDATE t_p39135821_musician_site_projec.users 
+                    SET {', '.join(updates)}
+                    WHERE id = {int(user_id)}
+                    RETURNING id, username, display_name, avatar_url, banner_url, profile_bio
+                ''')
+                user = cur.fetchone()
+                conn.commit()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps(dict(user), default=str)
+                }
+            
             return {
                 'statusCode': 404,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
