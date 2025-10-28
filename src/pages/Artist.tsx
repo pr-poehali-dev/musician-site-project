@@ -59,9 +59,9 @@ const Artist = () => {
 
   const fetchArtistData = async () => {
     try {
-      const albumsResponse = await fetch(`${USER_MUSIC_API}?path=albums&username=${username}`);
+      const profileResponse = await fetch(`${USER_MUSIC_API}?path=profile&username=${username}`);
       
-      if (!albumsResponse.ok) {
+      if (!profileResponse.ok) {
         toast({
           title: 'Артист не найден',
           description: 'Такого пользователя не существует',
@@ -71,16 +71,19 @@ const Artist = () => {
         return;
       }
 
-      const albumsData = await albumsResponse.json();
-      setAlbums(albumsData);
+      const profileData = await profileResponse.json();
+      setArtist({
+        username: profileData.username,
+        display_name: profileData.display_name,
+        avatar_url: profileData.avatar_url,
+        bio: profileData.profile_bio || profileData.bio,
+      });
 
-      if (albumsData.length > 0) {
-        const firstAlbum = albumsData[0];
-        setArtist({
-          username: firstAlbum.username,
-          display_name: firstAlbum.display_name,
-          avatar_url: firstAlbum.avatar_url,
-        });
+      const albumsResponse = await fetch(`${USER_MUSIC_API}?path=albums&username=${username}`);
+      
+      if (albumsResponse.ok) {
+        const albumsData = await albumsResponse.json();
+        setAlbums(albumsData);
 
         for (const album of albumsData) {
           const tracksResponse = await fetch(`${USER_MUSIC_API}?path=tracks&album_id=${album.id}`);
