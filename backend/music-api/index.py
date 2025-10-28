@@ -1,8 +1,8 @@
 '''
-Business: API для управления музыкальной библиотекой (альбомы, треки, статистика)
+Business: API для управления музыкальной библиотекой (альбомы, треки, статистика, блог)
 Args: event - dict с httpMethod, body, queryStringParameters
       context - object с request_id, function_name, memory_limit_in_mb
-Returns: HTTP response dict с альбомами, треками или статистикой
+Returns: HTTP response dict с альбомами, треками, статистикой или постами блога
 '''
 
 import json
@@ -40,6 +40,20 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        
+        if path.startswith('blog/'):
+            result = handle_blog(cursor, conn, event, method, path)
+            cursor.close()
+            conn.close()
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'isBase64Encoded': False,
+                'body': json.dumps(result, default=str)
+            }
         
         if path == 'telegram' and method == 'POST':
             body = json.loads(event.get('body', '{}'))
@@ -245,6 +259,68 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'isBase64Encoded': False,
             'body': json.dumps({'error': error_msg})
         }
+
+def handle_blog(cursor, conn, event: Dict[str, Any], method: str, path: str) -> Dict[str, Any]:
+    post_id = event.get('queryStringParameters', {}).get('id')
+    
+    if method == 'GET' and path == 'blog/posts':
+        cursor.execute('''
+            SELECT id, title, content, author, created_at, updated_at
+            FROM blog_posts
+            ORDER BY created_at DESC
+        ''')
+        posts = cursor.fetchall()
+        return {'posts': posts}
+    
+    elif method == 'POST' and path == 'blog/posts':
+        body = json.loads(event.get('body', '{}'))
+        title = body.get('title')
+        content = body.get('content')
+        author = body.get('author', 'Дмитрий Шмелидзэ')
+        
+        if not title or not content:
+            raise Exception('Title and content are required')
+        
+        post_id = str(int(datetime.now().timestamp() * 1000))
+        cursor.execute('''
+            INSERT INTO blog_posts (id, title, content, author)
+            VALUES (%s, %s, %s, %s)
+        ''', (post_id, title, content, author))
+        conn.commit()
+        
+        return {'success': True, 'post_id': post_id}
+    
+    elif method == 'PUT' and path == 'blog/posts':
+        if not post_id:
+            raise Exception('Post ID is required')
+        
+        body = json.loads(event.get('body', '{}'))
+        title = body.get('title')
+        content = body.get('content')
+        
+        if not title or not content:
+            raise Exception('Title and content are required')
+        
+        cursor.execute('''
+            UPDATE blog_posts
+            SET title = %s, content = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+        ''', (title, content, post_id))
+        conn.commit()
+        
+        return {'success': True}
+    
+    elif method == 'DELETE' and path == 'blog/posts':
+        if not post_id:
+            raise Exception('Post ID is required')
+        
+        cursor.execute('DELETE FROM blog_posts WHERE id = %s', (post_id,))
+        conn.commit()
+        
+        return {'success': True}
+    
+    else:
+        raise Exception('Invalid blog path or method')
 
 def get_albums(cursor) -> List[Dict]:
     print('[DEBUG] Getting albums...')

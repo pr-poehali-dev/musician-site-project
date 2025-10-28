@@ -61,6 +61,16 @@ const HomePage: React.FC = () => {
                   <Icon name="MessageCircle" size={20} className="mr-2" />
                   Контакты
                 </Button>
+                
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-vintage-warm text-vintage-warm hover:bg-vintage-warm hover:text-vintage-cream px-8 py-4 text-lg"
+                  onClick={() => navigate('/blog')}
+                >
+                  <Icon name="BookOpen" size={20} className="mr-2" />
+                  Блог
+                </Button>
               </div>
             </div>
             
