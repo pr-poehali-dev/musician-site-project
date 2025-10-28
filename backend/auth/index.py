@@ -172,6 +172,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 ''', (email, password_hash, username, display_name))
                 user = cur.fetchone()
                 
+                cur.execute('''
+                    INSERT INTO artist_profiles (user_id, bio, is_public)
+                    VALUES (%s, %s, %s)
+                ''', (user['id'], '', True))
+                
                 token = generate_token()
                 expires_at = datetime.now() + timedelta(days=30)
                 

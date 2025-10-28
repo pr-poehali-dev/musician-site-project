@@ -86,6 +86,40 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     conn = get_db_connection()
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            # GET /profile?username=... - Получить профиль артиста
+            if method == 'GET' and path == 'profile':
+                username = event.get('queryStringParameters', {}).get('username')
+                
+                if not username:
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'Username required'})
+                    }
+                
+                username_escaped = username.replace("'", "''")
+                cur.execute(f'''
+                    SELECT u.username, u.display_name, u.avatar_url, u.bio,
+                           ap.bio as profile_bio, ap.banner_url, ap.social_links, ap.is_public
+                    FROM users u
+                    LEFT JOIN artist_profiles ap ON u.id = ap.user_id
+                    WHERE u.username = '{username_escaped}'
+                ''')
+                
+                profile = cur.fetchone()
+                if not profile:
+                    return {
+                        'statusCode': 404,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'Artist not found'})
+                    }
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps(dict(profile), default=str)
+                }
+            
             # GET /albums?username=... - Получить альбомы пользователя
             if method == 'GET' and path == 'albums':
                 username = event.get('queryStringParameters', {}).get('username')
