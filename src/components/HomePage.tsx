@@ -28,7 +28,7 @@ const HomePage: React.FC = () => {
               
               <h1 className="md:text-3xl text-vintage-dark-brown text-center my-[9px] font-extralight px-7 text-lg">Я сочиняю песни. Это любимое занятие, потому что оно учит меня принимать неожиданность, быть внимательнее к мелочам, доверять процессу и себе. И каждый раз, когда финальная нота растворяется в тишине, я знаю — впереди снова пустая страница, новый аккорд</h1>
               
-              <p className="text-xl mb-8 text-[#72430d]">Официальный сайт Дмитрия Шмелидзэ</p>
+              <p className="text-xl mb-8 text-[#72430d]"></p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                 <Button 
