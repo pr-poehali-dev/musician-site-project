@@ -1,0 +1,3 @@
+Contact: mailto:music@dmitry-shmelidze.ru
+Preferred-Languages: ru, en
+Canonical: https://musician-site-project.poehali.dev/.well-known/security.txt

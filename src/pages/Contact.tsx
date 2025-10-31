@@ -4,12 +4,19 @@ import { Textarea } from "@/components/ui/textarea";
 import Icon from "@/components/ui/icon";
 import Logo from "@/components/Logo";
 import { useNavigate } from "react-router-dom";
+import SEO from "@/components/SEO";
 
 const Contact = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-green-900 to-indigo-950">
+    <>
+      <SEO 
+        title="Контакты - Дмитрий Шмелидзэ | Связаться с музыкантом"
+        description="Свяжитесь с Дмитрием Шмелидзэ. Вопросы о музыке, заказ выступлений, сотрудничество. Email, телефон, социальные сети."
+        keywords="Дмитрий Шмелидзэ контакты, связаться с музыкантом, заказать выступление, музыкант Москва"
+      />
+      <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-green-900 to-indigo-950">
       {/* Header */}
       <header className="p-6">
         <nav className="flex items-center justify-between max-w-7xl mx-auto">
@@ -179,6 +186,7 @@ const Contact = () => {
         </div>
       </main>
     </div>
+    </>
   );
 };
 

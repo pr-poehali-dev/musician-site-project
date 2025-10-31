@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/ui/icon';
 import Logo from '@/components/Logo';
 import { useToast } from '@/hooks/use-toast';
+import SEO from '@/components/SEO';
 
 interface BlogPost {
   id: string;
@@ -186,8 +187,15 @@ const Blog = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-brown to-vintage-dark-brown">
-      <header className="p-6 border-b border-vintage-brown/20">
+    <>
+      <SEO 
+        title="Блог - Дмитрий Шмелидзэ | Мысли о музыке и творчестве"
+        description="Личный блог Дмитрия Шмелидзэ. Истории создания песен, размышления о творчестве, вдохновение и жизненные моменты музыканта."
+        keywords="блог музыканта, творчество, авторские песни, Шмелидзэ блог, музыкальные истории"
+        type="blog"
+      />
+      <div className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-brown to-vintage-dark-brown">
+        <header className="p-6 border-b border-vintage-brown/20">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Logo />
           <div className="flex gap-4">
@@ -326,6 +334,7 @@ const Blog = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 
