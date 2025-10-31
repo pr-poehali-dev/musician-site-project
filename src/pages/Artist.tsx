@@ -60,9 +60,47 @@ const Artist = () => {
 
   useEffect(() => {
     if (username) {
+      loadCachedData();
       fetchArtistData();
     }
   }, [username]);
+
+  const getCacheKey = (key: string) => `artist_${username}_${key}`;
+  const CACHE_DURATION = 5 * 60 * 1000;
+
+  const loadCachedData = () => {
+    try {
+      const cachedArtist = localStorage.getItem(getCacheKey('profile'));
+      const cachedAlbums = localStorage.getItem(getCacheKey('albums'));
+      const cachedTracks = localStorage.getItem(getCacheKey('tracks'));
+      const cachedTimestamp = localStorage.getItem(getCacheKey('timestamp'));
+
+      if (cachedArtist && cachedAlbums && cachedTracks && cachedTimestamp) {
+        const timestamp = parseInt(cachedTimestamp, 10);
+        const now = Date.now();
+
+        if (now - timestamp < CACHE_DURATION) {
+          setArtist(JSON.parse(cachedArtist));
+          setAlbums(JSON.parse(cachedAlbums));
+          setTracks(JSON.parse(cachedTracks));
+          setLoading(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading cached data:', error);
+    }
+  };
+
+  const saveToCache = (artistData: Artist, albumsData: Album[], tracksData: { [albumId: number]: Track[] }) => {
+    try {
+      localStorage.setItem(getCacheKey('profile'), JSON.stringify(artistData));
+      localStorage.setItem(getCacheKey('albums'), JSON.stringify(albumsData));
+      localStorage.setItem(getCacheKey('tracks'), JSON.stringify(tracksData));
+      localStorage.setItem(getCacheKey('timestamp'), Date.now().toString());
+    } catch (error) {
+      console.error('Error saving to cache:', error);
+    }
+  };
 
   const fetchArtistData = async () => {
     try {
@@ -79,13 +117,14 @@ const Artist = () => {
       }
 
       const profileData = await profileResponse.json();
-      setArtist({
+      const artistData: Artist = {
         username: profileData.username,
         display_name: profileData.display_name,
         avatar_url: profileData.avatar_url,
         banner_url: profileData.banner_url,
         bio: profileData.profile_bio || profileData.bio,
-      });
+      };
+      setArtist(artistData);
 
       const albumsResponse = await fetch(`${USER_MUSIC_API}?path=albums&username=${username}`);
       
@@ -108,6 +147,7 @@ const Artist = () => {
         });
         
         setTracks(tracksMap);
+        saveToCache(artistData, albumsData, tracksMap);
       }
     } catch (error) {
       console.error('Error fetching artist data:', error);
@@ -160,6 +200,11 @@ const Artist = () => {
       });
 
       if (response.ok) {
+        localStorage.removeItem(getCacheKey('profile'));
+        localStorage.removeItem(getCacheKey('albums'));
+        localStorage.removeItem(getCacheKey('tracks'));
+        localStorage.removeItem(getCacheKey('timestamp'));
+        
         toast({
           title: 'Профиль обновлён!',
           description: 'Изменения успешно сохранены',
