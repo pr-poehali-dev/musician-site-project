@@ -93,13 +93,21 @@ const Artist = () => {
         const albumsData = await albumsResponse.json();
         setAlbums(albumsData);
 
-        for (const album of albumsData) {
-          const tracksResponse = await fetch(`${USER_MUSIC_API}?path=tracks&album_id=${album.id}`);
-          if (tracksResponse.ok) {
-            const tracksData = await tracksResponse.json();
-            setTracks(prev => ({ ...prev, [album.id]: tracksData }));
-          }
-        }
+        const tracksPromises = albumsData.map((album: Album) =>
+          fetch(`${USER_MUSIC_API}?path=tracks&album_id=${album.id}`)
+            .then(response => response.ok ? response.json() : [])
+            .then(tracksData => ({ albumId: album.id, tracks: tracksData }))
+            .catch(() => ({ albumId: album.id, tracks: [] }))
+        );
+
+        const tracksResults = await Promise.all(tracksPromises);
+        
+        const tracksMap: { [albumId: number]: Track[] } = {};
+        tracksResults.forEach(result => {
+          tracksMap[result.albumId] = result.tracks;
+        });
+        
+        setTracks(tracksMap);
       }
     } catch (error) {
       console.error('Error fetching artist data:', error);
