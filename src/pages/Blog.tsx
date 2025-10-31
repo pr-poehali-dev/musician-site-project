@@ -9,6 +9,7 @@ import Icon from '@/components/ui/icon';
 import Logo from '@/components/Logo';
 import { useToast } from '@/hooks/use-toast';
 import SEO from '@/components/SEO';
+import StructuredData from '@/components/StructuredData';
 
 interface BlogPost {
   id: string;
@@ -194,6 +195,7 @@ const Blog = () => {
         keywords="блог музыканта, творчество, авторские песни, Шмелидзэ блог, музыкальные истории"
         type="blog"
       />
+      <StructuredData type="blog" />
       <div className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-brown to-vintage-dark-brown">
         <header className="p-6 border-b border-vintage-brown/20">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
