@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import ProfileEditForm, { ProfileFormData } from '@/components/ProfileEditForm';
@@ -310,6 +310,9 @@ const Artist = () => {
             <DialogTitle className="text-vintage-dark-brown text-2xl">
               Редактировать профиль
             </DialogTitle>
+            <DialogDescription className="text-vintage-warm/70">
+              Обновите информацию о вашем профиле артиста
+            </DialogDescription>
           </DialogHeader>
           <ProfileEditForm 
             onSubmit={handleUpdateProfile}

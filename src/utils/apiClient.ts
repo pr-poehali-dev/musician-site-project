@@ -274,7 +274,7 @@ export const apiClient = {
         throw new Error('Требуется авторизация');
       }
 
-      const response = await fetch(`${API_URL}?path=stats/reset`, {
+      const response = await fetch(`https://functions.poehali.dev/52119c2a-82db-4422-894d-e3d5db04d16a?path=stats/reset`, {
         method: 'DELETE',
         headers: {
           'X-Auth-Token': token,
