@@ -58,7 +58,23 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         if password == ADMIN_PASSWORD:
             import secrets
+            from datetime import datetime, timedelta
             admin_token = secrets.token_urlsafe(32)
+            
+            conn = get_db_connection()
+            try:
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    admin_user_id = 3
+                    expires_at = datetime.now() + timedelta(days=30)
+                    token_escaped = admin_token.replace("'", "''")
+                    
+                    cur.execute(f'''
+                        INSERT INTO t_p39135821_musician_site_projec.sessions (user_id, token, expires_at)
+                        VALUES ({admin_user_id}, '{token_escaped}', '{expires_at.isoformat()}')
+                    ''')
+                    conn.commit()
+            finally:
+                conn.close()
             
             return {
                 'statusCode': 200,

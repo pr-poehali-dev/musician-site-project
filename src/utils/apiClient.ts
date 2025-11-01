@@ -271,7 +271,7 @@ export const apiClient = {
     try {
       const token = localStorage.getItem('authToken');
       if (!token) {
-        throw new Error('Требуется авторизация');
+        throw new Error('Требуется авторизация. Пожалуйста, войдите в админку заново.');
       }
 
       const response = await fetch(`https://functions.poehali.dev/52119c2a-82db-4422-894d-e3d5db04d16a?path=stats/reset`, {
@@ -281,6 +281,11 @@ export const apiClient = {
           'Content-Type': 'application/json'
         }
       });
+
+      if (response.status === 401) {
+        localStorage.removeItem('authToken');
+        throw new Error('Сессия истекла. Пожалуйста, войдите в админку заново.');
+      }
 
       if (!response.ok) {
         throw new Error('Ошибка сброса статистики');

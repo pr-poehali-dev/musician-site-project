@@ -95,11 +95,25 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ tracks }) => {
       });
       setShowResetDialog(false);
     } catch (error) {
+      const errorMessage = (error as Error).message;
+      const isAuthError = errorMessage.includes('Сессия истекла') || errorMessage.includes('авторизация');
+      
       toast({
         title: "❌ Ошибка сброса статистики",
-        description: (error as Error).message,
+        description: errorMessage,
         variant: "destructive",
+        action: isAuthError ? (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => window.location.href = '/music'}
+            className="bg-white"
+          >
+            Войти
+          </Button>
+        ) : undefined,
       });
+      setShowResetDialog(false);
     }
   };
 
