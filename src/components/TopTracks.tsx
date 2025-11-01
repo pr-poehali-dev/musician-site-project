@@ -26,6 +26,16 @@ const TopTracks = ({ username, limit = 5, onTrackClick }: TopTracksProps) => {
   const [tracks, setTracks] = useState<TopTrack[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const formatNumber = (num: number): string => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1).replace('.0', '') + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1).replace('.0', '') + 'K';
+    }
+    return num.toString();
+  };
+
   useEffect(() => {
     fetchTopTracks();
   }, [username, limit]);
@@ -115,7 +125,7 @@ const TopTracks = ({ username, limit = 5, onTrackClick }: TopTracksProps) => {
                 <div className="text-right flex-shrink-0">
                   <div className="flex items-center gap-1 text-vintage-warm">
                     <Icon name="Headphones" size={12} />
-                    <span className="font-semibold text-xs">{track.plays_count}</span>
+                    <span className="font-semibold text-xs">{formatNumber(track.plays_count)}</span>
                   </div>
                 </div>
               </div>
