@@ -23,6 +23,7 @@ const AlbumView: React.FC<AlbumViewProps> = ({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
+  const [animatingTracks, setAnimatingTracks] = useState<Set<string>>(new Set());
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const incrementPlayCount = async (trackId: string) => {
@@ -38,6 +39,15 @@ const AlbumView: React.FC<AlbumViewProps> = ({
       if (response.ok) {
         const data = await response.json();
         console.log('✅ [AlbumView] Счётчик прослушиваний обновлён:', data.plays_count);
+        
+        setAnimatingTracks(prev => new Set(prev).add(trackId));
+        setTimeout(() => {
+          setAnimatingTracks(prev => {
+            const next = new Set(prev);
+            next.delete(trackId);
+            return next;
+          });
+        }, 600);
       }
     } catch (error) {
       console.warn('⚠️ [AlbumView] Ошибка обновления счётчика:', error);
@@ -286,9 +296,11 @@ const AlbumView: React.FC<AlbumViewProps> = ({
                         <p className="font-medium text-vintage-warm">{track.title}</p>
                         <div className="flex items-center gap-3">
                           <p className="text-sm text-vintage-warm/60">{track.duration}</p>
-                          <div className="flex items-center gap-1 text-xs text-vintage-warm/60">
-                            <Icon name="Headphones" size={12} />
-                            <span>{track.plays_count || 0}</span>
+                          <div className={`flex items-center gap-1 text-xs text-vintage-warm/60 ${
+                            animatingTracks.has(track.id) ? 'play-count-animate text-vintage-warm font-bold' : ''
+                          }`}>
+                            <Icon name="Headphones" size={12} className={animatingTracks.has(track.id) ? 'text-vintage-warm' : ''} />
+                            <span className="tabular-nums">{track.plays_count || 0}</span>
                           </div>
                         </div>
                       </div>

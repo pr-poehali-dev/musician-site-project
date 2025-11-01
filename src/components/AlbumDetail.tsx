@@ -38,6 +38,8 @@ const AlbumDetail = ({ album, token, onBack }: AlbumDetailProps) => {
   const [isAddTrackOpen, setIsAddTrackOpen] = useState(false);
   const [isEditTrackOpen, setIsEditTrackOpen] = useState(false);
   const [editingTrack, setEditingTrack] = useState<Track | null>(null);
+  const [previousCounts, setPreviousCounts] = useState<Record<number, number>>({});
+  const [animatingTracks, setAnimatingTracks] = useState<Set<number>>(new Set());
   const { toast } = useToast();
 
   const USER_MUSIC_API = 'https://functions.poehali.dev/52119c2a-82db-4422-894d-e3d5db04d16a';
@@ -45,6 +47,28 @@ const AlbumDetail = ({ album, token, onBack }: AlbumDetailProps) => {
   useEffect(() => {
     fetchTracks();
   }, [album.id]);
+
+  useEffect(() => {
+    const newCounts: Record<number, number> = {};
+    tracks.forEach(track => {
+      const currentCount = track.plays_count || 0;
+      const previousCount = previousCounts[track.id];
+      
+      if (previousCount !== undefined && currentCount > previousCount) {
+        setAnimatingTracks(prev => new Set(prev).add(track.id));
+        setTimeout(() => {
+          setAnimatingTracks(prev => {
+            const next = new Set(prev);
+            next.delete(track.id);
+            return next;
+          });
+        }, 600);
+      }
+      
+      newCounts[track.id] = currentCount;
+    });
+    setPreviousCounts(newCounts);
+  }, [tracks]);
 
   const fetchTracks = async () => {
     try {
@@ -251,9 +275,11 @@ const AlbumDetail = ({ album, token, onBack }: AlbumDetailProps) => {
                         {track.label}
                       </p>
                     )}
-                    <p className="text-xs text-vintage-brown/70">
-                      <Icon name="Headphones" size={12} className="inline mr-1" />
-                      {track.plays_count || 0}
+                    <p className={`text-xs text-vintage-brown/70 ${
+                      animatingTracks.has(track.id) ? 'play-count-animate text-vintage-warm font-bold' : ''
+                    }`}>
+                      <Icon name="Headphones" size={12} className={`inline mr-1 ${animatingTracks.has(track.id) ? 'text-vintage-warm' : ''}`} />
+                      <span className="tabular-nums">{track.plays_count || 0}</span>
                     </p>
                   </div>
                   <p className="text-sm text-vintage-brown mt-1">

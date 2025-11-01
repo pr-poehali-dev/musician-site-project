@@ -13,7 +13,8 @@ const TrackItem = React.memo<{
   isCurrentTrack: boolean;
   isPlaying: boolean;
   onSelect: (track: Track) => void;
-}>(({ track, isCurrentTrack, isPlaying, onSelect }) => {
+  isAnimating?: boolean;
+}>(({ track, isCurrentTrack, isPlaying, onSelect, isAnimating = false }) => {
   const handleClick = useCallback(() => onSelect(track), [onSelect, track]);
 
   const formatDuration = useCallback((duration: string) => {
@@ -63,9 +64,11 @@ const TrackItem = React.memo<{
         <div className="flex items-center gap-3 text-vintage-cream/60 text-sm">
           <span>Vintage Soul • {formatDuration(track.duration)}</span>
           {track.plays_count !== undefined && (
-            <div className="flex items-center gap-1">
-              <Icon name="Headphones" size={12} />
-              <span>{track.plays_count}</span>
+            <div className={`flex items-center gap-1 transition-all duration-300 ${
+              isAnimating ? 'scale-125 text-vintage-warm font-bold' : ''
+            }`}>
+              <Icon name="Headphones" size={12} className={isAnimating ? 'text-vintage-warm' : ''} />
+              <span className="tabular-nums">{track.plays_count}</span>
             </div>
           )}
         </div>
@@ -95,6 +98,8 @@ TrackItem.displayName = 'TrackItem';
 const TrackList = ({ onTrackSelect, currentTrack, isPlaying }: TrackListProps) => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previousCounts, setPreviousCounts] = useState<Record<string, number>>({});
+  const [animatingTracks, setAnimatingTracks] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     // Загружаем треки из localStorage (сохраненные через админ-панель)
@@ -114,7 +119,6 @@ const TrackList = ({ onTrackSelect, currentTrack, isPlaying }: TrackListProps) =
 
     loadTracks();
 
-    // Обновляем список при изменении localStorage
     const handleStorageChange = () => {
       loadTracks();
     };
@@ -122,6 +126,28 @@ const TrackList = ({ onTrackSelect, currentTrack, isPlaying }: TrackListProps) =
     window.addEventListener('tracksUpdated', handleStorageChange);
     return () => window.removeEventListener('tracksUpdated', handleStorageChange);
   }, []);
+
+  useEffect(() => {
+    const newCounts: Record<string, number> = {};
+    tracks.forEach(track => {
+      const currentCount = track.plays_count || 0;
+      const previousCount = previousCounts[track.id];
+      
+      if (previousCount !== undefined && currentCount > previousCount) {
+        setAnimatingTracks(prev => new Set(prev).add(track.id));
+        setTimeout(() => {
+          setAnimatingTracks(prev => {
+            const next = new Set(prev);
+            next.delete(track.id);
+            return next;
+          });
+        }, 600);
+      }
+      
+      newCounts[track.id] = currentCount;
+    });
+    setPreviousCounts(newCounts);
+  }, [tracks]);
 
   if (loading) {
     return (
@@ -171,6 +197,7 @@ const TrackList = ({ onTrackSelect, currentTrack, isPlaying }: TrackListProps) =
               isCurrentTrack={currentTrack?.id === track.id}
               isPlaying={isPlaying}
               onSelect={onTrackSelect}
+              isAnimating={animatingTracks.has(track.id)}
             />
           ))}
         </div>

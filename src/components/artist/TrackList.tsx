@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
@@ -21,6 +22,31 @@ interface TrackListProps {
 }
 
 const TrackList = ({ tracks, currentTrack, onPlayTrack }: TrackListProps) => {
+  const [previousCounts, setPreviousCounts] = useState<Record<number, number>>({});
+  const [animatingTracks, setAnimatingTracks] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    const newCounts: Record<number, number> = {};
+    tracks.forEach(track => {
+      const currentCount = track.plays_count || 0;
+      const previousCount = previousCounts[track.id];
+      
+      if (previousCount !== undefined && currentCount > previousCount) {
+        setAnimatingTracks(prev => new Set(prev).add(track.id));
+        setTimeout(() => {
+          setAnimatingTracks(prev => {
+            const next = new Set(prev);
+            next.delete(track.id);
+            return next;
+          });
+        }, 600);
+      }
+      
+      newCounts[track.id] = currentCount;
+    });
+    setPreviousCounts(newCounts);
+  }, [tracks]);
+
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -73,9 +99,11 @@ const TrackList = ({ tracks, currentTrack, onPlayTrack }: TrackListProps) => {
                   {track.genre}
                 </Badge>
               )}
-              <div className="flex items-center gap-1 text-xs text-vintage-brown/70">
-                <Icon name="Headphones" size={12} />
-                <span>{track.plays_count || 0}</span>
+              <div className={`flex items-center gap-1 text-xs text-vintage-brown/70 ${
+                animatingTracks.has(track.id) ? 'play-count-animate text-vintage-warm font-bold' : ''
+              }`}>
+                <Icon name="Headphones" size={12} className={animatingTracks.has(track.id) ? 'text-vintage-warm' : ''} />
+                <span className="tabular-nums">{track.plays_count || 0}</span>
               </div>
             </div>
           </div>
