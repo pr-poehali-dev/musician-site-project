@@ -141,7 +141,7 @@ const AlbumGrid: React.FC<AlbumGridProps> = ({
         </div>
 
         <div className="bg-vintage-warm/10 border border-vintage-brown/20 rounded-lg p-4 mb-8 max-w-3xl mx-auto">
-          <p className="text-vintage-dark-brown text-center font-medium">Для прослушивания трека в хорошем качестве добавьте трек в корзину. 
+          <p className="text-vintage-dark-brown text-center font-medium px-[65px]">Для прослушивания трека в хорошем качестве добавьте трек в корзину. 
 Скачивая треки в хорошем качестве, вы поддерживаете автора</p>
         </div>
 
