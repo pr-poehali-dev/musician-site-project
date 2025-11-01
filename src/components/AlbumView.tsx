@@ -286,12 +286,10 @@ const AlbumView: React.FC<AlbumViewProps> = ({
                         <p className="font-medium text-vintage-warm">{track.title}</p>
                         <div className="flex items-center gap-3">
                           <p className="text-sm text-vintage-warm/60">{track.duration}</p>
-                          {track.plays_count !== undefined && track.plays_count > 0 && (
-                            <div className="flex items-center gap-1 text-xs text-vintage-warm/60">
-                              <Icon name="Headphones" size={12} />
-                              <span>{track.plays_count}</span>
-                            </div>
-                          )}
+                          <div className="flex items-center gap-1 text-xs text-vintage-warm/60">
+                            <Icon name="Headphones" size={12} />
+                            <span>{track.plays_count || 0}</span>
+                          </div>
                         </div>
                       </div>
                     </div>

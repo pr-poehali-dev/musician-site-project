@@ -60,9 +60,15 @@ const TrackItem = React.memo<{
         <h4 className="text-lg font-semibold text-vintage-cream mb-1">
           {track.title}
         </h4>
-        <p className="text-vintage-cream/60 text-sm">
-          Vintage Soul • {formatDuration(track.duration)}
-        </p>
+        <div className="flex items-center gap-3 text-vintage-cream/60 text-sm">
+          <span>Vintage Soul • {formatDuration(track.duration)}</span>
+          {track.plays_count !== undefined && (
+            <div className="flex items-center gap-1">
+              <Icon name="Headphones" size={12} />
+              <span>{track.plays_count}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {isCurrentlyPlaying && (

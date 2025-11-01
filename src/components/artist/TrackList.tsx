@@ -73,12 +73,10 @@ const TrackList = ({ tracks, currentTrack, onPlayTrack }: TrackListProps) => {
                   {track.genre}
                 </Badge>
               )}
-              {track.plays_count !== undefined && track.plays_count > 0 && (
-                <span className="text-xs text-vintage-brown/70 flex items-center gap-1">
-                  <Icon name="Play" size={12} />
-                  {track.plays_count}
-                </span>
-              )}
+              <div className="flex items-center gap-1 text-xs text-vintage-brown/70">
+                <Icon name="Headphones" size={12} />
+                <span>{track.plays_count || 0}</span>
+              </div>
             </div>
           </div>
 

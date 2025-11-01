@@ -251,12 +251,10 @@ const AlbumDetail = ({ album, token, onBack }: AlbumDetailProps) => {
                         {track.label}
                       </p>
                     )}
-                    {track.plays_count !== undefined && track.plays_count > 0 && (
-                      <p className="text-xs text-vintage-brown/70">
-                        <Icon name="Headphones" size={12} className="inline mr-1" />
-                        {track.plays_count}
-                      </p>
-                    )}
+                    <p className="text-xs text-vintage-brown/70">
+                      <Icon name="Headphones" size={12} className="inline mr-1" />
+                      {track.plays_count || 0}
+                    </p>
                   </div>
                   <p className="text-sm text-vintage-brown mt-1">
                     {track.duration || '—'} • {track.price} ₽
