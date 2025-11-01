@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import Icon from '@/components/ui/icon';
 import { Track } from '@/types';
 import { exportStats, resetStats } from '@/utils/trackStats';
@@ -36,6 +46,7 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ tracks }) => {
     top_tracks: []
   });
   const [loading, setLoading] = useState(true);
+  const [showResetDialog, setShowResetDialog] = useState(false);
 
   useEffect(() => {
     loadStats();
@@ -74,25 +85,21 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ tracks }) => {
   };
 
   const handleResetStats = async () => {
-    if (window.confirm('Вы уверены, что хотите сбросить всю статистику? Это действие нельзя отменить.')) {
-      try {
-        // Сброс локальной статистики в localStorage
-        resetStats();
-        // Сброс статистики в базе данных через API
-        await apiClient.resetStats();
-        // Перезагрузка данных с сервера
-        await loadStats();
-        toast({
-          title: "🔄 Статистика сброшена",
-          description: "Все счетчики обнулены",
-        });
-      } catch (error) {
-        toast({
-          title: "❌ Ошибка сброса статистики",
-          description: (error as Error).message,
-          variant: "destructive",
-        });
-      }
+    try {
+      resetStats();
+      await apiClient.resetStats();
+      await loadStats();
+      toast({
+        title: "🔄 Статистика сброшена",
+        description: "Все счетчики обнулены",
+      });
+      setShowResetDialog(false);
+    } catch (error) {
+      toast({
+        title: "❌ Ошибка сброса статистики",
+        description: (error as Error).message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -211,7 +218,7 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ tracks }) => {
         </Button>
         
         <Button
-          onClick={handleResetStats}
+          onClick={() => setShowResetDialog(true)}
           variant="outline"
           className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
         >
@@ -219,6 +226,39 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ tracks }) => {
           Сбросить статистику
         </Button>
       </div>
+
+      <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <AlertDialogContent className="bg-vintage-cream border-vintage-warm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-vintage-dark-brown flex items-center gap-2">
+              <Icon name="AlertTriangle" size={24} className="text-red-600" />
+              Подтверждение сброса статистики
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-vintage-warm/80">
+              Вы уверены, что хотите сбросить всю статистику? Это действие удалит:
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>Все счётчики прослушиваний</li>
+                <li>Все счётчики скачиваний</li>
+                <li>Историю воспроизведений</li>
+              </ul>
+              <p className="mt-3 font-semibold text-red-600">
+                Это действие нельзя отменить!
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-vintage-cream border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown/10">
+              Отмена
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleResetStats}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              Да, сбросить статистику
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
