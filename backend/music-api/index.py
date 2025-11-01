@@ -96,6 +96,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             elif path == 'stats':
                 track_id = event.get('queryStringParameters', {}).get('track_id')
                 result = get_stats(cursor, track_id)
+            elif path == 'tracks/top':
+                username = event.get('queryStringParameters', {}).get('username')
+                limit = int(event.get('queryStringParameters', {}).get('limit', 5))
+                result = get_top_tracks(cursor, username, limit)
             elif path == 'media':
                 media_id = event.get('queryStringParameters', {}).get('id')
                 if not media_id:
@@ -413,6 +417,54 @@ def get_media_file(cursor, media_id: str) -> Optional[Dict]:
     safe_id = media_id.replace("'", "''")
     cursor.execute(f"SELECT * FROM media_files WHERE id = '{safe_id}'")
     return cursor.fetchone()
+
+def get_top_tracks(cursor, username: Optional[str] = None, limit: int = 5) -> List[Dict]:
+    if username:
+        safe_username = username.replace("'", "''")
+        cursor.execute(f'''
+            SELECT 
+                t.id,
+                t.title,
+                t.duration,
+                t.price,
+                COALESCE(ts.plays_count, 0) as plays_count,
+                t.album_id,
+                a.title as album_title,
+                u.username,
+                ap.display_name,
+                a.cover
+            FROM tracks t
+            LEFT JOIN track_stats ts ON t.id = ts.track_id
+            LEFT JOIN albums a ON t.album_id = a.id
+            LEFT JOIN users u ON t.user_id = u.id
+            LEFT JOIN artist_profiles ap ON u.id = ap.user_id
+            WHERE u.username = '{safe_username}'
+            ORDER BY COALESCE(ts.plays_count, 0) DESC
+            LIMIT {limit}
+        ''')
+    else:
+        cursor.execute(f'''
+            SELECT 
+                t.id,
+                t.title,
+                t.duration,
+                t.price,
+                COALESCE(ts.plays_count, 0) as plays_count,
+                t.album_id,
+                a.title as album_title,
+                u.username,
+                ap.display_name,
+                a.cover
+            FROM tracks t
+            LEFT JOIN track_stats ts ON t.id = ts.track_id
+            LEFT JOIN albums a ON t.album_id = a.id
+            LEFT JOIN users u ON t.user_id = u.id
+            LEFT JOIN artist_profiles ap ON u.id = ap.user_id
+            ORDER BY COALESCE(ts.plays_count, 0) DESC
+            LIMIT {limit}
+        ''')
+    
+    return cursor.fetchall()
 
 def get_stats(cursor, track_id: Optional[str] = None) -> Dict:
     if track_id:
