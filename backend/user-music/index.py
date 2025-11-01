@@ -88,6 +88,41 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'body': json.dumps({'error': 'Неверный пароль'})
             }
     
+    # POST /track/play - Увеличить счётчик прослушиваний (БЕЗ авторизации)
+    if method == 'POST' and path == 'track/play':
+        body = json.loads(event.get('body', '{}'))
+        track_id = body.get('track_id')
+        
+        if not track_id:
+            return {
+                'statusCode': 400,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'track_id required'})
+            }
+        
+        conn = get_db_connection()
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                track_id_escaped = str(track_id).replace("'", "''")
+                
+                cur.execute(f'''
+                    INSERT INTO t_p39135821_musician_site_projec.track_stats (track_id, plays_count)
+                    VALUES ('{track_id_escaped}', 1)
+                    ON CONFLICT (track_id) 
+                    DO UPDATE SET plays_count = t_p39135821_musician_site_projec.track_stats.plays_count + 1
+                    RETURNING plays_count
+                ''')
+                result = cur.fetchone()
+                conn.commit()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'plays_count': result['plays_count']})
+                }
+        finally:
+            conn.close()
+    
     if not token and method != 'GET':
         print('[DEBUG] No token for non-GET request - returning 401')
         return {
