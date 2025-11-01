@@ -103,7 +103,7 @@ const HomePage: React.FC = () => {
                 <Icon name="Headphones" size={32} className="text-vintage-cream" />
               </div>
               <h4 className="text-xl font-bold text-vintage-dark-brown mb-4">Эксклюзивные треки</h4>
-              <p className="text-vintage-brown">это музыкальные произведения, которые выделяются своей уникальностью и недоступностью для широкой аудитории</p>
+              <p className="text-vintage-brown">Это музыкальные произведения, которые выделяются своей уникальностью и недоступностью для широкой аудитории</p>
             </div>
             
             <div className="text-center p-8 bg-vintage-cream/50 rounded-2xl backdrop-blur-sm border border-vintage-warm/30">
