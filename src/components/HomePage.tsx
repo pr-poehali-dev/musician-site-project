@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from 'react-router-dom';
 import Icon from '@/components/ui/icon';
 import Logo from '@/components/Logo';
+import TopTracks from '@/components/TopTracks';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -88,6 +89,35 @@ const HomePage: React.FC = () => {
                 <div className="absolute top-8 -left-8 w-4 h-4 bg-vintage-cream rounded-full opacity-60"></div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Top Tracks Section */}
+      <div className="py-20 px-4 bg-vintage-cream/30">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <Badge className="mb-4 px-4 py-2 bg-vintage-warm text-vintage-cream hover:bg-vintage-brown">
+              <Icon name="TrendingUp" size={16} className="mr-2" />
+              Обновляется автоматически
+            </Badge>
+            <h2 className="text-4xl font-bold text-vintage-dark-brown mb-4">
+              Самые популярные треки
+            </h2>
+            <p className="text-lg text-vintage-brown">
+              Композиции, которые слушают чаще всего
+            </p>
+          </div>
+          <TopTracks limit={5} onTrackClick={() => navigate('/music')} />
+          <div className="text-center mt-8">
+            <Button 
+              size="lg" 
+              className="bg-vintage-warm hover:bg-vintage-brown text-vintage-cream px-8 py-4 text-lg"
+              onClick={() => navigate('/music')}
+            >
+              <Icon name="Music" size={20} className="mr-2" />
+              Посмотреть все треки
+            </Button>
           </div>
         </div>
       </div>
