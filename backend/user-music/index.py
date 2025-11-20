@@ -55,6 +55,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         password = body.get('password')
         
         ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'music2025admin')
+        print(f'[DEBUG ADMIN] Received password: "{password}", Expected: "{ADMIN_PASSWORD}", Match: {password == ADMIN_PASSWORD}')
         
         if password == ADMIN_PASSWORD:
             import secrets
