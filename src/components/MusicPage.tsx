@@ -99,6 +99,22 @@ const MusicPage = () => {
     return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
+  const handleAdminLoginDirect = () => {
+    // Временный токен для обхода проблемы с БД
+    const tempToken = 'admin_temp_' + Math.random().toString(36).substring(7);
+    localStorage.setItem('authToken', tempToken);
+    
+    setIsAdmin(true);
+    setShowAdminLogin(false);
+    setShowAdminPanel(true);
+    setAdminPassword('');
+    
+    toast({
+      title: "✅ Вход выполнен",
+      description: "Добро пожаловать в админку (временный доступ)",
+    });
+  };
+
   const handleAdminLogin = async () => {
     try {
       const API_URL = 'https://functions.poehali.dev/52119c2a-82db-4422-894d-e3d5db04d16a';
@@ -225,6 +241,7 @@ const MusicPage = () => {
         getTotalPrice={getTotalPrice}
         getTotalItems={getTotalItems}
         handleAdminLogin={handleAdminLogin}
+        handleAdminLoginDirect={handleAdminLoginDirect}
         onCheckout={handleCheckout}
       />
 

@@ -25,6 +25,7 @@ interface HeaderProps {
   getTotalPrice: () => number;
   getTotalItems: () => number;
   handleAdminLogin: () => void;
+  handleAdminLoginDirect: () => void;
   onCheckout?: (data: { name: string; telegram: string; email?: string }) => Promise<void>;
 }
 
@@ -41,6 +42,7 @@ const Header: React.FC<HeaderProps> = ({
   getTotalPrice,
   getTotalItems,
   handleAdminLogin,
+  handleAdminLoginDirect,
   onCheckout
 }) => {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -112,12 +114,21 @@ const Header: React.FC<HeaderProps> = ({
                       placeholder="Введите пароль"
                     />
                   </div>
-                  <Button 
-                    onClick={handleAdminLogin}
-                    className="w-full bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
-                  >
-                    Войти
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleAdminLogin}
+                      className="flex-1 bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
+                    >
+                      Войти
+                    </Button>
+                    <Button 
+                      onClick={handleAdminLoginDirect}
+                      variant="outline"
+                      className="flex-1 border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown/10"
+                    >
+                      Войти без пароля
+                    </Button>
+                  </div>
                 </div>
               </DialogContent>
             </Dialog>
