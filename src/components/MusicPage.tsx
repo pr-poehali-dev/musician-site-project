@@ -26,7 +26,13 @@ const MusicPage = () => {
     const checkAdminStatus = () => {
       const adminStatus = localStorage.getItem('isAdmin') === 'true';
       const hasToken = !!localStorage.getItem('authToken');
-      setIsAdmin(adminStatus && hasToken);
+      const isAdminLoggedIn = adminStatus && hasToken;
+      
+      setIsAdmin(isAdminLoggedIn);
+      
+      if (isAdminLoggedIn) {
+        setShowAdminPanel(true);
+      }
     };
 
     checkAdminStatus();
@@ -276,6 +282,16 @@ const MusicPage = () => {
         editTrack={editTrack}
         moveTrack={moveTrack}
       />
+
+      {isAdmin && !showAdminPanel && (
+        <button
+          onClick={() => setShowAdminPanel(true)}
+          className="fixed bottom-6 right-6 z-50 bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream px-6 py-3 rounded-full shadow-lg transition-all hover:scale-105 flex items-center gap-2"
+        >
+          <span className="text-lg">⚙️</span>
+          <span className="font-medium">Админ панель</span>
+        </button>
+      )}
 
       <Footer />
 
