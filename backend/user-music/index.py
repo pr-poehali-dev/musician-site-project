@@ -55,12 +55,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         password = body.get('password')
         
         ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'music2025admin')
-        print(f'[DEBUG ADMIN] Received password: "{password}", Expected: "{ADMIN_PASSWORD}", Match: {password == ADMIN_PASSWORD}')
+        print(f'[ADMIN LOGIN] Received password length: {len(password) if password else 0}')
+        print(f'[ADMIN LOGIN] Expected password: {ADMIN_PASSWORD}')
+        print(f'[ADMIN LOGIN] Match: {password == ADMIN_PASSWORD}')
         
         if password == ADMIN_PASSWORD:
             import secrets
             from datetime import datetime, timedelta
             admin_token = secrets.token_urlsafe(32)
+            
+            print(f'[ADMIN LOGIN] Password correct, creating session with token: {admin_token[:10]}...')
             
             conn = get_db_connection()
             try:
@@ -69,11 +73,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     expires_at = datetime.now() + timedelta(days=30)
                     token_escaped = admin_token.replace("'", "''")
                     
+                    print(f'[ADMIN LOGIN] Attempting DB insert for user_id={admin_user_id}')
+                    
                     cur.execute(f'''
                         INSERT INTO t_p39135821_musician_site_projec.sessions (user_id, token, expires_at)
                         VALUES ({admin_user_id}, '{token_escaped}', '{expires_at.isoformat()}')
                     ''')
                     conn.commit()
+                    print('[ADMIN LOGIN] Session created successfully')
+            except Exception as e:
+                print(f'[ADMIN LOGIN ERROR] Database error: {str(e)}')
+                return {
+                    'statusCode': 500,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': f'Database error: {str(e)}'})
+                }
             finally:
                 conn.close()
             
@@ -83,6 +97,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'body': json.dumps({'token': admin_token, 'role': 'admin'})
             }
         else:
+            print('[ADMIN LOGIN] Password incorrect')
             return {
                 'statusCode': 401,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
