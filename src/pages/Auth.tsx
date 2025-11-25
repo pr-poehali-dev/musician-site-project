@@ -1,325 +1,161 @@
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import Logo from '@/components/Logo';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 import Icon from '@/components/ui/icon';
+import Logo from '@/components/Logo';
 
-const Auth = () => {
+const Auth: React.FC = () => {
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login, register } = useAuth();
   const { toast } = useToast();
-  
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [registerData, setRegisterData] = useState({ 
-    email: '', 
-    password: '', 
-    username: '', 
-    displayName: '' 
-  });
-  const [loading, setLoading] = useState(false);
-  
-  // Капча
-  const [captchaQuestion, setCaptchaQuestion] = useState('');
-  const [captchaAnswer, setCaptchaAnswer] = useState(0);
-  const [userCaptchaAnswer, setUserCaptchaAnswer] = useState('');
-  
-  // Генерация новой капчи
-  const generateCaptcha = () => {
-    const num1 = Math.floor(Math.random() * 10) + 1;
-    const num2 = Math.floor(Math.random() * 10) + 1;
-    const operations = ['+', '-', '*'];
-    const operation = operations[Math.floor(Math.random() * operations.length)];
-    
-    let answer = 0;
-    let question = '';
-    
-    switch(operation) {
-      case '+':
-        answer = num1 + num2;
-        question = `${num1} + ${num2}`;
-        break;
-      case '-':
-        // Делаем так, чтобы результат был положительным
-        const larger = Math.max(num1, num2);
-        const smaller = Math.min(num1, num2);
-        answer = larger - smaller;
-        question = `${larger} - ${smaller}`;
-        break;
-      case '*':
-        // Уменьшаем числа для умножения
-        const smallNum1 = Math.floor(Math.random() * 5) + 1;
-        const smallNum2 = Math.floor(Math.random() * 5) + 1;
-        answer = smallNum1 * smallNum2;
-        question = `${smallNum1} × ${smallNum2}`;
-        break;
-    }
-    
-    setCaptchaQuestion(question);
-    setCaptchaAnswer(answer);
-  };
-  
-  // Генерируем капчу при загрузке компонента
-  useEffect(() => {
-    generateCaptcha();
-  }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleDirectLogin = () => {
+    const tempToken = 'admin_temp_' + Math.random().toString(36).substring(7);
+    localStorage.setItem('authToken', tempToken);
+    localStorage.setItem('isAdmin', 'true');
     
-    try {
-      await login(loginData.email, loginData.password);
-      toast({
-        title: 'Добро пожаловать!',
-        description: 'Вы успешно вошли в систему',
-      });
-      navigate('/dashboard');
-    } catch (error) {
-      toast({
-        title: 'Ошибка входа',
-        description: error instanceof Error ? error.message : 'Проверьте email и пароль',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
+    toast({
+      title: "✅ Вход выполнен",
+      description: "Добро пожаловать в админку",
+    });
+
+    navigate('/music');
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Проверка капчи
-    if (parseInt(userCaptchaAnswer) !== captchaAnswer) {
-      toast({
-        title: 'Неверный ответ',
-        description: 'Решите математический пример правильно',
-        variant: 'destructive',
-      });
-      generateCaptcha(); // Генерируем новую капчу
-      setUserCaptchaAnswer('');
-      return;
-    }
-    
-    setLoading(true);
-    
+  const handlePasswordLogin = async () => {
+    setIsLoading(true);
     try {
-      await register(
-        registerData.email, 
-        registerData.password, 
-        registerData.username, 
-        registerData.displayName
-      );
-      toast({
-        title: 'Регистрация успешна!',
-        description: 'Добро пожаловать в Shmelidze&Co',
+      const API_URL = 'https://functions.poehali.dev/52119c2a-82db-4422-894d-e3d5db04d16a';
+      
+      const response = await fetch(`${API_URL}?path=admin-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ password })
       });
-      navigate('/dashboard');
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Неверный пароль');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('isAdmin', 'true');
+      
+      toast({
+        title: "✅ Вход выполнен",
+        description: "Добро пожаловать в админку",
+      });
+
+      navigate('/music');
     } catch (error) {
       toast({
-        title: 'Ошибка регистрации',
-        description: error instanceof Error ? error.message : 'Проверьте введенные данные',
-        variant: 'destructive',
+        title: "❌ Ошибка авторизации",
+        description: error instanceof Error ? error.message : "Не удалось войти",
+        variant: "destructive",
       });
-      generateCaptcha(); // Генерируем новую капчу при ошибке
-      setUserCaptchaAnswer('');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-brown to-vintage-dark-brown flex flex-col">
-      <header className="p-6">
-        <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-brown to-vintage-dark-brown flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="flex justify-center mb-8">
           <Logo />
         </div>
-      </header>
 
-      <div className="flex-1 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-vintage-cream/95 border-vintage-brown/30">
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl text-vintage-dark-brown">Shmelidze&Co</CardTitle>
-            <CardDescription className="text-vintage-brown">
-              Платформа для музыкантов и меломанов
+        <Card className="bg-vintage-cream/95 border-vintage-brown/20 shadow-2xl">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl text-vintage-warm flex items-center gap-2">
+              <Icon name="Lock" size={24} />
+              Вход в админ панель
+            </CardTitle>
+            <CardDescription className="text-vintage-warm/70">
+              Введите пароль для доступа к управлению сайтом
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-vintage-brown/20">
-                <TabsTrigger value="login" className="data-[state=active]:bg-vintage-warm data-[state=active]:text-vintage-cream">
-                  Вход
-                </TabsTrigger>
-                <TabsTrigger value="register" className="data-[state=active]:bg-vintage-warm data-[state=active]:text-vintage-cream">
-                  Регистрация
-                </TabsTrigger>
-              </TabsList>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-vintage-warm">
+                Пароль
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handlePasswordLogin()}
+                className="border-vintage-brown/30 focus:border-vintage-dark-brown bg-white"
+                placeholder="Введите пароль"
+                disabled={isLoading}
+              />
+            </div>
 
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div>
-                    <Label htmlFor="login-email" className="text-vintage-dark-brown">Email</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="your@email.com"
-                      value={loginData.email}
-                      onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                      required
-                      className="border-vintage-brown/30 focus:border-vintage-warm"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="login-password" className="text-vintage-dark-brown">Пароль</Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={loginData.password}
-                      onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                      required
-                      className="border-vintage-brown/30 focus:border-vintage-warm"
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-vintage-warm hover:bg-vintage-brown text-vintage-cream"
-                    disabled={loading}
-                  >
-                    {loading ? 'Вход...' : (
-                      <>
-                        <Icon name="LogIn" size={20} className="mr-2" />
-                        Войти
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
+            <div className="space-y-2">
+              <Button
+                onClick={handlePasswordLogin}
+                disabled={isLoading || !password}
+                className="w-full bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
+              >
+                {isLoading ? (
+                  <>
+                    <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
+                    Проверка...
+                  </>
+                ) : (
+                  <>
+                    <Icon name="LogIn" size={16} className="mr-2" />
+                    Войти с паролем
+                  </>
+                )}
+              </Button>
 
-              <TabsContent value="register">
-                <form onSubmit={handleRegister} className="space-y-4">
-                  <div>
-                    <Label htmlFor="register-email" className="text-vintage-dark-brown">Email</Label>
-                    <Input
-                      id="register-email"
-                      type="email"
-                      placeholder="your@email.com"
-                      value={registerData.email}
-                      onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-                      required
-                      className="border-vintage-brown/30 focus:border-vintage-warm"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="register-username" className="text-vintage-dark-brown">Username (URL профиля)</Label>
-                    <Input
-                      id="register-username"
-                      type="text"
-                      placeholder="myusername"
-                      value={registerData.username}
-                      onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })}
-                      required
-                      className="border-vintage-brown/30 focus:border-vintage-warm"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="register-displayname" className="text-vintage-dark-brown">Отображаемое имя</Label>
-                    <Input
-                      id="register-displayname"
-                      type="text"
-                      placeholder="Иван Иванов"
-                      value={registerData.displayName}
-                      onChange={(e) => setRegisterData({ ...registerData, displayName: e.target.value })}
-                      required
-                      className="border-vintage-brown/30 focus:border-vintage-warm"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="register-password" className="text-vintage-dark-brown">Пароль</Label>
-                    <Input
-                      id="register-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={registerData.password}
-                      onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                      required
-                      className="border-vintage-brown/30 focus:border-vintage-warm"
-                    />
-                  </div>
-                  
-                  {/* Капча */}
-                  <div className="p-4 bg-vintage-brown/10 rounded-lg border border-vintage-brown/30">
-                    <Label htmlFor="captcha" className="text-vintage-dark-brown flex items-center gap-2 mb-2">
-                      <Icon name="ShieldCheck" size={16} className="text-vintage-warm" />
-                      Подтвердите, что вы человек
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 bg-vintage-cream p-3 rounded border border-vintage-brown/20 text-center">
-                        <span className="text-2xl font-bold text-vintage-dark-brown font-mono">
-                          {captchaQuestion} = ?
-                        </span>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          generateCaptcha();
-                          setUserCaptchaAnswer('');
-                        }}
-                        className="border-vintage-brown/30 hover:bg-vintage-brown/10 px-3"
-                        title="Сменить пример"
-                      >
-                        <Icon name="RefreshCw" size={18} />
-                      </Button>
-                      <Input
-                        id="captcha"
-                        type="number"
-                        placeholder="Ответ"
-                        value={userCaptchaAnswer}
-                        onChange={(e) => setUserCaptchaAnswer(e.target.value)}
-                        required
-                        className="w-24 border-vintage-brown/30 focus:border-vintage-warm text-center text-lg font-semibold"
-                      />
-                    </div>
-                    <p className="text-xs text-vintage-brown/70 mt-2">
-                      Решите простой математический пример или обновите его
-                    </p>
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-vintage-warm hover:bg-vintage-brown text-vintage-cream"
-                    disabled={loading}
-                  >
-                    {loading ? 'Регистрация...' : (
-                      <>
-                        <Icon name="UserPlus" size={20} className="mr-2" />
-                        Зарегистрироваться
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-vintage-brown/20" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-vintage-cream px-2 text-vintage-warm/60">
+                    или
+                  </span>
+                </div>
+              </div>
 
-            <div className="mt-6 text-center">
-              <Button 
-                variant="ghost" 
-                onClick={() => navigate('/')}
-                className="text-vintage-brown hover:text-vintage-dark-brown"
+              <Button
+                onClick={handleDirectLogin}
+                variant="outline"
+                className="w-full border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown/10"
+              >
+                <Icon name="ShieldCheck" size={16} className="mr-2" />
+                Быстрый вход (без пароля)
+              </Button>
+            </div>
+
+            <div className="pt-4 border-t border-vintage-brown/10">
+              <Button
+                onClick={() => navigate('/music')}
+                variant="ghost"
+                className="w-full text-vintage-warm/70 hover:text-vintage-warm hover:bg-vintage-brown/10"
               >
                 <Icon name="ArrowLeft" size={16} className="mr-2" />
-                На главную
+                Вернуться на главную
               </Button>
             </div>
           </CardContent>
         </Card>
+
+        <div className="mt-6 text-center text-sm text-vintage-cream/80">
+          <p>Доступ только для администраторов</p>
+        </div>
       </div>
     </div>
   );

@@ -2,9 +2,6 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useNavigate, useLocation } from 'react-router-dom';
 import Icon from '@/components/ui/icon';
 import Logo from '@/components/Logo';
@@ -16,16 +13,10 @@ interface HeaderProps {
   cart: CartItem[];
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
-  showAdminLogin: boolean;
-  setShowAdminLogin: (show: boolean) => void;
-  adminPassword: string;
-  setAdminPassword: (password: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   removeFromCart: (id: string) => void;
   getTotalPrice: () => number;
   getTotalItems: () => number;
-  handleAdminLogin: () => void;
-  handleAdminLoginDirect: () => void;
   onCheckout?: (data: { name: string; telegram: string; email?: string }) => Promise<void>;
 }
 
@@ -33,16 +24,10 @@ const Header: React.FC<HeaderProps> = ({
   cart,
   isCartOpen,
   setIsCartOpen,
-  showAdminLogin,
-  setShowAdminLogin,
-  adminPassword,
-  setAdminPassword,
   updateQuantity,
   removeFromCart,
   getTotalPrice,
   getTotalItems,
-  handleAdminLogin,
-  handleAdminLoginDirect,
   onCheckout
 }) => {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -89,49 +74,13 @@ const Header: React.FC<HeaderProps> = ({
           </div>
           <div className="flex items-center gap-4">
             {/* Кнопка входа в админ панель */}
-            <Dialog open={showAdminLogin} onOpenChange={setShowAdminLogin}>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <Icon name="Settings" size={20} />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-vintage-cream border-vintage-brown/20" aria-describedby="admin-login-description">
-                <DialogHeader>
-                  <DialogTitle className="text-vintage-warm">Вход в админ панель</DialogTitle>
-                  <DialogDescription id="admin-login-description">
-                    Введите пароль для доступа к админ панели
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="password" className="text-vintage-warm">Пароль</Label>
-                    <Input 
-                      id="password"
-                      type="password"
-                      value={adminPassword}
-                      onChange={(e) => setAdminPassword(e.target.value)}
-                      className="mt-1 border-vintage-brown/30 focus:border-vintage-dark-brown"
-                      placeholder="Введите пароль"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={handleAdminLogin}
-                      className="flex-1 bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
-                    >
-                      Войти
-                    </Button>
-                    <Button 
-                      onClick={handleAdminLoginDirect}
-                      variant="outline"
-                      className="flex-1 border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown/10"
-                    >
-                      Войти без пароля
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate('/auth')}
+            >
+              <Icon name="Settings" size={20} />
+            </Button>
 
             <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
               <SheetTrigger asChild>

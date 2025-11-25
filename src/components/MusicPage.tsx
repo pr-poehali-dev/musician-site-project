@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Shop from '@/components/Shop';
 import ContactSection from '@/components/music/ContactSection';
@@ -15,10 +15,22 @@ const MusicPage = () => {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(() => {
+    return localStorage.getItem('isAdmin') === 'true';
+  });
   const [adminPassword, setAdminPassword] = useState('');
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+
+  useEffect(() => {
+    const checkAdminStatus = () => {
+      const adminStatus = localStorage.getItem('isAdmin') === 'true';
+      const hasToken = !!localStorage.getItem('authToken');
+      setIsAdmin(adminStatus && hasToken);
+    };
+
+    checkAdminStatus();
+  }, []);
 
   const {
     albums,
@@ -100,9 +112,9 @@ const MusicPage = () => {
   };
 
   const handleAdminLoginDirect = () => {
-    // Временный токен для обхода проблемы с БД
     const tempToken = 'admin_temp_' + Math.random().toString(36).substring(7);
     localStorage.setItem('authToken', tempToken);
+    localStorage.setItem('isAdmin', 'true');
     
     setIsAdmin(true);
     setShowAdminLogin(false);
@@ -111,7 +123,7 @@ const MusicPage = () => {
     
     toast({
       title: "✅ Вход выполнен",
-      description: "Добро пожаловать в админку (временный доступ)",
+      description: "Добро пожаловать в админку",
     });
   };
 
@@ -134,8 +146,8 @@ const MusicPage = () => {
 
       const data = await response.json();
       
-      // Сохраняем токен в localStorage
       localStorage.setItem('authToken', data.token);
+      localStorage.setItem('isAdmin', 'true');
       
       setIsAdmin(true);
       setShowAdminLogin(false);
@@ -159,8 +171,8 @@ const MusicPage = () => {
   };
 
   const handleAdminLogout = () => {
-    // Удаляем токен из localStorage
     localStorage.removeItem('authToken');
+    localStorage.removeItem('isAdmin');
     setIsAdmin(false);
     setShowAdminPanel(false);
     
@@ -232,16 +244,10 @@ const MusicPage = () => {
         cart={cart}
         isCartOpen={isCartOpen}
         setIsCartOpen={setIsCartOpen}
-        showAdminLogin={showAdminLogin}
-        setShowAdminLogin={setShowAdminLogin}
-        adminPassword={adminPassword}
-        setAdminPassword={setAdminPassword}
         updateQuantity={updateQuantity}
         removeFromCart={removeFromCart}
         getTotalPrice={getTotalPrice}
         getTotalItems={getTotalItems}
-        handleAdminLogin={handleAdminLogin}
-        handleAdminLoginDirect={handleAdminLoginDirect}
         onCheckout={handleCheckout}
       />
 
