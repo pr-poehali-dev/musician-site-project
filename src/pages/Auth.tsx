@@ -29,18 +29,7 @@ const Auth: React.FC = () => {
     }
   }, [searchParams]);
 
-  const handleDirectLogin = () => {
-    const tempToken = 'admin_temp_' + Math.random().toString(36).substring(7);
-    localStorage.setItem('authToken', tempToken);
-    localStorage.setItem('isAdmin', 'true');
-    
-    toast({
-      title: "✅ Вход выполнен",
-      description: "Добро пожаловать в админку",
-    });
 
-    navigate('/music');
-  };
 
   const handlePasswordLogin = async () => {
     setIsLoading(true);
@@ -321,45 +310,23 @@ const Auth: React.FC = () => {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Button
-                    onClick={handlePasswordLogin}
-                    disabled={isLoading || !password}
-                    className="w-full bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
-                        Проверка...
-                      </>
-                    ) : (
-                      <>
-                        <Icon name="LogIn" size={16} className="mr-2" />
-                        Войти с паролем
-                      </>
-                    )}
-                  </Button>
-
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-vintage-brown/20" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-vintage-cream px-2 text-vintage-warm/60">
-                        или
-                      </span>
-                    </div>
-                  </div>
-
-                  <Button
-                    onClick={handleDirectLogin}
-                    variant="outline"
-                    className="w-full border-vintage-brown text-vintage-dark-brown hover:bg-vintage-brown/10"
-                  >
-                    <Icon name="ShieldCheck" size={16} className="mr-2" />
-                    Быстрый вход (без пароля)
-                  </Button>
-                </div>
+                <Button
+                  onClick={handlePasswordLogin}
+                  disabled={isLoading || !password}
+                  className="w-full bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream"
+                >
+                  {isLoading ? (
+                    <>
+                      <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
+                      Проверка...
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="LogIn" size={16} className="mr-2" />
+                      Войти
+                    </>
+                  )}
+                </Button>
 
                 <div className="pt-2">
                   <Button
