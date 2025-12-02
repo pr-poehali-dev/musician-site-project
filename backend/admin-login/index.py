@@ -111,7 +111,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
     
     if method == 'POST' and action == 'change-password':
-        token = event.get('headers', {}).get('x-auth-token', '')
+        headers = event.get('headers', {})
+        headers_lower = {k.lower(): v for k, v in headers.items()}
+        token = headers_lower.get('x-auth-token', '')
         
         if not verify_admin_token(token):
             return {
