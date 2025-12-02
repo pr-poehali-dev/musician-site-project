@@ -1,0 +1,17 @@
+{
+  "tests": [
+    {
+      "name": "Сброс пароля с неверным токеном",
+      "method": "POST",
+      "path": "/?action=reset",
+      "body": {
+        "token": "invalid_token",
+        "newPassword": "newpassword123"
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "Неверный или истекший токен"
+      }
+    }
+  ]
+}
