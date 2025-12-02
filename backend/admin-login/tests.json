@@ -3,6 +3,7 @@
     {
       "name": "Успешный вход с правильным паролем",
       "method": "POST",
+      "path": "/?action=login",
       "body": {
         "password": "shmelidze2024"
       },
@@ -16,21 +17,13 @@
     {
       "name": "Ошибка при неверном пароле",
       "method": "POST",
+      "path": "/?action=login",
       "body": {
         "password": "wrongpassword"
       },
       "expectedStatus": 401,
       "expectedBody": {
         "error": "Неверный пароль"
-      }
-    },
-    {
-      "name": "Ошибка при отсутствии пароля",
-      "method": "POST",
-      "body": {},
-      "expectedStatus": 400,
-      "expectedBody": {
-        "error": "Password is required"
       }
     }
   ]

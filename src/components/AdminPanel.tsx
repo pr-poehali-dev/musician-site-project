@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AlbumManager from '@/components/admin/AlbumManager';
 import TrackManager from '@/components/admin/TrackManager';
 import StatsPanel from '@/components/admin/StatsPanel';
+import SecurityPanel from '@/components/admin/SecurityPanel';
 import { Track, Album } from '@/types';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
@@ -86,7 +87,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
 
   return (
     <Tabs defaultValue="stats" className="w-full">
-      <TabsList className="grid w-full grid-cols-4 bg-vintage-brown/10">
+      <TabsList className="grid w-full grid-cols-5 bg-vintage-brown/10">
         <TabsTrigger value="stats" className="data-[state=active]:bg-vintage-cream">
           <Icon name="BarChart3" size={16} className="mr-2" />
           Статистика
@@ -102,6 +103,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
         <TabsTrigger value="backup" className="data-[state=active]:bg-vintage-cream">
           <Icon name="Database" size={16} className="mr-2" />
           Резервные копии
+        </TabsTrigger>
+        <TabsTrigger value="security" className="data-[state=active]:bg-vintage-cream">
+          <Icon name="Shield" size={16} className="mr-2" />
+          Безопасность
         </TabsTrigger>
       </TabsList>
 
@@ -180,6 +185,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
             Экспорт сохранит все альбомы, треки и аудиофайлы в один файл. Импорт восстановит все данные из файла.
           </p>
         </div>
+      </TabsContent>
+
+      <TabsContent value="security" className="mt-6">
+        <SecurityPanel />
       </TabsContent>
     </Tabs>
   );
