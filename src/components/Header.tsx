@@ -73,6 +73,15 @@ const Header: React.FC<HeaderProps> = ({
             )}
           </div>
           <div className="flex items-center gap-4">
+            {/* Кнопка входа в админ панель */}
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate('/auth')}
+            >
+              <Icon name="Settings" size={20} />
+            </Button>
+
             <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" className="relative">
