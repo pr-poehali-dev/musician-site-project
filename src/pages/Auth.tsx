@@ -30,9 +30,9 @@ const Auth: React.FC = () => {
   const handlePasswordLogin = async () => {
     setIsLoading(true);
     try {
-      const API_URL = 'https://functions.poehali.dev/52119c2a-82db-4422-894d-e3d5db04d16a';
+      const API_URL = 'https://functions.poehali.dev/f03a389e-3ffb-4f5a-996b-c993b26230cf';
       
-      const response = await fetch(`${API_URL}?path=admin-login`, {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
