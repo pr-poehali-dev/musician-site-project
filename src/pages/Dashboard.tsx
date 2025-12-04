@@ -229,6 +229,14 @@ const Dashboard = () => {
               <Icon name="ExternalLink" size={16} className="mr-2" />
               Моя страница
             </Button>
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/analytics')}
+              className="text-vintage-brown hover:text-vintage-dark-brown"
+            >
+              <Icon name="BarChart3" size={16} className="mr-2" />
+              Аналитика
+            </Button>
             <span className="text-vintage-dark-brown">
               Привет, <strong>{user.display_name}</strong>!
             </span>
