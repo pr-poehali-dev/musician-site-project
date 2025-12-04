@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AlbumManager from '@/components/admin/AlbumManager';
 import TrackManager from '@/components/admin/TrackManager';
 import StatsPanel from '@/components/admin/StatsPanel';
@@ -33,6 +34,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   onEditTrack,
   onMoveTrack
 }) => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -87,7 +89,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
 
   return (
     <Tabs defaultValue="stats" className="w-full">
-      <TabsList className="grid w-full grid-cols-5 bg-vintage-brown/10">
+      <TabsList className="grid w-full grid-cols-6 bg-vintage-brown/10">
         <TabsTrigger value="stats" className="data-[state=active]:bg-vintage-cream">
           <Icon name="BarChart3" size={16} className="mr-2" />
           Статистика
@@ -99,6 +101,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
         <TabsTrigger value="tracks" className="data-[state=active]:bg-vintage-cream">
           <Icon name="Music" size={16} className="mr-2" />
           Треки
+        </TabsTrigger>
+        <TabsTrigger value="visits" className="data-[state=active]:bg-vintage-cream">
+          <Icon name="Eye" size={16} className="mr-2" />
+          Посещения
         </TabsTrigger>
         <TabsTrigger value="backup" className="data-[state=active]:bg-vintage-cream">
           <Icon name="Database" size={16} className="mr-2" />
@@ -133,6 +139,30 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
           onAddTrack={onAddTrack}
           onRemoveTrack={onRemoveTrack}
         />
+      </TabsContent>
+
+      <TabsContent value="visits" className="mt-6">
+        <div className="bg-vintage-cream/80 p-6 rounded-lg border border-vintage-brown/20">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-2xl font-bold text-vintage-dark-brown mb-2 flex items-center gap-2">
+                <Icon name="Eye" size={24} />
+                Статистика посещений сайта
+              </h3>
+              <p className="text-vintage-brown">
+                Подробная аналитика визитов с графиками и детальными данными
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={() => navigate('/analytics')}
+            className="bg-vintage-brown hover:bg-vintage-dark-brown text-vintage-cream text-lg px-6 py-6"
+            size="lg"
+          >
+            <Icon name="BarChart3" size={24} className="mr-2" />
+            Открыть страницу аналитики
+          </Button>
+        </div>
       </TabsContent>
 
       <TabsContent value="backup" className="mt-6">
