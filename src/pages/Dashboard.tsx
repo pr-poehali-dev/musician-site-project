@@ -303,11 +303,14 @@ const Dashboard = () => {
             </CardHeader>
           </Card>
 
-          <Card className="bg-vintage-cream/80 border-vintage-brown/30">
+          <Card 
+            className="bg-vintage-cream/80 border-vintage-brown/30 cursor-pointer hover:bg-vintage-cream transition-all"
+            onClick={() => navigate('/analytics')}
+          >
             <CardHeader>
               <CardTitle className="flex items-center text-vintage-dark-brown">
-                <Icon name="Eye" size={24} className="mr-2" />
-                Посещения
+                <Icon name="BarChart3" size={24} className="mr-2" />
+                Аналитика
               </CardTitle>
               <CardDescription className="text-vintage-brown">
                 {visitStats ? (
