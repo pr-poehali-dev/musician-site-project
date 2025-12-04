@@ -1,0 +1,23 @@
+{
+  "tests": [
+    {
+      "name": "POST - Запись визита",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "page_url": "/"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "GET - Получение статистики посещений",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
+    }
+  ]
+}

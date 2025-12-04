@@ -18,6 +18,12 @@ interface Album {
   created_at: string;
 }
 
+interface VisitStats {
+  total: number;
+  today: number;
+  week: number;
+}
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, token, logout, loading } = useAuth();
@@ -28,8 +34,10 @@ const Dashboard = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingAlbum, setEditingAlbum] = useState<Album | null>(null);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+  const [visitStats, setVisitStats] = useState<VisitStats | null>(null);
 
   const USER_MUSIC_API = 'https://functions.poehali.dev/52119c2a-82db-4422-894d-e3d5db04d16a';
+  const TRACK_VISIT_API = 'https://functions.poehali.dev/3d661569-e3dc-4578-8135-90a94a152d74';
 
   useEffect(() => {
     if (!loading && !user) {
@@ -40,8 +48,21 @@ const Dashboard = () => {
   useEffect(() => {
     if (user && token) {
       fetchAlbums();
+      fetchVisitStats();
     }
   }, [user, token]);
+
+  const fetchVisitStats = async () => {
+    try {
+      const response = await fetch(TRACK_VISIT_API);
+      if (response.ok) {
+        const data = await response.json();
+        setVisitStats(data);
+      }
+    } catch (error) {
+      console.error('Error fetching visit stats:', error);
+    }
+  };
 
   const fetchAlbums = async () => {
     try {
@@ -237,7 +258,7 @@ const Dashboard = () => {
           <p className="text-vintage-brown">Управляйте своими альбомами и треками</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="bg-vintage-cream/80 border-vintage-brown/30">
             <CardHeader>
               <CardTitle className="flex items-center text-vintage-dark-brown">
@@ -270,6 +291,35 @@ const Dashboard = () => {
               </CardTitle>
               <CardDescription className="text-vintage-brown">
                 @{user.username}
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="bg-vintage-cream/80 border-vintage-brown/30">
+            <CardHeader>
+              <CardTitle className="flex items-center text-vintage-dark-brown">
+                <Icon name="Eye" size={24} className="mr-2" />
+                Посещения
+              </CardTitle>
+              <CardDescription className="text-vintage-brown">
+                {visitStats ? (
+                  <div className="space-y-1 text-sm mt-2">
+                    <div className="flex justify-between">
+                      <span>Сегодня:</span>
+                      <span className="font-semibold">{visitStats.today}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>За неделю:</span>
+                      <span className="font-semibold">{visitStats.week}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Всего:</span>
+                      <span className="font-semibold">{visitStats.total}</span>
+                    </div>
+                  </div>
+                ) : (
+                  'Загрузка...'
+                )}
               </CardDescription>
             </CardHeader>
           </Card>
