@@ -261,9 +261,18 @@ const Dashboard = () => {
           />
         ) : (
         <>
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-vintage-dark-brown mb-2">Личный кабинет</h1>
-          <p className="text-vintage-brown">Управляйте своими альбомами и треками</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-vintage-dark-brown mb-2">Личный кабинет</h1>
+            <p className="text-vintage-brown">Управляйте своими альбомами и треками</p>
+          </div>
+          <Button
+            onClick={() => navigate('/analytics')}
+            className="bg-vintage-brown hover:bg-vintage-dark-brown text-vintage-cream"
+          >
+            <Icon name="BarChart3" size={20} className="mr-2" />
+            Аналитика сайта
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
