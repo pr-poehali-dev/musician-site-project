@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -17,6 +19,7 @@ interface AnalyticsData {
 }
 
 const Analytics = () => {
+  const navigate = useNavigate();
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -58,6 +61,14 @@ const Analytics = () => {
     <div className="min-h-screen bg-vintage-light py-12">
       <div className="container mx-auto px-4">
         <div className="mb-8">
+          <Button
+            onClick={() => navigate(-1)}
+            variant="ghost"
+            className="mb-4 text-vintage-brown hover:text-vintage-dark-brown"
+          >
+            <Icon name="ArrowLeft" size={20} className="mr-2" />
+            Назад
+          </Button>
           <h1 className="text-4xl font-bold text-vintage-dark-brown mb-2">Аналитика посещений</h1>
           <p className="text-vintage-brown">Подробная статистика посещений вашего сайта</p>
         </div>
