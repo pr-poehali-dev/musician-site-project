@@ -2,50 +2,45 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   
-  <!-- Главная страница -->
   <url>
     <loc>https://musician-site-project.poehali.dev/</loc>
-    <lastmod>2025-01-17</lastmod>
+    <lastmod>2026-01-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
       <image:loc>https://cdn.poehali.dev/files/35bf3198-6bc5-4049-9328-baf39a81cdb5.jpg</image:loc>
-      <image:title>Дмитрий Шмелидзэ - Авторские песни и современная музыка</image:title>
+      <image:title>Дмитрий Шмелидзэ - Авторские песни и современная музыка ХИТы 2025</image:title>
     </image:image>
   </url>
   
-  <!-- Страница музыки - ХИТы и треки 2025 -->
   <url>
     <loc>https://musician-site-project.poehali.dev/music</loc>
-    <lastmod>2025-01-17</lastmod>
+    <lastmod>2026-01-29</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   
-  <!-- Профиль артиста -->
   <url>
     <loc>https://musician-site-project.poehali.dev/artist/dshmelidze</loc>
-    <lastmod>2025-01-17</lastmod>
+    <lastmod>2026-01-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://cdn.poehali.dev/files/35bf3198-6bc5-4049-9328-baf39a81cdb5.jpg</image:loc>
-      <image:title>Дмитрий Шмелидзэ - Композиции и авторские песни</image:title>
+      <image:title>Дмитрий Шмелидзэ - Композиции и авторские песни 2025</image:title>
     </image:image>
   </url>
   
-  <!-- Блог -->
   <url>
     <loc>https://musician-site-project.poehali.dev/blog</loc>
-    <lastmod>2025-01-17</lastmod>
-    <changefreq>daily</changefreq>
+    <lastmod>2026-01-29</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   
-  <!-- Контакты -->
   <url>
     <loc>https://musician-site-project.poehali.dev/contact</loc>
-    <lastmod>2025-01-17</lastmod>
+    <lastmod>2026-01-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

@@ -2,11 +2,22 @@ User-agent: Googlebot
 Allow: /
 Disallow: /dashboard
 Disallow: /auth
+Disallow: /analytics
+Crawl-delay: 0
 
 User-agent: Bingbot
 Allow: /
 Disallow: /dashboard
 Disallow: /auth
+Disallow: /analytics
+Crawl-delay: 1
+
+User-agent: YandexBot
+Allow: /
+Disallow: /dashboard
+Disallow: /auth
+Disallow: /analytics
+Crawl-delay: 1
 
 User-agent: Twitterbot
 Allow: /
@@ -14,14 +25,15 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: YandexBot
+User-agent: LinkedInBot
 Allow: /
-Disallow: /dashboard
-Disallow: /auth
 
 User-agent: *
 Allow: /
 Disallow: /dashboard
 Disallow: /auth
+Disallow: /analytics
 
 Sitemap: https://musician-site-project.poehali.dev/sitemap.xml
+
+Host: https://musician-site-project.poehali.dev

@@ -7,14 +7,16 @@ interface SEOProps {
   keywords?: string;
   image?: string;
   type?: string;
+  jsonLd?: object;
 }
 
 const SEO = ({ 
-  title = 'Shmelidze&Co - Музыка слов от сердца к клавишам', 
-  description = 'Официальный сайт Дмитрия Шмелидзэ - авторские песни, студийные записи, эксклюзивные треки. Слушайте музыку с душой.',
-  keywords = 'Дмитрий Шмелидзэ, авторские песни, музыка, студийные записи, российская музыка, песни под гитару',
+  title = 'Дмитрий Шмелидзэ - Авторские песни, современная музыка и ХИТы 2025', 
+  description = 'Авторские песни Дмитрий Шмелидзэ - современная музыка, композиции и ХИТы 2025. Слушайте новые треки онлайн, студийные записи и эксклюзивные песни российского музыканта.',
+  keywords = 'Дмитрий Шмелидзэ, авторские песни, музыка, студийные записи, российская музыка, песни под гитару, ХИТы 2025, современная музыка',
   image = 'https://cdn.poehali.dev/files/35bf3198-6bc5-4049-9328-baf39a81cdb5.jpg',
-  type = 'website'
+  type = 'website',
+  jsonLd
 }: SEOProps) => {
   const location = useLocation();
   const currentUrl = `${window.location.origin}${location.pathname}`;
@@ -43,7 +45,7 @@ const SEO = ({
     updateMeta('og:image', image, true);
     updateMeta('og:url', currentUrl, true);
     updateMeta('og:type', type, true);
-    updateMeta('og:site_name', 'Shmelidze&Co', true);
+    updateMeta('og:site_name', 'Дмитрий Шмелидзэ', true);
     
     updateMeta('twitter:card', 'summary_large_image');
     updateMeta('twitter:title', title);
@@ -59,7 +61,24 @@ const SEO = ({
       link.href = currentUrl;
       document.head.appendChild(link);
     }
-  }, [title, description, keywords, image, currentUrl, type]);
+
+    if (jsonLd) {
+      const existingScript = document.querySelector('script[type="application/ld+json"][data-dynamic="true"]');
+      if (existingScript) {
+        existingScript.remove();
+      }
+
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.setAttribute('data-dynamic', 'true');
+      script.textContent = JSON.stringify(jsonLd);
+      document.head.appendChild(script);
+
+      return () => {
+        script.remove();
+      };
+    }
+  }, [title, description, keywords, image, currentUrl, type, jsonLd]);
 
   return null;
 };
