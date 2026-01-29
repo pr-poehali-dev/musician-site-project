@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import Icon from '@/components/ui/icon';
 import { Album, Track } from '@/types';
 import { musicApi } from '@/utils/musicApi';
+import ShareButtons from '@/components/ShareButtons';
 
 interface AlbumViewProps {
   album: Album;
@@ -241,7 +242,7 @@ const AlbumView: React.FC<AlbumViewProps> = ({
                   <span className="text-vintage-warm/60">{album.tracks} треков</span>
                   <span className="text-2xl font-bold text-vintage-dark-brown">{album.price} ₽</span>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 flex-wrap">
                   <Button
                     onClick={playAlbum}
                     className="bg-vintage-warm hover:bg-vintage-brown text-vintage-cream"
@@ -257,6 +258,10 @@ const AlbumView: React.FC<AlbumViewProps> = ({
                     <Icon name="ShoppingCart" size={16} className="mr-2" />
                     Купить
                   </Button>
+                  <ShareButtons 
+                    title={`${album.title} — ${album.artist}`}
+                    description={album.description || `Слушайте альбом "${album.title}" от ${album.artist}`}
+                  />
                 </div>
               </div>
             </div>
