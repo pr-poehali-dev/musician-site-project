@@ -329,11 +329,11 @@ def handle_blog(cursor, conn, event: Dict[str, Any], method: str, path: str) -> 
 def get_albums(cursor) -> List[Dict]:
     print('[DEBUG] Getting albums...')
     cursor.execute('''
-        SELECT a.id, a.title, a.artist, a.cover, a.price, a.description, a.created_at, a.updated_at,
+        SELECT a.id, a.title, a.artist, a.cover, a.price, a.description, a.year, a.created_at, a.updated_at,
                COUNT(t.id) as tracks_count
         FROM albums a
         LEFT JOIN tracks t ON a.id = t.album_id
-        GROUP BY a.id, a.title, a.artist, a.cover, a.price, a.description, a.created_at, a.updated_at
+        GROUP BY a.id, a.title, a.artist, a.cover, a.price, a.description, a.year, a.created_at, a.updated_at
         ORDER BY a.created_at DESC
         LIMIT 100
     ''')
@@ -537,6 +537,7 @@ def create_album(cursor, conn, data: Dict) -> Dict:
     cover_data = data.get('cover', '')
     price = data.get('price', 0)
     description = data.get('description', '').replace("'", "''")
+    year = data.get('year')
     now = datetime.now().isoformat()
     
     print(f'[DEBUG] Album fields - id: {album_id}, title: {title}, artist: {artist}')
@@ -549,9 +550,10 @@ def create_album(cursor, conn, data: Dict) -> Dict:
     
     print(f'[DEBUG] Inserting album into database...')
     cover_value = f"'{cover_id}'" if cover_id else 'NULL'
+    year_value = str(year) if year else 'NULL'
     cursor.execute(f'''
-        INSERT INTO albums (id, title, artist, cover, price, description, tracks_count, created_at, user_id)
-        VALUES ('{album_id}', '{title}', '{artist}', {cover_value}, {price}, '{description}', 0, '{now}', NULL)
+        INSERT INTO albums (id, title, artist, cover, price, description, year, tracks_count, created_at, user_id)
+        VALUES ('{album_id}', '{title}', '{artist}', {cover_value}, {price}, '{description}', {year_value}, 0, '{now}', NULL)
         RETURNING *
     ''')
     conn.commit()
@@ -611,6 +613,7 @@ def update_album(cursor, conn, album_id: str, data: Dict) -> Dict:
     cover_data = data.get('cover', '')
     price = data.get('price', 0)
     description = data.get('description', '').replace("'", "''")
+    year = data.get('year')
     now = datetime.now().isoformat()
     
     cover_id = None
@@ -621,9 +624,10 @@ def update_album(cursor, conn, album_id: str, data: Dict) -> Dict:
         cover_id = cover_data
     
     cover_value = f"'{cover_id}'" if cover_id else 'NULL'
+    year_value = str(year) if year else 'NULL'
     cursor.execute(f'''
         UPDATE albums 
-        SET title = '{title}', artist = '{artist}', cover = {cover_value}, price = {price}, description = '{description}', updated_at = '{now}'
+        SET title = '{title}', artist = '{artist}', cover = {cover_value}, price = {price}, description = '{description}', year = {year_value}, updated_at = '{now}'
         WHERE id = '{safe_id}'
         RETURNING *
     ''')
