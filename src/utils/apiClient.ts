@@ -121,7 +121,8 @@ export const apiClient = {
       title: album.title,
       artist: album.artist,
       price: album.price,
-      description: album.description || ''
+      description: album.description || '',
+      year: album.year
     };
     
     // Отправляем обложку только если она есть
@@ -160,7 +161,8 @@ export const apiClient = {
       title: albumData.title,
       artist: albumData.artist,
       price: albumData.price,
-      description: albumData.description || ''
+      description: albumData.description || '',
+      year: albumData.year
     };
     
     // Отправляем обложку только если она есть
@@ -240,6 +242,7 @@ export const apiClient = {
           price: album.price,
           cover: coverUrl,
           description: album.description,
+          year: album.year,
           trackList: processedTracks
         };
       }));
