@@ -14,6 +14,7 @@ interface EditAlbumDialogProps {
     cover: string;
     price: number;
     description: string;
+    year?: number;
   };
   onAlbumDataChange: (data: any) => void;
   editCoverPreview: string | null;
@@ -54,6 +55,17 @@ const EditAlbumDialog: React.FC<EditAlbumDialogProps> = ({
               value={editAlbumData.artist}
               onChange={(e) => onAlbumDataChange({...editAlbumData, artist: e.target.value})}
               placeholder="Имя исполнителя"
+              className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+            />
+          </div>
+          <div>
+            <Label htmlFor="edit-album-year" className="text-vintage-warm">Год выпуска</Label>
+            <Input
+              id="edit-album-year"
+              type="number"
+              value={editAlbumData.year || ''}
+              onChange={(e) => onAlbumDataChange({...editAlbumData, year: e.target.value ? Number(e.target.value) : undefined})}
+              placeholder="2024"
               className="border-vintage-brown/30 focus:border-vintage-dark-brown"
             />
           </div>

@@ -230,7 +230,12 @@ const AlbumView: React.FC<AlbumViewProps> = ({
               </div>
               <div className="flex-1">
                 <h1 className="text-3xl font-bold text-vintage-warm mb-2">{album.title}</h1>
-                <p className="text-xl text-vintage-warm/70 mb-4">{album.artist}</p>
+                <div className="flex items-center gap-3 mb-4">
+                  <p className="text-xl text-vintage-warm/70">{album.artist}</p>
+                  {album.year && (
+                    <span className="text-lg text-vintage-warm/50">• {album.year}</span>
+                  )}
+                </div>
                 <p className="text-vintage-warm/60 mb-4">{album.description}</p>
                 <div className="flex items-center gap-4 mb-4">
                   <span className="text-vintage-warm/60">{album.tracks} треков</span>

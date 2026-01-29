@@ -64,9 +64,14 @@ const AlbumCard = React.memo<{
           <h4 className="font-bold text-vintage-warm text-base sm:text-lg mb-1 line-clamp-1">
             {album.title}
           </h4>
-          <p className="text-vintage-warm/70 text-xs sm:text-sm mb-2 line-clamp-1">
-            {album.artist}
-          </p>
+          <div className="flex items-center gap-2 mb-2">
+            <p className="text-vintage-warm/70 text-xs sm:text-sm line-clamp-1">
+              {album.artist}
+            </p>
+            {album.year && (
+              <span className="text-vintage-warm/50 text-xs">• {album.year}</span>
+            )}
+          </div>
           <p className="text-vintage-warm/60 text-xs sm:text-sm mb-3 line-clamp-2 hidden sm:block">
             {album.description}
           </p>

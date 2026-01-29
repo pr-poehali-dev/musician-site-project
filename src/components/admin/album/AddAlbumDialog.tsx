@@ -15,6 +15,7 @@ interface AddAlbumDialogProps {
     cover: string;
     price: number;
     description: string;
+    year?: number;
   };
   onAlbumChange: (album: any) => void;
   coverPreview: string | null;
@@ -61,6 +62,17 @@ const AddAlbumDialog: React.FC<AddAlbumDialogProps> = ({
               value={newAlbum.artist}
               onChange={(e) => onAlbumChange({...newAlbum, artist: e.target.value})}
               placeholder="Имя исполнителя"
+              className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+            />
+          </div>
+          <div>
+            <Label htmlFor="album-year" className="text-vintage-warm">Год выпуска</Label>
+            <Input
+              id="album-year"
+              type="number"
+              value={newAlbum.year || ''}
+              onChange={(e) => onAlbumChange({...newAlbum, year: e.target.value ? Number(e.target.value) : undefined})}
+              placeholder="2024"
               className="border-vintage-brown/30 focus:border-vintage-dark-brown"
             />
           </div>

@@ -52,7 +52,8 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
     artist: '',
     cover: '',
     price: 0,
-    description: ''
+    description: '',
+    year: undefined as number | undefined
   });
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
@@ -65,7 +66,8 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
     artist: '',
     cover: '',
     price: 0,
-    description: ''
+    description: '',
+    year: undefined as number | undefined
   });
   const [editCoverFile, setEditCoverFile] = useState<File | null>(null);
   const [editCoverPreview, setEditCoverPreview] = useState<string | null>(null);
@@ -96,7 +98,8 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
           artist: '',
           cover: '',
           price: 0,
-          description: ''
+          description: '',
+          year: undefined
         });
         setCoverFile(null);
         setCoverPreview(null);
@@ -182,7 +185,8 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
       artist: album.artist,
       cover: album.cover,
       price: album.price,
-      description: album.description
+      description: album.description,
+      year: album.year
     });
     setEditCoverPreview(album.cover || null);
     setShowEditAlbum(true);
@@ -223,7 +227,8 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
           artist: '',
           cover: '',
           price: 0,
-          description: ''
+          description: '',
+          year: undefined
         });
         setEditCoverFile(null);
         setEditCoverPreview(null);

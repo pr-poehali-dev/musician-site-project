@@ -28,4 +28,5 @@ export interface Album {
   tracks: number;
   description: string;
   trackList: Track[];
+  year?: number;
 }
