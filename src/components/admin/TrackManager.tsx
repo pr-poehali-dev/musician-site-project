@@ -39,7 +39,7 @@ const TrackManager: React.FC<TrackManagerProps> = ({
   };
 
   const handleAddTrack = async () => {
-    if (newTrack.title && newTrack.duration && newTrack.file && selectedAlbum) {
+    if (newTrack.title && newTrack.file && selectedAlbum) {
       const trackToSave = {
         ...newTrack,
         cover: newTrack.cover || '' // Обложка необязательна
