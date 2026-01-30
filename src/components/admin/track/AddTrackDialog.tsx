@@ -38,7 +38,7 @@ const AddTrackDialog: React.FC<AddTrackDialogProps> = ({
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [previewError, setPreviewError] = useState(false);
 
-  const isButtonDisabled = !newTrack.title || !newTrack.duration || !newTrack.file || !selectedAlbum;
+  const isButtonDisabled = !newTrack.title || !newTrack.file || !selectedAlbum;
 
   useEffect(() => {
     const loadPreviewUrl = async () => {
@@ -90,7 +90,7 @@ const AddTrackDialog: React.FC<AddTrackDialogProps> = ({
 
           <div>
             <Label htmlFor="track-duration" className="text-vintage-warm">
-              Длительность (в секундах)
+              Длительность (в секундах, необязательно)
             </Label>
             <Input
               id="track-duration"
@@ -105,6 +105,9 @@ const AddTrackDialog: React.FC<AddTrackDialogProps> = ({
                 = {Math.floor(Number(newTrack.duration) / 60)}:{(Number(newTrack.duration) % 60).toString().padStart(2, '0')}
               </p>
             )}
+            <p className="text-xs text-vintage-brown/60 mt-1">
+              Можно оставить пустым, определится автоматически при воспроизведении
+            </p>
           </div>
 
           <div>
