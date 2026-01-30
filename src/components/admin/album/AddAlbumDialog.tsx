@@ -94,13 +94,18 @@ const AddAlbumDialog: React.FC<AddAlbumDialogProps> = ({
                 </div>
               )}
               <div className="text-sm text-vintage-warm/60">или</div>
-              <Input
-                id="album-cover"
-                value={newAlbum.cover}
-                onChange={(e) => onAlbumChange({...newAlbum, cover: e.target.value})}
-                placeholder="Вставьте ссылку на обложку"
-                className="border-vintage-brown/30 focus:border-vintage-dark-brown"
-              />
+              <div>
+                <Input
+                  id="album-cover"
+                  value={newAlbum.cover}
+                  onChange={(e) => onAlbumChange({...newAlbum, cover: e.target.value})}
+                  placeholder="https://disk.yandex.ru/i/..."
+                  className="border-vintage-brown/30 focus:border-vintage-dark-brown"
+                />
+                <p className="text-xs text-vintage-warm/60 mt-1">
+                  💡 Используйте ссылку с Яндекс.Диска с /i/ для изображений
+                </p>
+              </div>
             </div>
           </div>
           <div>
