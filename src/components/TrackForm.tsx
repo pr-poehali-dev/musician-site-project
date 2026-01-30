@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
-import AudioUploader from '@/components/AudioUploader';
 
 const MUSIC_GENRES = [
   'Поп',
@@ -125,27 +124,28 @@ const TrackForm = ({ onSubmit, onCancel, albumId, initialData, isEditing = false
           Превью аудио
         </Label>
         <div className="space-y-3">
-          <AudioUploader
-            label="Загрузить превью"
-            onUploadComplete={(url, duration) => {
-              const updates: Partial<TrackFormData> = { preview_url: url };
-              if (duration && formData.duration === 0) {
-                updates.duration = duration;
-              }
-              setFormData({ ...formData, ...updates });
-            }}
-            accept="audio/*"
-          />
-          <div className="text-sm text-vintage-brown/60 text-center">или</div>
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <Icon name="Info" size={20} className="text-blue-600 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-blue-900 font-medium mb-2">Загрузите трек на Яндекс.Диск</p>
+                <ol className="text-xs text-blue-800 space-y-1 list-decimal list-inside">
+                  <li>Загрузите аудио на <a href="https://disk.yandex.ru" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600">Яндекс.Диск</a></li>
+                  <li>Нажмите "Поделиться" → "Скопировать публичную ссылку"</li>
+                  <li>Вставьте ссылку в поле ниже</li>
+                </ol>
+              </div>
+            </div>
+          </div>
           <div>
             <Label htmlFor="preview_url" className="text-sm text-vintage-brown">
-              Вставить ссылку
+              Ссылка с Яндекс.Диска
             </Label>
             <Input
               id="preview_url"
               value={formData.preview_url}
               onChange={(e) => setFormData({ ...formData, preview_url: e.target.value })}
-              placeholder="https://example.com/preview.mp3"
+              placeholder="https://disk.yandex.ru/d/..."
               type="url"
               className="border-vintage-brown/30 focus:border-vintage-warm mt-1"
             />
@@ -172,27 +172,28 @@ const TrackForm = ({ onSubmit, onCancel, albumId, initialData, isEditing = false
           Полный файл
         </Label>
         <div className="space-y-3">
-          <AudioUploader
-            label="Загрузить полный трек"
-            onUploadComplete={(url, duration) => {
-              const updates: Partial<TrackFormData> = { file_url: url };
-              if (duration && formData.duration === 0) {
-                updates.duration = duration;
-              }
-              setFormData({ ...formData, ...updates });
-            }}
-            accept="audio/*"
-          />
-          <div className="text-sm text-vintage-brown/60 text-center">или</div>
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <Icon name="Info" size={20} className="text-blue-600 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-blue-900 font-medium mb-2">Загрузите полный трек на Яндекс.Диск</p>
+                <ol className="text-xs text-blue-800 space-y-1 list-decimal list-inside">
+                  <li>Загрузите аудио на <a href="https://disk.yandex.ru" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600">Яндекс.Диск</a></li>
+                  <li>Нажмите "Поделиться" → "Скопировать публичную ссылку"</li>
+                  <li>Вставьте ссылку в поле ниже</li>
+                </ol>
+              </div>
+            </div>
+          </div>
           <div>
             <Label htmlFor="file_url" className="text-sm text-vintage-brown">
-              Вставить ссылку
+              Ссылка с Яндекс.Диска
             </Label>
             <Input
               id="file_url"
               value={formData.file_url}
               onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
-              placeholder="https://example.com/track.mp3"
+              placeholder="https://disk.yandex.ru/d/..."
               type="url"
               className="border-vintage-brown/30 focus:border-vintage-warm mt-1"
             />

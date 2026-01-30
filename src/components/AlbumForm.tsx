@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
-import AudioUploader from '@/components/AudioUploader';
 
 interface AlbumFormProps {
   onSubmit: (albumData: AlbumFormData) => Promise<void>;
@@ -75,21 +74,28 @@ const AlbumForm = ({ onSubmit, onCancel, initialData, isEditing = false }: Album
           Обложка альбома
         </Label>
         <div className="space-y-3">
-          <AudioUploader
-            label="Загрузить обложку"
-            onUploadComplete={(url) => setFormData({ ...formData, cover_url: url })}
-            accept="image/*"
-          />
-          <div className="text-sm text-vintage-brown/60 text-center">или</div>
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <Icon name="Info" size={20} className="text-blue-600 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-blue-900 font-medium mb-2">Загрузите обложку на Яндекс.Диск</p>
+                <ol className="text-xs text-blue-800 space-y-1 list-decimal list-inside">
+                  <li>Загрузите изображение на <a href="https://disk.yandex.ru" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600">Яндекс.Диск</a></li>
+                  <li>Нажмите "Поделиться" → "Скопировать публичную ссылку"</li>
+                  <li>Вставьте ссылку в поле ниже</li>
+                </ol>
+              </div>
+            </div>
+          </div>
           <div>
             <Label htmlFor="cover_url" className="text-sm text-vintage-brown">
-              Вставить ссылку
+              Ссылка с Яндекс.Диска
             </Label>
             <Input
               id="cover_url"
               value={formData.cover_url}
               onChange={(e) => setFormData({ ...formData, cover_url: e.target.value })}
-              placeholder="https://example.com/cover.jpg"
+              placeholder="https://disk.yandex.ru/i/..."
               type="url"
               className="border-vintage-brown/30 focus:border-vintage-warm mt-1"
             />

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Track } from '@/types';
-import { apiClient } from '@/utils/apiClient';
 import { incrementPlays } from '@/utils/trackStats';
+import { convertYandexDiskUrl } from '@/utils/yandexDisk';
 import FloatingPlayer from '@/components/player/FloatingPlayer';
 import PlayerCard from '@/components/player/PlayerCard';
 
@@ -118,12 +118,8 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
           
           console.log('🎵 [MusicPlayer] Загрузка трека:', currentTrack.title, 'file:', audioUrl);
           
-          // Если это ID файла из БД (audio_xxxxx), загружаем из базы данных
-          if (audioUrl.startsWith('audio_')) {
-            console.log('🔍 [MusicPlayer] Загрузка аудио из БД:', audioUrl);
-            audioUrl = await apiClient.loadMediaFile(audioUrl);
-            console.log('✅ [MusicPlayer] Аудио загружено из БД');
-          }
+          // Конвертируем ссылку Яндекс.Диска в прямую ссылку на файл
+          audioUrl = await convertYandexDiskUrl(audioUrl);
           
           audio.src = audioUrl;
           audio.load();

@@ -1,4 +1,5 @@
 import { Album, Track } from '@/types';
+import { convertYandexDiskUrl } from './yandexDisk';
 
 const API_URL = 'https://functions.poehali.dev/25aac639-cf81-4eb7-80fc-aa9a157a25e6';
 
@@ -153,7 +154,14 @@ export const musicApi = {
       const response = await fetch(`${API_URL}?path=track-file&id=${trackId}`);
       if (!response.ok) throw new Error('Failed to fetch track file');
       const data = await response.json();
-      return data.file || null;
+      const fileUrl = data.file || null;
+      
+      // Если это ссылка на Яндекс.Диск, конвертируем в прямую ссылку
+      if (fileUrl) {
+        return await convertYandexDiskUrl(fileUrl);
+      }
+      
+      return null;
     } catch (error) {
       console.error('Ошибка загрузки файла трека:', error);
       return null;

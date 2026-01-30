@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import Icon from '@/components/ui/icon';
+import { convertYandexDiskUrl } from '@/utils/yandexDisk';
 
 interface Track {
   id: number;
@@ -28,11 +29,15 @@ const AudioPlayer = ({ track, onClose }: AudioPlayerProps) => {
   const [volume, setVolume] = useState(100);
 
   useEffect(() => {
-    if (audioRef.current && track.preview_url) {
-      audioRef.current.src = track.preview_url;
-      audioRef.current.play();
-      setIsPlaying(true);
-    }
+    const loadTrack = async () => {
+      if (audioRef.current && track.preview_url) {
+        const audioUrl = await convertYandexDiskUrl(track.preview_url);
+        audioRef.current.src = audioUrl;
+        audioRef.current.play();
+        setIsPlaying(true);
+      }
+    };
+    loadTrack();
   }, [track]);
 
   useEffect(() => {
