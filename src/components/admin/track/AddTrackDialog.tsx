@@ -37,6 +37,7 @@ const AddTrackDialog: React.FC<AddTrackDialogProps> = ({
   const [previewAudioUrl, setPreviewAudioUrl] = useState<string>('');
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [previewError, setPreviewError] = useState(false);
+  const audioRef = React.useRef<HTMLAudioElement>(null);
 
   const isButtonDisabled = !newTrack.title || !newTrack.file || !selectedAlbum;
 
@@ -60,6 +61,16 @@ const AddTrackDialog: React.FC<AddTrackDialogProps> = ({
     };
     loadPreviewUrl();
   }, [newTrack.file]);
+
+  const handleAudioLoaded = () => {
+    if (audioRef.current && !newTrack.duration) {
+      const duration = Math.round(audioRef.current.duration);
+      if (duration && !isNaN(duration) && isFinite(duration)) {
+        onTrackChange({...newTrack, duration: duration.toString()});
+        console.log('✅ [AddTrackDialog] Длительность определена автоматически:', duration, 'сек');
+      }
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -105,8 +116,9 @@ const AddTrackDialog: React.FC<AddTrackDialogProps> = ({
                 = {Math.floor(Number(newTrack.duration) / 60)}:{(Number(newTrack.duration) % 60).toString().padStart(2, '0')}
               </p>
             )}
-            <p className="text-xs text-vintage-brown/60 mt-1">
-              Можно оставить пустым, определится автоматически при воспроизведении
+            <p className="text-xs text-green-700/80 mt-1 flex items-center gap-1">
+              <Icon name="Check" size={12} />
+              Определяется автоматически при загрузке трека
             </p>
           </div>
 
@@ -155,11 +167,13 @@ const AddTrackDialog: React.FC<AddTrackDialogProps> = ({
                 </div>
                 {previewAudioUrl && !loadingPreview && (
                   <audio 
+                    ref={audioRef}
                     src={previewAudioUrl} 
                     controls 
                     className="w-full"
                     style={{ height: '40px' }}
                     onError={() => setPreviewError(true)}
+                    onLoadedMetadata={handleAudioLoaded}
                   />
                 )}
                 {previewError && (
