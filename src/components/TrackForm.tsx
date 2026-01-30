@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
+import { convertYandexDiskUrl } from '@/utils/yandexDisk';
 
 const MUSIC_GENRES = [
   'Поп',
@@ -67,6 +68,50 @@ const TrackForm = ({ onSubmit, onCancel, albumId, initialData, isEditing = false
     }
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewAudioUrl, setPreviewAudioUrl] = useState<string>('');
+  const [fullAudioUrl, setFullAudioUrl] = useState<string>('');
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [loadingFull, setLoadingFull] = useState(false);
+
+  useEffect(() => {
+    const loadPreviewUrl = async () => {
+      if (formData.preview_url) {
+        setLoadingPreview(true);
+        try {
+          const url = await convertYandexDiskUrl(formData.preview_url);
+          setPreviewAudioUrl(url);
+        } catch (error) {
+          console.error('Ошибка загрузки превью:', error);
+          setPreviewAudioUrl(formData.preview_url);
+        } finally {
+          setLoadingPreview(false);
+        }
+      } else {
+        setPreviewAudioUrl('');
+      }
+    };
+    loadPreviewUrl();
+  }, [formData.preview_url]);
+
+  useEffect(() => {
+    const loadFullUrl = async () => {
+      if (formData.file_url) {
+        setLoadingFull(true);
+        try {
+          const url = await convertYandexDiskUrl(formData.file_url);
+          setFullAudioUrl(url);
+        } catch (error) {
+          console.error('Ошибка загрузки полного трека:', error);
+          setFullAudioUrl(formData.file_url);
+        } finally {
+          setLoadingFull(false);
+        }
+      } else {
+        setFullAudioUrl('');
+      }
+    };
+    loadFullUrl();
+  }, [formData.file_url]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,15 +199,33 @@ const TrackForm = ({ onSubmit, onCancel, albumId, initialData, isEditing = false
         {formData.preview_url && (
           <div className="mt-3 p-4 bg-vintage-brown/5 rounded-lg border border-vintage-brown/20">
             <div className="flex items-center gap-3 mb-2">
-              <Icon name="Play" size={16} className="text-vintage-warm" />
-              <span className="text-sm font-medium text-vintage-dark-brown">Предпросмотр превью</span>
+              {loadingPreview ? (
+                <Icon name="Loader2" size={16} className="text-vintage-warm animate-spin" />
+              ) : (
+                <Icon name="Play" size={16} className="text-vintage-warm" />
+              )}
+              <span className="text-sm font-medium text-vintage-dark-brown">
+                {loadingPreview ? 'Загрузка превью...' : 'Предпросмотр превью'}
+              </span>
             </div>
-            <audio 
-              src={formData.preview_url} 
-              controls 
-              className="w-full"
-              style={{ height: '40px' }}
-            />
+            {previewAudioUrl && !loadingPreview && (
+              <audio 
+                src={previewAudioUrl} 
+                controls 
+                className="w-full"
+                style={{ height: '40px' }}
+                onError={(e) => {
+                  console.error('Ошибка воспроизведения превью');
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            )}
+            {!loadingPreview && !previewAudioUrl && (
+              <p className="text-xs text-red-600 flex items-center gap-1">
+                <Icon name="AlertCircle" size={12} />
+                Не удалось загрузить превью. Проверьте ссылку.
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -202,15 +265,33 @@ const TrackForm = ({ onSubmit, onCancel, albumId, initialData, isEditing = false
         {formData.file_url && (
           <div className="mt-3 p-4 bg-vintage-brown/5 rounded-lg border border-vintage-brown/20">
             <div className="flex items-center gap-3 mb-2">
-              <Icon name="Music" size={16} className="text-vintage-warm" />
-              <span className="text-sm font-medium text-vintage-dark-brown">Предпросмотр полного трека</span>
+              {loadingFull ? (
+                <Icon name="Loader2" size={16} className="text-vintage-warm animate-spin" />
+              ) : (
+                <Icon name="Music" size={16} className="text-vintage-warm" />
+              )}
+              <span className="text-sm font-medium text-vintage-dark-brown">
+                {loadingFull ? 'Загрузка трека...' : 'Предпросмотр полного трека'}
+              </span>
             </div>
-            <audio 
-              src={formData.file_url} 
-              controls 
-              className="w-full"
-              style={{ height: '40px' }}
-            />
+            {fullAudioUrl && !loadingFull && (
+              <audio 
+                src={fullAudioUrl} 
+                controls 
+                className="w-full"
+                style={{ height: '40px' }}
+                onError={(e) => {
+                  console.error('Ошибка воспроизведения полного трека');
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            )}
+            {!loadingFull && !fullAudioUrl && (
+              <p className="text-xs text-red-600 flex items-center gap-1">
+                <Icon name="AlertCircle" size={12} />
+                Не удалось загрузить трек. Проверьте ссылку.
+              </p>
+            )}
           </div>
         )}
       </div>

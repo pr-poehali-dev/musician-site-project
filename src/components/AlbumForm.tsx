@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
+import { isYandexDiskUrl } from '@/utils/yandexDisk';
 
 interface AlbumFormProps {
   onSubmit: (albumData: AlbumFormData) => Promise<void>;
@@ -29,6 +30,15 @@ const AlbumForm = ({ onSubmit, onCancel, initialData, isEditing = false }: Album
     }
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
+
+  useEffect(() => {
+    if (formData.cover_url) {
+      setImageLoading(true);
+      setImageError(false);
+    }
+  }, [formData.cover_url]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +94,9 @@ const AlbumForm = ({ onSubmit, onCancel, initialData, isEditing = false }: Album
                   <li>Нажмите "Поделиться" → "Скопировать публичную ссылку"</li>
                   <li>Вставьте ссылку в поле ниже</li>
                 </ol>
+                <p className="text-xs text-blue-700 mt-2 italic">
+                  💡 Для изображений используйте ссылки с /i/ (например: disk.yandex.ru/i/...)
+                </p>
               </div>
             </div>
           </div>
@@ -103,14 +116,34 @@ const AlbumForm = ({ onSubmit, onCancel, initialData, isEditing = false }: Album
         </div>
         {formData.cover_url && (
           <div className="mt-3">
-            <img
-              src={formData.cover_url}
-              alt="Предпросмотр обложки"
-              className="w-32 h-32 object-cover rounded-lg border-2 border-vintage-brown/20"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
+            {imageLoading && (
+              <div className="w-32 h-32 flex items-center justify-center bg-vintage-brown/5 rounded-lg border-2 border-vintage-brown/20">
+                <Icon name="Loader2" size={24} className="text-vintage-warm animate-spin" />
+              </div>
+            )}
+            {!imageError && (
+              <img
+                src={formData.cover_url}
+                alt="Предпросмотр обложки"
+                className="w-32 h-32 object-cover rounded-lg border-2 border-vintage-brown/20"
+                style={{ display: imageLoading ? 'none' : 'block' }}
+                onLoad={() => setImageLoading(false)}
+                onError={() => {
+                  setImageLoading(false);
+                  setImageError(true);
+                }}
+              />
+            )}
+            {imageError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-xs text-red-600 flex items-center gap-1">
+                  <Icon name="AlertCircle" size={12} />
+                  {isYandexDiskUrl(formData.cover_url) 
+                    ? 'Не удалось загрузить изображение. Убедитесь, что ссылка публичная.'
+                    : 'Неверная ссылка на изображение.'}
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
