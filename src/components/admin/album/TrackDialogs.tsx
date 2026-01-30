@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Album, Track } from '@/types';
 import Icon from '@/components/ui/icon';
@@ -46,6 +46,7 @@ export const EditTrackDialog: React.FC<EditTrackDialogProps> = ({
       <DialogContent className="bg-vintage-cream border-vintage-brown/20">
         <DialogHeader>
           <DialogTitle className="text-vintage-warm">Редактировать трек</DialogTitle>
+          <DialogDescription className="text-vintage-brown">Измените информацию о треке</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>
@@ -187,6 +188,7 @@ export const MoveTrackDialog: React.FC<MoveTrackDialogProps> = ({
       <DialogContent className="bg-vintage-cream border-vintage-brown/20">
         <DialogHeader>
           <DialogTitle className="text-vintage-warm">Переместить трек</DialogTitle>
+          <DialogDescription className="text-vintage-brown">Выберите альбом для перемещения трека</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>

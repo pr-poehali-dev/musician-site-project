@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import Icon from '@/components/ui/icon';
 import TrackForm, { TrackFormData } from '@/components/TrackForm';
 import { useToast } from '@/hooks/use-toast';
@@ -317,6 +317,7 @@ const AlbumDetail = ({ album, token, onBack }: AlbumDetailProps) => {
         <DialogContent className="bg-vintage-cream border-vintage-brown/30">
           <DialogHeader>
             <DialogTitle className="text-vintage-dark-brown">Добавить трек</DialogTitle>
+            <DialogDescription className="text-vintage-brown">Заполните информацию о новом треке</DialogDescription>
           </DialogHeader>
           <TrackForm
             albumId={album.id}
@@ -330,6 +331,7 @@ const AlbumDetail = ({ album, token, onBack }: AlbumDetailProps) => {
         <DialogContent className="bg-vintage-cream border-vintage-brown/30">
           <DialogHeader>
             <DialogTitle className="text-vintage-dark-brown">Редактировать трек</DialogTitle>
+            <DialogDescription className="text-vintage-brown">Обновите информацию о треке</DialogDescription>
           </DialogHeader>
           {editingTrack && (
             <TrackForm

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import Icon from '@/components/ui/icon';
 
 interface AddAlbumDialogProps {
@@ -43,6 +43,7 @@ const AddAlbumDialog: React.FC<AddAlbumDialogProps> = ({
       <DialogContent className="bg-vintage-cream border-vintage-brown/20">
         <DialogHeader>
           <DialogTitle className="text-vintage-warm">Новый альбом</DialogTitle>
+          <DialogDescription className="text-vintage-brown">Создайте новый альбом</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>

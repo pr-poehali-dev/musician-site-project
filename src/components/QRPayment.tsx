@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import Icon from '@/components/ui/icon';
 import { CartItem } from '@/types';
@@ -98,6 +98,7 @@ const QRPayment: React.FC<QRPaymentProps> = ({
           <DialogTitle className="text-vintage-warm text-center text-2xl">
             Оплата через СБП
           </DialogTitle>
+          <DialogDescription className="text-vintage-brown text-center">Отсканируйте QR-код в приложении банка</DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6 text-center">

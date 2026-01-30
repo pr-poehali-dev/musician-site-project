@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import AdminPanel from '@/components/AdminPanel';
 import { Track, Album } from '@/types';
@@ -43,6 +43,9 @@ const AdminLogin: React.FC<AdminLoginProps> = ({
         <DialogHeader>
           <DialogTitle className="text-vintage-warm flex items-center justify-between">
             Админ панель
+          </DialogTitle>
+          <DialogDescription className="text-vintage-brown">
+            Управление альбомами и треками
             <Button 
               onClick={handleAdminLogout}
               variant="outline"
