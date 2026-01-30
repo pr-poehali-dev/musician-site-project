@@ -1,4 +1,5 @@
 {
+  "yandex-proxy": "https://functions.poehali.dev/2ed609fb-2133-45c0-be31-27b500f24161",
   "analytics": "https://functions.poehali.dev/c307ce78-b70c-4224-943f-1036ec49967b",
   "track-visit": "https://functions.poehali.dev/3d661569-e3dc-4578-8135-90a94a152d74",
   "password-reset": "https://functions.poehali.dev/40703186-f784-40d2-bade-49faef36c0e8",
