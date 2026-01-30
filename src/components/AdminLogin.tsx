@@ -43,9 +43,6 @@ const AdminLogin: React.FC<AdminLoginProps> = ({
         <DialogHeader>
           <DialogTitle className="text-vintage-warm flex items-center justify-between">
             Админ панель
-          </DialogTitle>
-          <DialogDescription className="text-vintage-brown">
-            Управление альбомами и треками
             <Button 
               onClick={handleAdminLogout}
               variant="outline"
@@ -55,6 +52,9 @@ const AdminLogin: React.FC<AdminLoginProps> = ({
               Выйти
             </Button>
           </DialogTitle>
+          <DialogDescription className="text-vintage-brown">
+            Управление альбомами и треками
+          </DialogDescription>
         </DialogHeader>
         
         <AdminPanel 
