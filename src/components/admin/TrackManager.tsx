@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Track, Album } from '@/types';
 import AddTrackDialog from './track/AddTrackDialog';
 import TrackListItem from './track/TrackListItem';
+import { convertYandexDiskUrl } from '@/utils/yandexDisk';
 
 interface TrackManagerProps {
   albums: Album[];
@@ -40,9 +41,12 @@ const TrackManager: React.FC<TrackManagerProps> = ({
 
   const handleAddTrack = async () => {
     if (newTrack.title && newTrack.file && selectedAlbum) {
+      const proxyFileUrl = await convertYandexDiskUrl(newTrack.file);
+      
       const trackToSave = {
         ...newTrack,
-        cover: newTrack.cover || '' // Обложка необязательна
+        file: proxyFileUrl,
+        cover: newTrack.cover || ''
       };
       
       onAddTrack(selectedAlbum, trackToSave);
