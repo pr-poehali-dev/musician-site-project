@@ -156,9 +156,18 @@ export const musicApi = {
       const data = await response.json();
       const fileUrl = data.file || null;
       
-      // Если это ссылка на Яндекс.Диск, конвертируем в прямую ссылку
-      if (fileUrl) {
+      if (!fileUrl) return null;
+      
+      if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
         return await convertYandexDiskUrl(fileUrl);
+      }
+      
+      if (fileUrl.startsWith('audio_')) {
+        const response = await fetch(`${API_URL}?path=track-stream&file_key=${encodeURIComponent(fileUrl)}`);
+        if (response.redirected) {
+          return response.url;
+        }
+        return `${API_URL}?path=track-stream&file_key=${encodeURIComponent(fileUrl)}`;
       }
       
       return null;

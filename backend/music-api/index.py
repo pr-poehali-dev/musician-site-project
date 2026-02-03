@@ -93,6 +93,20 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'isBase64Encoded': False,
                     'body': json.dumps(result, default=str)
                 }
+            elif path == 'track-stream':
+                file_key = event.get('queryStringParameters', {}).get('file_key')
+                if not file_key:
+                    return error_response('File key is required', 400)
+                cdn_url = get_cdn_url(file_key)
+                return {
+                    'statusCode': 302,
+                    'headers': {
+                        'Location': cdn_url,
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'isBase64Encoded': False,
+                    'body': ''
+                }
             elif path == 'stats':
                 track_id = event.get('queryStringParameters', {}).get('track_id')
                 result = get_stats(cursor, track_id)
@@ -417,6 +431,10 @@ def get_media_file(cursor, media_id: str) -> Optional[Dict]:
     safe_id = media_id.replace("'", "''")
     cursor.execute(f"SELECT * FROM media_files WHERE id = '{safe_id}'")
     return cursor.fetchone()
+
+def get_cdn_url(file_key: str) -> str:
+    aws_key = os.environ.get('AWS_ACCESS_KEY_ID', '')
+    return f"https://cdn.poehali.dev/projects/{aws_key}/bucket/{file_key}.mp3"
 
 def get_top_tracks(cursor, username: Optional[str] = None, limit: int = 5) -> List[Dict]:
     if username:
