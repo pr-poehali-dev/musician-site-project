@@ -163,10 +163,6 @@ export const musicApi = {
       }
       
       if (fileUrl.startsWith('audio_')) {
-        const response = await fetch(`${API_URL}?path=track-stream&file_key=${encodeURIComponent(fileUrl)}`);
-        if (response.redirected) {
-          return response.url;
-        }
         return `${API_URL}?path=track-stream&file_key=${encodeURIComponent(fileUrl)}`;
       }
       

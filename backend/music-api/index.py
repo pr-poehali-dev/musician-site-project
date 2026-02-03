@@ -97,15 +97,31 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 file_key = event.get('queryStringParameters', {}).get('file_key')
                 if not file_key:
                     return error_response('File key is required', 400)
-                cdn_url = get_cdn_url(file_key)
+                
+                parts = file_key.split('_')
+                if len(parts) >= 2:
+                    clean_key = f"{parts[0]}_{parts[1]}"
+                else:
+                    clean_key = file_key
+                
+                safe_key = clean_key.replace("'", "''")
+                cursor.execute(f"SELECT data, file_type FROM media_files WHERE id = '{safe_key}'")
+                result = cursor.fetchone()
+                
+                if not result or not result.get('data'):
+                    return error_response('Audio file not found', 404)
+                
+                audio_data = result['data']
+                
                 return {
-                    'statusCode': 302,
+                    'statusCode': 200,
                     'headers': {
-                        'Location': cdn_url,
-                        'Access-Control-Allow-Origin': '*'
+                        'Content-Type': 'audio/mpeg',
+                        'Access-Control-Allow-Origin': '*',
+                        'Cache-Control': 'public, max-age=31536000'
                     },
-                    'isBase64Encoded': False,
-                    'body': ''
+                    'isBase64Encoded': True,
+                    'body': audio_data
                 }
             elif path == 'stats':
                 track_id = event.get('queryStringParameters', {}).get('track_id')
