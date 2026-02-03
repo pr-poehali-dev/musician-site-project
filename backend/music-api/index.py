@@ -113,6 +113,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 audio_data = result['data']
                 
+                if audio_data.startswith('http://') or audio_data.startswith('https://'):
+                    return error_response('Audio file expired (Yandex.Disk link), please re-upload', 410)
+                
+                if audio_data.startswith('data:audio/'):
+                    audio_data = audio_data.split(',', 1)[1]
+                
                 return {
                     'statusCode': 200,
                     'headers': {
