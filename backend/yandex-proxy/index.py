@@ -54,43 +54,14 @@ def handler(event: dict, context) -> dict:
         
         download_url = data['href']
         
-        headers = {}
-        request_headers = event.get('headers', {})
-        range_header = request_headers.get('range') or request_headers.get('Range')
-        if range_header:
-            headers['Range'] = range_header
-        
-        req = urllib.request.Request(download_url, headers=headers)
-        
-        with urllib.request.urlopen(req, timeout=30) as file_response:
-            file_data = file_response.read()
-            content_type = file_response.headers.get('Content-Type', 'audio/mpeg')
-            content_length = file_response.headers.get('Content-Length')
-            content_range = file_response.headers.get('Content-Range')
-            status_code = 200 if not range_header else 206
-            
-            response_headers = {
+        return {
+            'statusCode': 200,
+            'headers': {
                 'Access-Control-Allow-Origin': '*',
-                'Content-Type': content_type,
-                'Accept-Ranges': 'bytes',
-                'Cache-Control': 'public, max-age=3600'
-            }
-            
-            if content_length:
-                response_headers['Content-Length'] = content_length
-            
-            if content_range:
-                response_headers['Content-Range'] = content_range
-            
-            import base64
-            body = base64.b64encode(file_data).decode('utf-8')
-            
-            return {
-                'statusCode': status_code,
-                'headers': response_headers,
-                'body': body,
-                'isBase64Encoded': True
-            }
+                'Content-Type': 'application/json'
+            },
+            'body': json.dumps({'url': download_url})
+        }
     
     except HTTPError as e:
         return {

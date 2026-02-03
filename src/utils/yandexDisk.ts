@@ -44,24 +44,36 @@ export async function convertYandexDiskUrl(publicUrl: string): Promise<string> {
   const now = Date.now();
   
   if (cached && (now - cached.timestamp) < CACHE_DURATION) {
-    console.log('✅ [YandexDisk] Использую кешированную прокси-ссылку');
+    console.log('✅ [YandexDisk] Использую кешированную прямую ссылку');
     return cached.proxyUrl;
   }
 
-  const proxyUrl = `${PROXY_URL}?url=${encodeURIComponent(publicUrl)}`;
-  
-  urlCache.set(publicUrl, {
-    proxyUrl,
-    timestamp: now
-  });
-  
-  console.log('✅ [YandexDisk] Создана новая прокси-ссылка (кеш: 30 мин)');
-  
-  if (urlCache.size > 50) {
-    cleanExpiredCache();
+  try {
+    const response = await fetch(`${PROXY_URL}?url=${encodeURIComponent(publicUrl)}`);
+    
+    if (!response.ok) {
+      throw new Error(`Proxy error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const directUrl = data.url;
+    
+    urlCache.set(publicUrl, {
+      proxyUrl: directUrl,
+      timestamp: now
+    });
+    
+    console.log('✅ [YandexDisk] Получена прямая ссылка на файл (кеш: 30 мин)');
+    
+    if (urlCache.size > 50) {
+      cleanExpiredCache();
+    }
+    
+    return directUrl;
+  } catch (error) {
+    console.error('❌ [YandexDisk] Ошибка получения прямой ссылки:', error);
+    return publicUrl;
   }
-  
-  return proxyUrl;
 }
 
 /**
