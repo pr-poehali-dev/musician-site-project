@@ -159,7 +159,7 @@ export const musicApi = {
       if (!fileUrl) return null;
       
       if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
-        return await convertYandexDiskUrl(fileUrl);
+        return `${API_URL}?path=track-stream&file_key=${encodeURIComponent(trackId)}`;
       }
       
       if (fileUrl.startsWith('audio_')) {
