@@ -89,9 +89,20 @@ const AlbumView: React.FC<AlbumViewProps> = ({
           return;
         }
         
-        console.log('✅ [AlbumView] Файл получен, размер:', audioUrl.length, 'символов');
+        console.log('✅ [AlbumView] Файл получен, URL:', audioUrl);
         
-        audio.src = audioUrl;
+        const response = await fetch(audioUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch audio: ${response.status}`);
+        }
+        
+        const audioBlob = await response.blob();
+        console.log('✅ [AlbumView] Blob создан, размер:', (audioBlob.size / 1024 / 1024).toFixed(2), 'MB');
+        
+        const blobUrl = URL.createObjectURL(audioBlob);
+        console.log('✅ [AlbumView] Blob URL создан:', blobUrl);
+        
+        audio.src = blobUrl;
         audio.load();
         setCurrentTrack(track);
         setCurrentTime(0);
