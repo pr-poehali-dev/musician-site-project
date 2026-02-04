@@ -118,13 +118,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 if audio_data.startswith('http://') or audio_data.startswith('https://'):
                     import urllib.request
+                    import base64
                     try:
+                        print(f'[DEBUG] Downloading audio from: {audio_data[:100]}...')
                         req = urllib.request.Request(audio_data, headers={'User-Agent': 'Mozilla/5.0'})
-                        with urllib.request.urlopen(req, timeout=30) as response:
+                        with urllib.request.urlopen(req, timeout=50) as response:
                             file_content = response.read()
-                            import base64
-                            audio_data = base64.b64encode(file_content).decode('utf-8')
+                            print(f'[DEBUG] Downloaded {len(file_content)} bytes, converting to base64...')
+                            audio_data_b64 = base64.b64encode(file_content).decode('utf-8')
+                            print(f'[DEBUG] Base64 conversion complete, updating cache...')
+                            cursor.execute(f"UPDATE media_files SET data = '{audio_data_b64.replace(chr(39), chr(39)*2)}' WHERE id = '{safe_key}'")
+                            conn.commit()
+                            print(f'[DEBUG] Cache updated, returning audio data')
+                            audio_data = audio_data_b64
                     except Exception as e:
+                        print(f'[ERROR] Failed to download audio: {str(e)}')
                         return error_response(f'Failed to fetch audio from Yandex.Disk: {str(e)}', 502)
                 
                 if audio_data.startswith('data:audio/'):
