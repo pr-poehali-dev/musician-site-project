@@ -116,25 +116,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 audio_data = result['data']
                 
-                if audio_data.startswith('http://') or audio_data.startswith('https://'):
-                    import urllib.request
-                    import base64
-                    try:
-                        print(f'[DEBUG] Downloading audio from: {audio_data[:100]}...')
-                        req = urllib.request.Request(audio_data, headers={'User-Agent': 'Mozilla/5.0'})
-                        with urllib.request.urlopen(req, timeout=50) as response:
-                            file_content = response.read()
-                            print(f'[DEBUG] Downloaded {len(file_content)} bytes, converting to base64...')
-                            audio_data_b64 = base64.b64encode(file_content).decode('utf-8')
-                            print(f'[DEBUG] Base64 conversion complete, updating cache...')
-                            cursor.execute(f"UPDATE media_files SET data = '{audio_data_b64.replace(chr(39), chr(39)*2)}' WHERE id = '{safe_key}'")
-                            conn.commit()
-                            print(f'[DEBUG] Cache updated, returning audio data')
-                            audio_data = audio_data_b64
-                    except Exception as e:
-                        print(f'[ERROR] Failed to download audio: {str(e)}')
-                        return error_response(f'Failed to fetch audio from Yandex.Disk: {str(e)}', 502)
-                
                 if audio_data.startswith('data:audio/'):
                     audio_data = audio_data.split(',', 1)[1]
                 
@@ -634,8 +615,21 @@ def create_track(cursor, conn, data: Dict) -> Dict:
     file_id = None
     if file_data:
         if file_data.startswith('http://') or file_data.startswith('https://'):
-            file_id = f"audio_{track_id}"
-            save_media_file(cursor, conn, file_id, 'audio', file_data)
+            import urllib.request
+            import base64
+            print(f'[DEBUG] Downloading audio from Yandex.Disk: {file_data[:100]}...')
+            try:
+                req = urllib.request.Request(file_data, headers={'User-Agent': 'Mozilla/5.0'})
+                with urllib.request.urlopen(req, timeout=45) as response:
+                    file_content = response.read()
+                    print(f'[DEBUG] Downloaded {len(file_content)} bytes')
+                    audio_data_b64 = base64.b64encode(file_content).decode('utf-8')
+                    file_id = f"audio_{track_id}"
+                    save_media_file(cursor, conn, file_id, 'audio', audio_data_b64)
+                    print(f'[DEBUG] Audio cached as base64 in media_files')
+            except Exception as e:
+                print(f'[ERROR] Failed to download audio during track creation: {str(e)}')
+                raise Exception(f'Не удалось загрузить аудиофайл с Яндекс.Диска: {str(e)}')
         elif file_data.startswith('data:'):
             file_id = f"audio_{track_id}"
             save_media_file(cursor, conn, file_id, 'audio', file_data)
@@ -709,8 +703,21 @@ def update_track(cursor, conn, track_id: str, data: Dict) -> Dict:
     file_id = None
     if file_data:
         if file_data.startswith('http://') or file_data.startswith('https://'):
-            file_id = f"audio_{track_id}"
-            save_media_file(cursor, conn, file_id, 'audio', file_data)
+            import urllib.request
+            import base64
+            print(f'[DEBUG] Downloading audio from Yandex.Disk: {file_data[:100]}...')
+            try:
+                req = urllib.request.Request(file_data, headers={'User-Agent': 'Mozilla/5.0'})
+                with urllib.request.urlopen(req, timeout=45) as response:
+                    file_content = response.read()
+                    print(f'[DEBUG] Downloaded {len(file_content)} bytes')
+                    audio_data_b64 = base64.b64encode(file_content).decode('utf-8')
+                    file_id = f"audio_{track_id}"
+                    save_media_file(cursor, conn, file_id, 'audio', audio_data_b64)
+                    print(f'[DEBUG] Audio cached as base64 in media_files')
+            except Exception as e:
+                print(f'[ERROR] Failed to download audio during track update: {str(e)}')
+                raise Exception(f'Не удалось загрузить аудиофайл с Яндекс.Диска: {str(e)}')
         elif file_data.startswith('data:'):
             file_id = f"audio_{track_id}"
             save_media_file(cursor, conn, file_id, 'audio', file_data)
