@@ -18,6 +18,25 @@ def get_db_connection():
         raise Exception('DATABASE_URL not found')
     return psycopg2.connect(database_url, cursor_factory=RealDictCursor)
 
+def upload_to_s3(file_content: bytes, key: str, content_type: str) -> str:
+    import boto3
+    
+    s3 = boto3.client('s3',
+        endpoint_url='https://bucket.poehali.dev',
+        aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+        aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY']
+    )
+    
+    s3.put_object(
+        Bucket='files',
+        Key=key,
+        Body=file_content,
+        ContentType=content_type
+    )
+    
+    cdn_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
+    return cdn_url
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
     
@@ -72,7 +91,20 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
         
         if method == 'GET':
-            if path == 'convert-urls':
+            if path == 'migrate-to-s3':
+                result = migrate_audio_to_s3(cursor, conn)
+                cursor.close()
+                conn.close()
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'isBase64Encoded': False,
+                    'body': json.dumps(result, default=str)
+                }
+            elif path == 'convert-urls':
                 result = convert_urls_to_base64(cursor, conn)
                 cursor.close()
                 conn.close()
@@ -128,6 +160,19 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     return error_response('Audio file not found', 404)
                 
                 audio_data = result['data']
+                
+                if audio_data.startswith('https://cdn.poehali.dev/'):
+                    cursor.close()
+                    conn.close()
+                    return {
+                        'statusCode': 302,
+                        'headers': {
+                            'Location': audio_data,
+                            'Access-Control-Allow-Origin': '*'
+                        },
+                        'isBase64Encoded': False,
+                        'body': ''
+                    }
                 
                 if audio_data.startswith('data:audio/'):
                     audio_data = audio_data.split(',', 1)[1]
@@ -197,20 +242,23 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 if data.startswith('http://') or data.startswith('https://'):
                     import urllib.request
-                    import base64
                     print(f'[DEBUG] Downloading media from Yandex.Disk: {data[:100]}...')
                     try:
                         req = urllib.request.Request(data, headers={'User-Agent': 'Mozilla/5.0'})
                         with urllib.request.urlopen(req, timeout=45) as response:
                             file_content = response.read()
-                            print(f'[DEBUG] Downloaded {len(file_content)} bytes')
-                            data = base64.b64encode(file_content).decode('utf-8')
-                            print(f'[DEBUG] Converted to base64, ready to save')
+                            print(f'[DEBUG] Downloaded {len(file_content)} bytes, uploading to S3...')
+                            
+                            s3_key = f'audio/{media_id}.mp3'
+                            s3_url = upload_to_s3(file_content, s3_key, 'audio/mpeg')
+                            print(f'[DEBUG] Uploaded to S3: {s3_url}')
+                            
+                            data = s3_url
                     except Exception as e:
-                        print(f'[ERROR] Failed to download media: {str(e)}')
+                        print(f'[ERROR] Failed to download/upload media: {str(e)}')
                         cursor.close()
                         conn.close()
-                        return error_response(f'Не удалось загрузить файл с Яндекс.Диска: {str(e)}', 502)
+                        return error_response(f'Не удалось загрузить файл: {str(e)}', 502)
                 
                 result = save_media_file(cursor, conn, media_id, file_type, data)
                 cursor.close()
@@ -1125,6 +1173,53 @@ def create_web_order(cursor, conn, data: Dict) -> Dict:
         'success': True,
         'order_id': order_id,
         'message': 'Заказ успешно создан!'
+    }
+
+def migrate_audio_to_s3(cursor, conn) -> Dict:
+    import base64
+    
+    cursor.execute("SELECT id, data FROM media_files WHERE file_type = 'audio' AND data NOT LIKE 'https://cdn.poehali.dev/%' LIMIT 10")
+    audio_files = cursor.fetchall()
+    
+    migrated = 0
+    failed = []
+    
+    for file_record in audio_files:
+        file_id = file_record['id']
+        base64_data = file_record['data']
+        
+        try:
+            print(f'[DEBUG] Migrating {file_id} to S3...')
+            
+            if base64_data.startswith('data:audio/'):
+                base64_data = base64_data.split(',', 1)[1]
+            
+            file_content = base64.b64decode(base64_data)
+            print(f'[DEBUG] Decoded {len(file_content)} bytes')
+            
+            s3_key = f'audio/{file_id}.mp3'
+            s3_url = upload_to_s3(file_content, s3_key, 'audio/mpeg')
+            print(f'[DEBUG] Uploaded to S3: {s3_url}')
+            
+            safe_id = file_id.replace("'", "''")
+            safe_url = s3_url.replace("'", "''")
+            cursor.execute(f"UPDATE media_files SET data = '{safe_url}' WHERE id = '{safe_id}'")
+            conn.commit()
+            
+            migrated += 1
+            print(f'[DEBUG] ✓ Migrated {file_id} to S3')
+        except Exception as e:
+            print(f'[ERROR] Failed to migrate {file_id}: {str(e)}')
+            failed.append({'id': file_id, 'error': str(e)})
+            import traceback
+            print(traceback.format_exc())
+    
+    return {
+        'success': True,
+        'migrated': migrated,
+        'failed': len(failed),
+        'failed_files': failed,
+        'remaining': 'call again to migrate more files'
     }
 
 def convert_urls_to_base64(cursor, conn) -> Dict:
