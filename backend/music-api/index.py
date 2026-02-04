@@ -624,11 +624,15 @@ def create_track(cursor, conn, data: Dict) -> Dict:
     now = datetime.now().isoformat()
     
     file_id = None
-    if file_data and len(file_data) > 100:
-        file_id = f"audio_{track_id}"
-        save_media_file(cursor, conn, file_id, 'audio', file_data)
-    elif file_data and len(file_data) > 0 and len(file_data) < 100:
-        file_id = file_data
+    if file_data:
+        if file_data.startswith('http://') or file_data.startswith('https://'):
+            file_id = f"audio_{track_id}"
+            save_media_file(cursor, conn, file_id, 'audio', file_data)
+        elif file_data.startswith('data:'):
+            file_id = f"audio_{track_id}"
+            save_media_file(cursor, conn, file_id, 'audio', file_data)
+        else:
+            file_id = file_data
     
     cover_id = None
     if cover_data and len(cover_data) > 100:
@@ -695,11 +699,15 @@ def update_track(cursor, conn, track_id: str, data: Dict) -> Dict:
     now = datetime.now().isoformat()
     
     file_id = None
-    if file_data and len(file_data) > 100:
-        file_id = f"audio_{track_id}"
-        save_media_file(cursor, conn, file_id, 'audio', file_data)
-    elif file_data and len(file_data) > 0 and len(file_data) < 100:
-        file_id = file_data
+    if file_data:
+        if file_data.startswith('http://') or file_data.startswith('https://'):
+            file_id = f"audio_{track_id}"
+            save_media_file(cursor, conn, file_id, 'audio', file_data)
+        elif file_data.startswith('data:'):
+            file_id = f"audio_{track_id}"
+            save_media_file(cursor, conn, file_id, 'audio', file_data)
+        else:
+            file_id = file_data
     
     file_value = f"'{file_id}'" if file_id else 'NULL'
     cursor.execute(f'''

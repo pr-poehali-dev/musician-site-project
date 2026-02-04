@@ -35,11 +35,7 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
     price: 0,
     file: ''
   });
-  const [editTrackFile, setEditTrackFile] = useState<File | null>(null);
-  const [editTrackFileLoading, setEditTrackFileLoading] = useState(false);
-  const [editTrackFileSaving, setEditTrackFileSaving] = useState(false);
-  const [editTrackFilePath, setEditTrackFilePath] = useState<string | null>(null);
-  const [editFileInputKey, setEditFileInputKey] = useState(Date.now());
+
   const [movingTrack, setMovingTrack] = useState<{track: Track, albumId: string} | null>(null);
   const [showMoveTrack, setShowMoveTrack] = useState(false);
   const [targetAlbumId, setTargetAlbumId] = useState('');
@@ -271,44 +267,7 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
     setShowEditTrack(true);
   }, []);
 
-  const handleEditTrackFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    setEditTrackFile(file);
-    setEditTrackFileLoading(true);
-    setEditTrackFilePath(null);
 
-    const audioUrl = URL.createObjectURL(file);
-    const audio = new Audio();
-    audio.src = audioUrl;
-    audio.addEventListener('loadedmetadata', () => {
-      const minutes = Math.floor(audio.duration / 60);
-      const seconds = Math.floor(audio.duration % 60);
-      const duration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-      setEditTrackData(prev => ({ ...prev, duration }));
-      setEditTrackFileLoading(false);
-    });
-  }, []);
-
-  const handleSaveEditTrackFile = useCallback(async () => {
-    if (!editTrackFile) return;
-    
-    setEditTrackFileSaving(true);
-    try {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const base64 = e.target?.result as string;
-        setEditTrackData(prev => ({ ...prev, file: base64 }));
-        setEditTrackFilePath(base64);
-        setEditTrackFileSaving(false);
-      };
-      reader.readAsDataURL(editTrackFile);
-    } catch (error) {
-      console.error('Ошибка конвертации файла:', error);
-      setEditTrackFileSaving(false);
-    }
-  }, [editTrackFile]);
 
   const handleSaveEditTrack = useCallback(() => {
     if (editingTrack && editTrackData.title && editTrackData.duration) {
@@ -321,11 +280,6 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
         price: 0,
         file: ''
       });
-      setEditTrackFile(null);
-      setEditTrackFileLoading(false);
-      setEditTrackFileSaving(false);
-      setEditTrackFilePath(null);
-      setEditFileInputKey(Date.now());
     }
   }, [editingTrack, editTrackData, onEditTrack]);
 
@@ -453,13 +407,6 @@ const AlbumManager: React.FC<AlbumManagerProps> = ({
         editTrackData={editTrackData}
         onTrackDataChange={setEditTrackData}
         onSaveEditTrack={handleSaveEditTrack}
-        onFileUpload={handleEditTrackFileUpload}
-        uploadedFile={editTrackFile}
-        isUploading={editTrackFileLoading}
-        isSaving={editTrackFileSaving}
-        savedFilePath={editTrackFilePath}
-        onSaveAudioFile={handleSaveEditTrackFile}
-        fileInputKey={editFileInputKey}
       />
 
       <EditAlbumDialog
