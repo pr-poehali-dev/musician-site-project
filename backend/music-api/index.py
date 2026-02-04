@@ -98,13 +98,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 if not file_key:
                     return error_response('File key is required', 400)
                 
-                parts = file_key.split('_')
-                if len(parts) >= 2:
-                    clean_key = f"{parts[0]}_{parts[1]}"
-                else:
-                    clean_key = file_key
+                media_file_id = file_key
+                if not file_key.startswith('audio_'):
+                    safe_track_id = file_key.replace("'", "''")
+                    cursor.execute(f"SELECT file FROM tracks WHERE id = '{safe_track_id}'")
+                    track_result = cursor.fetchone()
+                    if not track_result or not track_result.get('file'):
+                        return error_response('Track not found', 404)
+                    media_file_id = track_result['file']
                 
-                safe_key = clean_key.replace("'", "''")
+                safe_key = media_file_id.replace("'", "''")
                 cursor.execute(f"SELECT data, file_type FROM media_files WHERE id = '{safe_key}'")
                 result = cursor.fetchone()
                 
