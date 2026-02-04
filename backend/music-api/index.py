@@ -72,7 +72,20 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
         
         if method == 'GET':
-            if path == 'albums':
+            if path == 'convert-urls':
+                result = convert_urls_to_base64(cursor, conn)
+                cursor.close()
+                conn.close()
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'isBase64Encoded': False,
+                    'body': json.dumps(result, default=str)
+                }
+            elif path == 'albums':
                 result = get_albums(cursor)
             elif path == 'tracks':
                 album_id = event.get('queryStringParameters', {}).get('album_id')
@@ -181,6 +194,24 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 if not media_id or not data:
                     return error_response('Media ID and data are required', 400)
                 print(f'[DEBUG] Saving media file: {media_id}, type: {file_type}, size: {len(data)}')
+                
+                if data.startswith('http://') or data.startswith('https://'):
+                    import urllib.request
+                    import base64
+                    print(f'[DEBUG] Downloading media from Yandex.Disk: {data[:100]}...')
+                    try:
+                        req = urllib.request.Request(data, headers={'User-Agent': 'Mozilla/5.0'})
+                        with urllib.request.urlopen(req, timeout=45) as response:
+                            file_content = response.read()
+                            print(f'[DEBUG] Downloaded {len(file_content)} bytes')
+                            data = base64.b64encode(file_content).decode('utf-8')
+                            print(f'[DEBUG] Converted to base64, ready to save')
+                    except Exception as e:
+                        print(f'[ERROR] Failed to download media: {str(e)}')
+                        cursor.close()
+                        conn.close()
+                        return error_response(f'Не удалось загрузить файл с Яндекс.Диска: {str(e)}', 502)
+                
                 result = save_media_file(cursor, conn, media_id, file_type, data)
                 cursor.close()
                 conn.close()
@@ -1100,4 +1131,40 @@ def create_web_order(cursor, conn, data: Dict) -> Dict:
         'success': True,
         'order_id': order_id,
         'message': 'Заказ успешно создан!'
+    }
+
+def convert_urls_to_base64(cursor, conn) -> Dict:
+    import urllib.request
+    import base64
+    
+    cursor.execute("SELECT id, data FROM media_files WHERE file_type = 'audio' AND data LIKE 'http%'")
+    url_files = cursor.fetchall()
+    
+    converted = 0
+    failed = []
+    
+    for file_record in url_files:
+        file_id = file_record['id']
+        url = file_record['data']
+        
+        try:
+            print(f'[DEBUG] Converting {file_id}: {url[:100]}...')
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=45) as response:
+                file_content = response.read()
+                audio_data_b64 = base64.b64encode(file_content).decode('utf-8')
+                safe_id = file_id.replace("'", "''")
+                cursor.execute(f"UPDATE media_files SET data = '{audio_data_b64.replace(chr(39), chr(39)*2)}' WHERE id = '{safe_id}'")
+                conn.commit()
+                converted += 1
+                print(f'[DEBUG] ✓ Converted {file_id} ({len(file_content)} bytes)')
+        except Exception as e:
+            print(f'[ERROR] Failed to convert {file_id}: {str(e)}')
+            failed.append({'id': file_id, 'error': str(e)})
+    
+    return {
+        'success': True,
+        'converted': converted,
+        'failed': len(failed),
+        'failed_files': failed
     }
