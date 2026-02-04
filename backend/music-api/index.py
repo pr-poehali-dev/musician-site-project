@@ -114,7 +114,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 audio_data = result['data']
                 
                 if audio_data.startswith('http://') or audio_data.startswith('https://'):
-                    return error_response('Audio file expired (Yandex.Disk link), please re-upload', 410)
+                    import urllib.request
+                    try:
+                        req = urllib.request.Request(audio_data, headers={'User-Agent': 'Mozilla/5.0'})
+                        with urllib.request.urlopen(req, timeout=30) as response:
+                            file_content = response.read()
+                            import base64
+                            audio_data = base64.b64encode(file_content).decode('utf-8')
+                    except Exception as e:
+                        return error_response(f'Failed to fetch audio from Yandex.Disk: {str(e)}', 502)
                 
                 if audio_data.startswith('data:audio/'):
                     audio_data = audio_data.split(',', 1)[1]
