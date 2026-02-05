@@ -118,7 +118,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <h4 className="text-lg font-bold text-blue-100">Email</h4>
-                  <p className="text-blue-200">music@dmitry-shmelidze.ru</p>
+                  <p className="text-blue-200">d.shmelidze@mail.ru</p>
                 </div>
               </div>
             </div>
@@ -126,11 +126,11 @@ const Contact = () => {
             <div className="bg-purple-900/30 rounded-2xl p-6 backdrop-blur-sm border border-purple-500/30">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-violet-600 rounded-full flex items-center justify-center mr-4">
-                  <Icon name="Phone" size={24} className="text-white" />
+                  <Icon name="Send" size={24} className="text-white" />
                 </div>
                 <div>
-                  <h4 className="text-lg font-bold text-purple-100">Телефон</h4>
-                  <p className="text-purple-200">+7 (999) 123-45-67</p>
+                  <h4 className="text-lg font-bold text-purple-100">Telegram</h4>
+                  <p className="text-purple-200">@dshmelidze</p>
                 </div>
               </div>
             </div>
@@ -142,7 +142,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <h4 className="text-lg font-bold text-emerald-100">Местоположение</h4>
-                  <p className="text-emerald-200">Москва, Россия</p>
+                  <p className="text-emerald-200">Россия, Луганск</p>
                 </div>
               </div>
             </div>
