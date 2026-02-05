@@ -31,7 +31,11 @@ def upload_to_s3(file_content: bytes, key: str, content_type: str) -> str:
         Bucket='files',
         Key=key,
         Body=file_content,
-        ContentType=content_type
+        ContentType=content_type,
+        CacheControl='public, max-age=31536000',
+        Metadata={
+            'Access-Control-Allow-Origin': '*'
+        }
     )
     
     cdn_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
@@ -162,22 +166,19 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 audio_data = result['data']
                 
                 if audio_data.startswith('https://cdn.poehali.dev/'):
-                    import urllib.request
-                    import base64
-                    
-                    print(f'[DEBUG] Proxying S3 file: {audio_data}')
-                    try:
-                        req = urllib.request.Request(audio_data, headers={'User-Agent': 'Mozilla/5.0'})
-                        with urllib.request.urlopen(req, timeout=30) as response:
-                            file_content = response.read()
-                            audio_data = base64.b64encode(file_content).decode('utf-8')
-                            print(f'[DEBUG] Proxied {len(file_content)} bytes')
-                    except Exception as e:
-                        print(f'[ERROR] Failed to proxy S3 file: {str(e)}')
-                        cursor.close()
-                        conn.close()
-                        return error_response(f'Failed to load audio: {str(e)}', 502)
-                elif audio_data.startswith('data:audio/'):
+                    cursor.close()
+                    conn.close()
+                    return {
+                        'statusCode': 200,
+                        'headers': {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'
+                        },
+                        'isBase64Encoded': False,
+                        'body': json.dumps({'url': audio_data, 'type': 'redirect'})
+                    }
+                
+                if audio_data.startswith('data:audio/'):
                     audio_data = audio_data.split(',', 1)[1]
                 
                 cursor.close()

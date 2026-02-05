@@ -96,13 +96,25 @@ const AlbumView: React.FC<AlbumViewProps> = ({
           throw new Error(`Failed to fetch audio: ${response.status}`);
         }
         
-        const audioBlob = await response.blob();
-        console.log('✅ [AlbumView] Blob создан, размер:', (audioBlob.size / 1024 / 1024).toFixed(2), 'MB');
+        const contentType = response.headers.get('content-type');
         
-        const blobUrl = URL.createObjectURL(audioBlob);
-        console.log('✅ [AlbumView] Blob URL создан:', blobUrl);
-        
-        audio.src = blobUrl;
+        if (contentType?.includes('application/json')) {
+          const data = await response.json();
+          if (data.type === 'redirect' && data.url) {
+            console.log('✅ [AlbumView] Получен CDN URL:', data.url);
+            audio.src = data.url;
+          } else {
+            throw new Error('Invalid JSON response');
+          }
+        } else {
+          const audioBlob = await response.blob();
+          console.log('✅ [AlbumView] Blob создан, размер:', (audioBlob.size / 1024 / 1024).toFixed(2), 'MB');
+          
+          const blobUrl = URL.createObjectURL(audioBlob);
+          console.log('✅ [AlbumView] Blob URL создан:', blobUrl);
+          
+          audio.src = blobUrl;
+        }
         audio.load();
         setCurrentTrack(track);
         setCurrentTime(0);
