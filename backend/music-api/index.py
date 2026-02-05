@@ -1178,7 +1178,7 @@ def create_web_order(cursor, conn, data: Dict) -> Dict:
 def migrate_audio_to_s3(cursor, conn) -> Dict:
     import base64
     
-    cursor.execute("SELECT id, data FROM media_files WHERE file_type = 'audio' AND data NOT LIKE 'https://cdn.poehali.dev/%' LIMIT 10")
+    cursor.execute("SELECT id, data FROM media_files WHERE file_type = 'audio' AND data NOT LIKE 'https://cdn.poehali.dev/%' LIMIT 5")
     audio_files = cursor.fetchall()
     
     migrated = 0
