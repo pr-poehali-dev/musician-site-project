@@ -162,21 +162,26 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 audio_data = result['data']
                 
                 if audio_data.startswith('https://cdn.poehali.dev/'):
-                    cursor.close()
-                    conn.close()
-                    return {
-                        'statusCode': 302,
-                        'headers': {
-                            'Location': audio_data,
-                            'Access-Control-Allow-Origin': '*'
-                        },
-                        'isBase64Encoded': False,
-                        'body': ''
-                    }
-                
-                if audio_data.startswith('data:audio/'):
+                    import urllib.request
+                    import base64
+                    
+                    print(f'[DEBUG] Proxying S3 file: {audio_data}')
+                    try:
+                        req = urllib.request.Request(audio_data, headers={'User-Agent': 'Mozilla/5.0'})
+                        with urllib.request.urlopen(req, timeout=30) as response:
+                            file_content = response.read()
+                            audio_data = base64.b64encode(file_content).decode('utf-8')
+                            print(f'[DEBUG] Proxied {len(file_content)} bytes')
+                    except Exception as e:
+                        print(f'[ERROR] Failed to proxy S3 file: {str(e)}')
+                        cursor.close()
+                        conn.close()
+                        return error_response(f'Failed to load audio: {str(e)}', 502)
+                elif audio_data.startswith('data:audio/'):
                     audio_data = audio_data.split(',', 1)[1]
                 
+                cursor.close()
+                conn.close()
                 return {
                     'statusCode': 200,
                     'headers': {
