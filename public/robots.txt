@@ -34,6 +34,6 @@ Disallow: /dashboard
 Disallow: /auth
 Disallow: /analytics
 
-Sitemap: https://musician-site-project.poehali.dev/sitemap.xml
+Sitemap: https://shmelidze.ru/sitemap.xml
 
-Host: https://musician-site-project.poehali.dev
+Host: https://shmelidze.ru
