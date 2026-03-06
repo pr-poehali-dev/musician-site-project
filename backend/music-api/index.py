@@ -57,7 +57,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'body': ''
         }
     
-    path = event.get('queryStringParameters', {}).get('path', '')
+    path = (event.get('queryStringParameters') or {}).get('path', '')
     print(f'[DEBUG] Method: {method}, Path: {path}')
     
     try:
