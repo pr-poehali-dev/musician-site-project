@@ -333,6 +333,20 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         elif method == 'DELETE':
             query_params = event.get('queryStringParameters', {})
             item_id = query_params.get('id')
+
+            if path == 'cleanup-audio':
+                result = cleanup_unused_audio(cursor, conn)
+                cursor.close()
+                conn.close()
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'isBase64Encoded': False,
+                    'body': json.dumps(result, default=str)
+                }
             
             if not item_id:
                 return error_response('ID is required', 400)
@@ -384,6 +398,24 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'isBase64Encoded': False,
             'body': json.dumps({'error': error_msg})
         }
+
+def cleanup_unused_audio(cursor, conn) -> Dict[str, Any]:
+    cursor.execute('''
+        SELECT COUNT(*) as count FROM media_files
+        WHERE file_type IN ('audio', 'audio/mpeg')
+        AND id NOT IN (SELECT file FROM tracks WHERE file IS NOT NULL)
+    ''')
+    count_result = cursor.fetchone()
+    count = count_result['count'] if count_result else 0
+
+    cursor.execute('''
+        DELETE FROM media_files
+        WHERE file_type IN ('audio', 'audio/mpeg')
+        AND id NOT IN (SELECT file FROM tracks WHERE file IS NOT NULL)
+    ''')
+    conn.commit()
+    return {'deleted': count, 'message': f'Удалено {count} неиспользуемых аудиофайлов'}
+
 
 def handle_blog(cursor, conn, event: Dict[str, Any], method: str, path: str) -> Dict[str, Any]:
     post_id = event.get('queryStringParameters', {}).get('id')

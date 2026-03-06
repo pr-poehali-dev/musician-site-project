@@ -11,11 +11,15 @@ import {
   checkMigrationStatus 
 } from '@/utils/dataMigration';
 
+const MUSIC_API_URL = 'https://functions.poehali.dev/25aac639-cf81-4eb7-80fc-aa9a157a25e6';
+
 const MigrationPanel: React.FC = () => {
   const [isMigrating, setIsMigrating] = useState(false);
-  const [migrationResult, setMigrationResult] = useState<any>(null);
-  const [migrationStatus, setMigrationStatus] = useState<any>(null);
+  const [migrationResult, setMigrationResult] = useState<Record<string, unknown> | null>(null);
+  const [migrationStatus, setMigrationStatus] = useState<Record<string, unknown> | null>(null);
   const [isChecking, setIsChecking] = useState(true);
+  const [isCleaningAudio, setIsCleaningAudio] = useState(false);
+  const [cleanupResult, setCleanupResult] = useState<{deleted: number; message: string} | null>(null);
 
   useEffect(() => {
     checkStatus();
@@ -70,6 +74,23 @@ const MigrationPanel: React.FC = () => {
       checkStatus();
     } else {
       alert('❌ Не удалось очистить localStorage');
+    }
+  };
+
+  const handleCleanupAudio = async () => {
+    if (!confirm('Удалить 115 неиспользуемых аудиофайлов из базы данных?\n\nЭто освободит ~20 МБ. Действие необратимо.')) {
+      return;
+    }
+    setIsCleaningAudio(true);
+    setCleanupResult(null);
+    try {
+      const res = await fetch(`${MUSIC_API_URL}?path=cleanup-audio`, { method: 'DELETE' });
+      const data = await res.json();
+      setCleanupResult(data);
+    } catch (error) {
+      setCleanupResult({ deleted: 0, message: 'Ошибка: ' + error });
+    } finally {
+      setIsCleaningAudio(false);
     }
   };
 
@@ -211,6 +232,33 @@ const MigrationPanel: React.FC = () => {
             <Icon name="RotateCcw" size={16} className="mr-2" />
             Восстановить из резервной копии
           </Button>
+
+          <div className="border-t border-vintage-brown/20 pt-2 mt-2">
+            <p className="text-xs text-vintage-warm mb-2 font-medium">🗑️ Очистка базы данных</p>
+            <Button
+              onClick={handleCleanupAudio}
+              disabled={isCleaningAudio}
+              variant="outline"
+              className="w-full border-red-300 text-red-700 hover:bg-red-50"
+            >
+              {isCleaningAudio ? (
+                <>
+                  <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
+                  Удаляю...
+                </>
+              ) : (
+                <>
+                  <Icon name="Trash2" size={16} className="mr-2" />
+                  Удалить неиспользуемые аудиофайлы (~115 шт, 20 МБ)
+                </>
+              )}
+            </Button>
+            {cleanupResult && (
+              <p className={`text-xs mt-1 text-center ${cleanupResult.deleted > 0 ? 'text-green-700' : 'text-red-600'}`}>
+                {cleanupResult.message}
+              </p>
+            )}
+          </div>
 
           <Button
             onClick={checkStatus}
