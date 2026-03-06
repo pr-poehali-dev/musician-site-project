@@ -406,15 +406,33 @@ def cleanup_unused_audio(cursor, conn) -> Dict[str, Any]:
         AND id NOT IN (SELECT file FROM tracks WHERE file IS NOT NULL)
     ''')
     count_result = cursor.fetchone()
-    count = count_result['count'] if count_result else 0
+    audio_count = count_result['count'] if count_result else 0
 
     cursor.execute('''
         DELETE FROM media_files
         WHERE file_type IN ('audio', 'audio/mpeg')
         AND id NOT IN (SELECT file FROM tracks WHERE file IS NOT NULL)
     ''')
+
+    cursor.execute('''
+        SELECT COUNT(*) as count FROM media_files
+        WHERE file_type IN ('image', 'image/jpeg', 'image/png')
+        AND id NOT IN (SELECT cover FROM albums WHERE cover IS NOT NULL)
+        AND id NOT IN (SELECT cover FROM tracks WHERE cover IS NOT NULL AND cover NOT LIKE 'http%')
+    ''')
+    img_result = cursor.fetchone()
+    img_count = img_result['count'] if img_result else 0
+
+    cursor.execute('''
+        DELETE FROM media_files
+        WHERE file_type IN ('image', 'image/jpeg', 'image/png')
+        AND id NOT IN (SELECT cover FROM albums WHERE cover IS NOT NULL)
+        AND id NOT IN (SELECT cover FROM tracks WHERE cover IS NOT NULL AND cover NOT LIKE 'http%')
+    ''')
+
     conn.commit()
-    return {'deleted': count, 'message': f'Удалено {count} неиспользуемых аудиофайлов'}
+    total = audio_count + img_count
+    return {'deleted': total, 'message': f'Удалено {audio_count} аудио и {img_count} картинок'}
 
 
 def handle_blog(cursor, conn, event: Dict[str, Any], method: str, path: str) -> Dict[str, Any]:
