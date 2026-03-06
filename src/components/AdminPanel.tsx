@@ -4,6 +4,7 @@ import AlbumManager from '@/components/admin/AlbumManager';
 import TrackManager from '@/components/admin/TrackManager';
 import StatsPanel from '@/components/admin/StatsPanel';
 import SecurityPanel from '@/components/admin/SecurityPanel';
+import MigrationPanel from '@/components/admin/MigrationPanel';
 import { Track, Album } from '@/types';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
@@ -214,6 +215,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
           <p className="text-xs text-vintage-warm/60">
             Экспорт сохранит все альбомы, треки и аудиофайлы в один файл. Импорт восстановит все данные из файла.
           </p>
+        </div>
+        <div className="mt-4">
+          <MigrationPanel />
         </div>
       </TabsContent>
 
