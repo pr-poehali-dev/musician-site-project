@@ -1,11 +1,3 @@
-export interface CartItem {
-  id: string;
-  title: string;
-  type: 'track' | 'album';
-  price: number;
-  quantity: number;
-}
-
 export interface Track {
   id: string;
   title: string;

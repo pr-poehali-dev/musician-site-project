@@ -10,13 +10,11 @@ import ShareButtons from '@/components/ShareButtons';
 interface AlbumViewProps {
   album: Album;
   onClose: () => void;
-  onAddToCart: (item: { id: string; title: string; type: 'track' | 'album'; price: number; quantity: number }) => void;
 }
 
 const AlbumView: React.FC<AlbumViewProps> = ({
   album,
   onClose,
-  onAddToCart
 }) => {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -204,28 +202,6 @@ const AlbumView: React.FC<AlbumViewProps> = ({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const handleAddTrackToCart = (track: Track) => {
-    console.log('🛒 Добавляем трек в корзину:', track.title, track);
-    onAddToCart({
-      id: track.id,
-      title: track.title,
-      type: 'track',
-      price: track.price,
-      quantity: 1
-    });
-    console.log('✅ Трек отправлен в onAddToCart');
-  };
-
-  const handleAddAlbumToCart = () => {
-    onAddToCart({
-      id: album.id,
-      title: album.title,
-      type: 'album',
-      price: album.price,
-      quantity: 1
-    });
-  };
-
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <Card className="bg-vintage-cream/95 border-vintage-brown/20 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
@@ -263,7 +239,6 @@ const AlbumView: React.FC<AlbumViewProps> = ({
                 <p className="text-vintage-warm/60 mb-4">{album.description}</p>
                 <div className="flex items-center gap-4 mb-4">
                   <span className="text-vintage-warm/60">{album.tracks} треков</span>
-                  <span className="text-2xl font-bold text-vintage-dark-brown">{album.price} ₽</span>
                 </div>
                 <div className="flex gap-3 flex-wrap">
                   <Button
@@ -272,14 +247,6 @@ const AlbumView: React.FC<AlbumViewProps> = ({
                   >
                     <Icon name="Play" size={16} className="mr-2" />
                     Слушать альбом
-                  </Button>
-                  <Button
-                    onClick={handleAddAlbumToCart}
-                    variant="outline"
-                    className="border-vintage-dark-brown text-vintage-dark-brown hover:bg-vintage-dark-brown hover:text-vintage-cream"
-                  >
-                    <Icon name="ShoppingCart" size={16} className="mr-2" />
-                    Купить
                   </Button>
                   <ShareButtons 
                     title={`${album.title} — ${album.artist}`}
@@ -291,12 +258,6 @@ const AlbumView: React.FC<AlbumViewProps> = ({
 
             {/* Список треков */}
             <div className="space-y-3">
-              <div className="bg-vintage-warm/10 border border-vintage-brown/20 rounded-lg p-4 mb-4">
-                <p className="text-vintage-dark-brown text-center">
-                  <Icon name="Info" size={18} className="inline mr-2" />
-                  Для прослушивания трека в хорошем качестве добавьте трек в корзину
-                </p>
-              </div>
               <h3 className="text-xl font-bold text-vintage-warm mb-4">Треки альбома</h3>
               {album.trackList.map((track, index) => {
                 return (
@@ -339,16 +300,7 @@ const AlbumView: React.FC<AlbumViewProps> = ({
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="font-bold text-vintage-dark-brown">{track.price} ₽</span>
-                      <Button
-                        onClick={() => handleAddTrackToCart(track)}
-                        variant="outline"
-                        size="sm"
-                        className="border-vintage-brown/30 text-vintage-dark-brown hover:bg-vintage-brown/10"
-                      >
-                        <Icon name="ShoppingCart" size={14} className="mr-1" />
-                        Купить
-                      </Button>
+                      <span className="text-sm text-vintage-warm/60">{track.duration}</span>
                     </div>
                   </div>
                 );

@@ -7,18 +7,15 @@ import { Album } from '@/types';
 interface AlbumGridProps {
   albums: Album[];
   onAlbumClick: (album: Album) => void;
-  onAddToCart: (item: { id: string; title: string; type: 'album'; price: number; quantity: number }) => void;
 }
 
 const AlbumCard = React.memo<{
   album: Album;
   onAlbumClick: (album: Album) => void;
-  onAddToCart: (album: Album, e: React.MouseEvent) => void;
-}>(({ album, onAlbumClick, onAddToCart }) => {
+}>(({ album, onAlbumClick }) => {
   const [coverLoaded, setCoverLoaded] = useState(false);
   const [coverError, setCoverError] = useState(false);
   const handleClick = useCallback(() => onAlbumClick(album), [onAlbumClick, album]);
-  const handleAddToCart = useCallback((e: React.MouseEvent) => onAddToCart(album, e), [onAddToCart, album]);
 
   const validCover = album.cover && album.cover.startsWith('data:') ? album.cover : '';
 
@@ -77,22 +74,16 @@ const AlbumCard = React.memo<{
           </p>
           
           <div className="flex items-center justify-between gap-2">
-            <div className="flex flex-col">
-              <span className="text-lg sm:text-xl font-bold text-vintage-dark-brown">
-                {album.price} ₽
-              </span>
-              <span className="text-xs text-vintage-warm/60">
-                {album.trackList?.length || album.tracks || 0} {(album.trackList?.length || album.tracks || 0) === 1 ? 'трек' : 'треков'}
-              </span>
-            </div>
-            
+            <span className="text-xs text-vintage-warm/60">
+              {album.trackList?.length || album.tracks || 0} {(album.trackList?.length || album.tracks || 0) === 1 ? 'трек' : 'треков'}
+            </span>
             <Button
-              onClick={handleAddToCart}
-              className="bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream text-xs sm:text-sm"
+              variant="ghost"
               size="sm"
+              className="text-vintage-dark-brown hover:bg-vintage-brown/10 text-xs sm:text-sm"
             >
-              <Icon name="ShoppingCart" size={14} className="sm:mr-1" />
-              <span className="hidden sm:inline">В корзину</span>
+              <Icon name="Play" size={14} className="sm:mr-1" />
+              <span className="hidden sm:inline">Слушать</span>
             </Button>
           </div>
         </div>
@@ -106,7 +97,6 @@ AlbumCard.displayName = 'AlbumCard';
 const AlbumGrid: React.FC<AlbumGridProps> = ({
   albums: initialAlbums,
   onAlbumClick,
-  onAddToCart
 }) => {
   const [albums, setAlbums] = useState<Album[]>(initialAlbums);
 
@@ -126,17 +116,6 @@ const AlbumGrid: React.FC<AlbumGridProps> = ({
     return () => window.removeEventListener('albumsUpdated', loadAlbums);
   }, []);
 
-  const handleAddToCart = useCallback((album: Album, e: React.MouseEvent) => {
-    e.stopPropagation();
-    onAddToCart({
-      id: album.id,
-      title: album.title,
-      type: 'album',
-      price: album.price,
-      quantity: 1
-    });
-  }, [onAddToCart]);
-
   return (
     <section id="albums" className="py-16 px-6">
       <div className="max-w-7xl mx-auto">
@@ -145,18 +124,12 @@ const AlbumGrid: React.FC<AlbumGridProps> = ({
           <p className="text-vintage-warm/70 text-lg">Выберите альбом для прослушивания треков</p>
         </div>
 
-        <div className="bg-vintage-warm/10 border border-vintage-brown/20 rounded-lg p-4 mb-8 max-w-3xl mx-auto">
-          <p className="text-vintage-dark-brown text-center font-medium px-[65px]">Для прослушивания трека в хорошем качестве добавьте трек в корзину. 
-Скачивая треки в хорошем качестве, вы поддерживаете автора</p>
-        </div>
-
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           {albums.map((album) => (
             <AlbumCard
               key={album.id}
               album={album}
               onAlbumClick={onAlbumClick}
-              onAddToCart={handleAddToCart}
             />
           ))}
         </div>
