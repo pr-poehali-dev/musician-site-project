@@ -315,7 +315,15 @@ const AlbumView: React.FC<AlbumViewProps> = ({
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-vintage-warm/60">{track.duration}</span>
+                      <a
+                        href={`https://t.me/dshmelidze?text=${encodeURIComponent(`Здравствуйте! Интересует покупка авторских прав на песню "${track.title}" из альбома "${album.title}".`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-vintage-dark-brown/70 hover:text-vintage-dark-brown text-xs border border-vintage-brown/30 hover:border-vintage-dark-brown px-2 py-1 rounded transition-colors whitespace-nowrap"
+                      >
+                        Купить права
+                      </a>
                     </div>
                   </div>
                 );
