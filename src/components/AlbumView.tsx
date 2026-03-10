@@ -262,7 +262,7 @@ const AlbumView: React.FC<AlbumViewProps> = ({
                 Хотите приобрести авторские права на песню для коммерческого использования?
               </p>
               <a
-                href="https://t.me/dshmelidze?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%B5%D1%81%D1%83%D0%B5%D1%82%20%D0%BF%D0%BE%D0%BA%D1%83%D0%BF%D0%BA%D0%B0%20%D0%B0%D0%B2%D1%82%D0%BE%D1%80%D1%81%D0%BA%D0%B8%D1%85%20%D0%BF%D1%80%D0%B0%D0%B2."
+                href={`https://t.me/dshmelidze?text=${encodeURIComponent(`Здравствуйте! Интересует покупка авторских прав на альбом "${album.title}".`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="shrink-0 bg-vintage-dark-brown hover:bg-vintage-warm text-vintage-cream px-5 py-2 rounded-lg text-sm font-medium transition-colors"
