@@ -438,6 +438,12 @@ const AlbumView: React.FC<AlbumViewProps> = ({
         </CardContent>
       </Card>
       
+      <div className="mt-4 px-1 text-center">
+        <p className="text-xs text-vintage-warm/50 italic">
+          © Все авторские права на песни защищены с момента их размещения на сайте (Согласно ст. 1255 ГК РФ)
+        </p>
+      </div>
+
       {/* Скрытый аудио элемент - вне условия currentTrack */}
       <audio
         ref={audioRef}
