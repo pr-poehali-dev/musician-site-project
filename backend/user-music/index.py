@@ -1,702 +1,253 @@
 '''
-Business: User-specific music management - CRUD для альбомов и треков пользователей
-Args: event with httpMethod, body, headers (X-Auth-Token); context with request_id
-Returns: HTTP response with user's albums/tracks or operation result
+Управление альбомами и треками для админ-панели сайта.
+Args: event с httpMethod, body, headers (X-Authorization с admin_-токеном); context с request_id
+Returns: HTTP-ответ с данными альбомов/треков или результатом операции
 '''
 
 import json
 import os
-from typing import Dict, Any, Optional
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-def get_db_connection():
+SCHEMA = 't_p39135821_musician_site_projec'
+CORS = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Authorization',
+}
+
+def get_db():
     return psycopg2.connect(os.environ['DATABASE_URL'])
 
-def verify_session(token: str) -> Optional[int]:
-    conn = get_db_connection()
-    try:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            token_escaped = token.replace("'", "''")
-            cur.execute(f'''
-                SELECT user_id FROM sessions 
-                WHERE token = '{token_escaped}' AND expires_at > NOW()
-            ''')
-            result = cur.fetchone()
-            return result['user_id'] if result else None
-    finally:
-        conn.close()
+def ok(data, status=200):
+    return {'statusCode': status, 'headers': {'Content-Type': 'application/json', **CORS}, 'body': json.dumps(data, default=str)}
 
-def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
-    method: str = event.get('httpMethod', 'GET')
-    print(f'[DEBUG] Method: {method}, Headers: {event.get("headers", {})}')
-    
+def err(msg, status=400):
+    return {'statusCode': status, 'headers': {'Content-Type': 'application/json', **CORS}, 'body': json.dumps({'error': msg})}
+
+def is_admin(token):
+    return token and token.startswith('admin_')
+
+def handler(event: dict, context) -> dict:
+    method = event.get('httpMethod', 'GET')
     if method == 'OPTIONS':
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token',
-                'Access-Control-Max-Age': '86400'
-            },
-            'body': ''
-        }
-    
+        return {'statusCode': 200, 'headers': CORS, 'body': ''}
+
     headers = event.get('headers', {})
-    token = headers.get('X-Auth-Token') or headers.get('x-auth-token')
-    path = event.get('queryStringParameters', {}).get('path', '')
-    
-    print(f'[DEBUG] Token: {token[:20] if token else "NONE"}..., Path: {path}')
-    
-    # Проверка админского токена (временное решение без БД)
-    is_admin = token and token.startswith('admin_')
-    
-    # POST /admin-login - Простая авторизация админки по паролю (без БД)
-    if method == 'POST' and path == 'admin-login':
-        body = json.loads(event.get('body', '{}'))
-        password = body.get('password')
-        
-        ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
-        
-        if password == ADMIN_PASSWORD:
-            import secrets
-            admin_token = 'admin_' + secrets.token_urlsafe(32)
-            
-            return {
-                'statusCode': 200,
-                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'token': admin_token, 'role': 'admin'})
-            }
-        else:
-            return {
-                'statusCode': 401,
-                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'error': 'Неверный пароль'})
-            }
-    
-    # POST /track/play - Увеличить счётчик прослушиваний (БЕЗ авторизации)
+    token = headers.get('X-Authorization') or headers.get('x-authorization')
+    params = event.get('queryStringParameters') or {}
+    path = params.get('path', '')
+
+    # POST /track/play — публичный, без авторизации
     if method == 'POST' and path == 'track/play':
         body = json.loads(event.get('body', '{}'))
         track_id = body.get('track_id')
-        
         if not track_id:
-            return {
-                'statusCode': 400,
-                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'error': 'track_id required'})
-            }
-        
-        conn = get_db_connection()
+            return err('track_id required')
+        conn = get_db()
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                track_id_escaped = str(track_id).replace("'", "''")
-                
+                tid = str(track_id).replace("'", "''")
                 cur.execute(f'''
-                    INSERT INTO t_p39135821_musician_site_projec.track_stats (track_id, plays_count)
-                    VALUES ('{track_id_escaped}', 1)
-                    ON CONFLICT (track_id) 
-                    DO UPDATE SET plays_count = t_p39135821_musician_site_projec.track_stats.plays_count + 1
+                    INSERT INTO {SCHEMA}.track_stats (track_id, plays_count, last_played_at, created_at, updated_at)
+                    VALUES ('{tid}', 1, NOW(), NOW(), NOW())
+                    ON CONFLICT (track_id)
+                    DO UPDATE SET plays_count = {SCHEMA}.track_stats.plays_count + 1,
+                                  last_played_at = NOW(), updated_at = NOW()
                     RETURNING plays_count
                 ''')
                 result = cur.fetchone()
                 conn.commit()
-                
-                return {
-                    'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'plays_count': result['plays_count']})
-                }
+                return ok({'plays_count': result['plays_count']})
         finally:
             conn.close()
-    
-    if not token and method != 'GET':
-        print('[DEBUG] No token for non-GET request - returning 401')
-        return {
-            'statusCode': 401,
-            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Authentication required'})
-        }
-    
-    # Для админского токена не проверяем БД
-    if is_admin:
-        user_id = 3  # ID админа
-    else:
-        user_id = verify_session(token) if token else None
-    print(f'[DEBUG] User ID from token: {user_id}')
-    
-    conn = get_db_connection()
+
+    # GET /albums — публичный список всех альбомов
+    if method == 'GET' and path == 'albums':
+        conn = get_db()
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(f'''
+                    SELECT id, title, cover, price, created_at, artist, description
+                    FROM {SCHEMA}.albums
+                    ORDER BY created_at DESC
+                ''')
+                return ok([dict(a) for a in cur.fetchall()])
+        finally:
+            conn.close()
+
+    # GET /tracks — публичный список треков альбома
+    if method == 'GET' and path == 'tracks':
+        album_id = params.get('album_id')
+        if not album_id:
+            return err('album_id required')
+        conn = get_db()
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                aid = album_id.replace("'", "''")
+                cur.execute(f'''
+                    SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
+                           t.label, t.genre, t.album_id, t.created_at,
+                           COALESCE(ts.plays_count, 0) as plays_count
+                    FROM {SCHEMA}.tracks t
+                    LEFT JOIN {SCHEMA}.track_stats ts ON t.id = ts.track_id
+                    WHERE t.album_id = '{aid}'
+                    ORDER BY t.track_order ASC, t.created_at ASC
+                ''')
+                return ok([dict(t) for t in cur.fetchall()])
+        finally:
+            conn.close()
+
+    # GET /tracks/top — публичный топ треков
+    if method == 'GET' and path == 'tracks/top':
+        limit = min(int(params.get('limit', 10)), 50)
+        conn = get_db()
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(f'''
+                    SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
+                           t.label, t.genre, t.album_id, t.created_at,
+                           COALESCE(ts.plays_count, 0) as plays_count,
+                           a.title as album_title
+                    FROM {SCHEMA}.tracks t
+                    LEFT JOIN {SCHEMA}.track_stats ts ON t.id = ts.track_id
+                    LEFT JOIN {SCHEMA}.albums a ON t.album_id = a.id
+                    ORDER BY COALESCE(ts.plays_count, 0) DESC, t.created_at DESC
+                    LIMIT {limit}
+                ''')
+                return ok([dict(t) for t in cur.fetchall()])
+        finally:
+            conn.close()
+
+    # Всё остальное требует admin-токена
+    if not is_admin(token):
+        return err('Admin authentication required', 401)
+
+    conn = get_db()
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            # GET /profile?username=... - Получить профиль артиста
-            if method == 'GET' and path == 'profile':
-                username = event.get('queryStringParameters', {}).get('username')
-                
-                if not username:
-                    return {
-                        'statusCode': 400,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Username required'})
-                    }
-                
-                username_escaped = username.replace("'", "''")
-                cur.execute(f'''
-                    SELECT u.username, u.display_name, u.avatar_url, u.bio,
-                           ap.bio as profile_bio, ap.banner_url, ap.social_links, ap.is_public
-                    FROM users u
-                    LEFT JOIN artist_profiles ap ON u.id = ap.user_id
-                    WHERE u.username = '{username_escaped}'
-                ''')
-                
-                profile = cur.fetchone()
-                if not profile:
-                    return {
-                        'statusCode': 404,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Artist not found'})
-                    }
-                
-                return {
-                    'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps(dict(profile), default=str)
-                }
-            
-            # GET /albums?username=... - Получить альбомы пользователя
-            if method == 'GET' and path == 'albums':
-                username = event.get('queryStringParameters', {}).get('username')
-                
-                if username:
-                    username_escaped = username.replace("'", "''")
-                    cur.execute(f'''
-                        SELECT a.id, a.title, a.cover, a.price, a.created_at,
-                               a.artist, a.description
-                        FROM t_p39135821_musician_site_projec.albums a
-                        WHERE a.artist = '{username_escaped}'
-                        ORDER BY a.created_at DESC
-                    ''')
-                elif user_id:
-                    cur.execute(f'''
-                        SELECT id, title, cover, price, created_at, artist, description
-                        FROM t_p39135821_musician_site_projec.albums
-                        WHERE user_id = {int(user_id)}
-                        ORDER BY created_at DESC
-                    ''')
-                else:
-                    return {
-                        'statusCode': 400,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Username or auth token required'})
-                    }
-                
-                albums = cur.fetchall()
-                return {
-                    'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps([dict(a) for a in albums], default=str)
-                }
-            
-            # GET /tracks?album_id=... or ?username=... - Получить треки
-            if method == 'GET' and path == 'tracks':
-                album_id = event.get('queryStringParameters', {}).get('album_id')
-                username = event.get('queryStringParameters', {}).get('username')
-                
-                if album_id:
-                    album_id_escaped = album_id.replace("'", "''")
-                    cur.execute(f'''
-                        SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
-                               t.label, t.genre, t.album_id, t.created_at, u.username, u.display_name,
-                               COALESCE(ts.plays_count, 0) as plays_count
-                        FROM t_p39135821_musician_site_projec.tracks t
-                        JOIN t_p39135821_musician_site_projec.users u ON t.user_id = u.id
-                        LEFT JOIN t_p39135821_musician_site_projec.track_stats ts ON t.id = ts.track_id
-                        WHERE t.album_id = '{album_id_escaped}'
-                        ORDER BY t.track_order ASC, t.created_at ASC
-                    ''')
-                elif username:
-                    username_escaped = username.replace("'", "''")
-                    cur.execute(f'''
-                        SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
-                               t.label, t.genre, t.album_id, t.created_at,
-                               COALESCE(ts.plays_count, 0) as plays_count
-                        FROM t_p39135821_musician_site_projec.tracks t
-                        JOIN t_p39135821_musician_site_projec.users u ON t.user_id = u.id
-                        LEFT JOIN t_p39135821_musician_site_projec.track_stats ts ON t.id = ts.track_id
-                        WHERE u.username = '{username_escaped}'
-                        ORDER BY t.created_at DESC
-                    ''')
-                elif user_id:
-                    cur.execute(f'''
-                        SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
-                               t.label, t.genre, t.album_id, t.created_at,
-                               COALESCE(ts.plays_count, 0) as plays_count
-                        FROM t_p39135821_musician_site_projec.tracks t
-                        LEFT JOIN t_p39135821_musician_site_projec.track_stats ts ON t.id = ts.track_id
-                        WHERE t.user_id = {int(user_id)}
-                        ORDER BY t.created_at DESC
-                    ''')
-                else:
-                    return {
-                        'statusCode': 400,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Album ID, username, or auth token required'})
-                    }
-                
-                tracks = cur.fetchall()
-                return {
-                    'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps([dict(t) for t in tracks], default=str)
-                }
-            
-            # GET /tracks/top?limit=10 - Получить топ треков по прослушиваниям
-            if method == 'GET' and path == 'tracks/top':
-                limit = int(event.get('queryStringParameters', {}).get('limit', 10))
-                username = event.get('queryStringParameters', {}).get('username')
-                
-                if username:
-                    username_escaped = username.replace("'", "''")
-                    cur.execute(f'''
-                        SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
-                               t.label, t.genre, t.album_id, t.created_at,
-                               COALESCE(ts.plays_count, 0) as plays_count,
-                               u.username, u.display_name,
-                               a.title as album_title
-                        FROM t_p39135821_musician_site_projec.tracks t
-                        LEFT JOIN t_p39135821_musician_site_projec.users u ON t.user_id = u.id
-                        LEFT JOIN t_p39135821_musician_site_projec.track_stats ts ON t.id = ts.track_id
-                        LEFT JOIN t_p39135821_musician_site_projec.albums a ON t.album_id = a.id
-                        WHERE u.username = '{username_escaped}'
-                        ORDER BY COALESCE(ts.plays_count, 0) DESC, t.created_at DESC
-                        LIMIT {int(limit)}
-                    ''')
-                else:
-                    cur.execute(f'''
-                        SELECT t.id, t.title, t.duration, t.file, t.price, t.cover,
-                               t.label, t.genre, t.album_id, t.created_at,
-                               COALESCE(ts.plays_count, 0) as plays_count,
-                               u.username, u.display_name,
-                               a.title as album_title
-                        FROM t_p39135821_musician_site_projec.tracks t
-                        LEFT JOIN t_p39135821_musician_site_projec.users u ON t.user_id = u.id
-                        LEFT JOIN t_p39135821_musician_site_projec.track_stats ts ON t.id = ts.track_id
-                        LEFT JOIN t_p39135821_musician_site_projec.albums a ON t.album_id = a.id
-                        ORDER BY COALESCE(ts.plays_count, 0) DESC, t.created_at DESC
-                        LIMIT {int(limit)}
-                    ''')
-                
-                tracks = cur.fetchall()
-                return {
-                    'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps([dict(t) for t in tracks], default=str)
-                }
-            
-            # POST /track/play - Увеличить счётчик прослушиваний
-            if method == 'POST' and path == 'track/play':
-                body = json.loads(event.get('body', '{}'))
-                track_id = body.get('track_id')
-                
-                if not track_id:
-                    return {
-                        'statusCode': 400,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'track_id is required'})
-                    }
-                
-                track_id_escaped = str(track_id).replace("'", "''")
-                cur.execute(f'''
-                    INSERT INTO t_p39135821_musician_site_projec.track_stats 
-                    (track_id, plays_count, last_played_at, created_at, updated_at)
-                    VALUES ('{track_id_escaped}', 1, NOW(), NOW(), NOW())
-                    ON CONFLICT (track_id) 
-                    DO UPDATE SET 
-                        plays_count = t_p39135821_musician_site_projec.track_stats.plays_count + 1,
-                        last_played_at = NOW(),
-                        updated_at = NOW()
-                    RETURNING plays_count
-                ''')
-                result = cur.fetchone()
-                conn.commit()
-                
-                return {
-                    'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'plays_count': result['plays_count']})
-                }
-            
-            if not user_id:
-                return {
-                    'statusCode': 401,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'error': 'Invalid or expired token'})
-                }
-            
-            # POST /albums - Создать альбом
+
+            # POST /albums — создать альбом
             if method == 'POST' and path == 'albums':
                 body = json.loads(event.get('body', '{}'))
-                title = body.get('title')
-                artist = body.get('artist', '')
-                cover = body.get('cover_url', '')
-                price = body.get('price', 0)
-                description = body.get('description', '')
-                
+                title = body.get('title', '').replace("'", "''")
+                artist = body.get('artist', '').replace("'", "''")
+                cover = body.get('cover_url', body.get('cover', '')).replace("'", "''")
+                price = float(body.get('price', 0))
+                description = body.get('description', '').replace("'", "''")
                 if not title:
-                    return {
-                        'statusCode': 400,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Title is required'})
-                    }
-                
-                title_escaped = title.replace("'", "''")
-                artist_escaped = artist.replace("'", "''")
-                cover_escaped = cover.replace("'", "''")
-                description_escaped = description.replace("'", "''")
+                    return err('title required')
                 cur.execute(f'''
-                    INSERT INTO t_p39135821_musician_site_projec.albums 
-                    (id, user_id, title, artist, cover, price, description, created_at)
-                    VALUES (gen_random_uuid()::text, {int(user_id)}, '{title_escaped}', '{artist_escaped}', '{cover_escaped}', {float(price)}, '{description_escaped}', NOW())
+                    INSERT INTO {SCHEMA}.albums (id, title, artist, cover, price, description, created_at)
+                    VALUES (gen_random_uuid()::text, '{title}', '{artist}', '{cover}', {price}, '{description}', NOW())
                     RETURNING id, title, artist, cover, price, description, created_at
                 ''')
-                album = cur.fetchone()
                 conn.commit()
-                
-                return {
-                    'statusCode': 201,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps(dict(album), default=str)
-                }
-            
-            # POST /tracks - Создать трек
+                return ok(dict(cur.fetchone()), 201)
+
+            # PUT /albums?id=... — обновить альбом
+            if method == 'PUT' and path == 'albums':
+                album_id = params.get('id', '').replace("'", "''")
+                if not album_id:
+                    return err('id required')
+                body = json.loads(event.get('body', '{}'))
+                updates = []
+                for field, col in [('title','title'),('artist','artist'),('cover_url','cover'),('cover','cover'),('description','description')]:
+                    if field in body:
+                        val = body[field].replace("'", "''")
+                        updates.append(f"{col} = '{val}'")
+                if 'price' in body:
+                    updates.append(f"price = {float(body['price'])}")
+                if not updates:
+                    return err('no fields to update')
+                cur.execute(f'''
+                    UPDATE {SCHEMA}.albums SET {', '.join(updates)}
+                    WHERE id = '{album_id}'
+                    RETURNING id, title, artist, cover, price, description, created_at
+                ''')
+                row = cur.fetchone()
+                if not row:
+                    return err('album not found', 404)
+                conn.commit()
+                return ok(dict(row))
+
+            # DELETE /albums?id=... — удалить альбом
+            if method == 'DELETE' and path == 'albums':
+                album_id = params.get('id', '').replace("'", "''")
+                if not album_id:
+                    return err('id required')
+                cur.execute(f"DELETE FROM {SCHEMA}.albums WHERE id = '{album_id}'")
+                if cur.rowcount == 0:
+                    return err('album not found', 404)
+                conn.commit()
+                return ok({'message': 'deleted'})
+
+            # POST /tracks — создать трек
             if method == 'POST' and path == 'tracks':
                 body = json.loads(event.get('body', '{}'))
-                title = body.get('title')
-                album_id = body.get('album_id')
-                duration = body.get('duration', '0:00')
-                file = body.get('file_url', '')
-                cover = body.get('cover', '')
-                price = body.get('price', 129)
-                label = body.get('label', '')
-                genre = body.get('genre', '')
-                
+                album_id = body.get('album_id', '').replace("'", "''")
+                title = body.get('title', '').replace("'", "''")
+                duration = str(body.get('duration', '')).replace("'", "''")
+                file_ = body.get('file', body.get('file_url', '')).replace("'", "''")
+                cover = body.get('cover', body.get('cover_url', '')).replace("'", "''")
+                price = float(body.get('price', 0))
+                label = body.get('label', '').replace("'", "''")
+                genre = body.get('genre', '').replace("'", "''")
                 if not title or not album_id:
-                    return {
-                        'statusCode': 400,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Title and album_id are required'})
-                    }
-                
-                album_id_escaped = album_id.replace("'", "''")
-                cur.execute(f"SELECT id FROM t_p39135821_musician_site_projec.albums WHERE id = '{album_id_escaped}' AND user_id = {int(user_id)}")
-                if not cur.fetchone():
-                    return {
-                        'statusCode': 403,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Album not found or access denied'})
-                    }
-                
-                title_escaped = title.replace("'", "''")
-                duration_escaped = duration.replace("'", "''")
-                file_escaped = file.replace("'", "''")
-                cover_escaped = cover.replace("'", "''")
-                label_escaped = label.replace("'", "''")
-                genre_escaped = genre.replace("'", "''")
+                    return err('title and album_id required')
                 cur.execute(f'''
-                    INSERT INTO t_p39135821_musician_site_projec.tracks 
-                    (id, user_id, album_id, title, duration, file, cover, price, label, genre, created_at)
-                    VALUES (gen_random_uuid()::text, {int(user_id)}, '{album_id_escaped}', '{title_escaped}', '{duration_escaped}', '{file_escaped}', '{cover_escaped}', {float(price)}, '{label_escaped}', '{genre_escaped}', NOW())
-                    RETURNING id, title, duration, file, cover, price, label, genre, album_id, created_at
+                    INSERT INTO {SCHEMA}.tracks (id, album_id, title, duration, file, cover, price, label, genre, created_at)
+                    VALUES (gen_random_uuid()::text, '{album_id}', '{title}', '{duration}', '{file_}', '{cover}', {price}, '{label}', '{genre}', NOW())
+                    RETURNING id, album_id, title, duration, file, cover, price, label, genre, created_at
                 ''')
-                track = cur.fetchone()
                 conn.commit()
-                
-                return {
-                    'statusCode': 201,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps(dict(track), default=str)
-                }
-            
-            # PUT /albums?id=... - Обновить альбом
-            if method == 'PUT' and path == 'albums':
-                album_id = event.get('queryStringParameters', {}).get('id')
-                body = json.loads(event.get('body', '{}'))
-                
-                if not album_id:
-                    return {
-                        'statusCode': 400,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Album ID is required'})
-                    }
-                
-                album_id_escaped = album_id.replace("'", "''")
-                cur.execute(f"SELECT id FROM albums WHERE id = '{album_id_escaped}' AND user_id = {int(user_id)}")
-                if not cur.fetchone():
-                    return {
-                        'statusCode': 403,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Album not found or access denied'})
-                    }
-                
-                updates = []
-                if 'title' in body:
-                    title_escaped = body['title'].replace("'", "''")
-                    updates.append(f"title = '{title_escaped}'")
-                if 'cover_url' in body:
-                    cover_url_escaped = body['cover_url'].replace("'", "''")
-                    updates.append(f"cover_url = '{cover_url_escaped}'")
-                if 'price' in body:
-                    updates.append(f"price = {float(body['price'])}")
-                
-                if not updates:
-                    return {
-                        'statusCode': 400,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'No fields to update'})
-                    }
-                
-                cur.execute(f'''
-                    UPDATE albums SET {', '.join(updates)}, updated_at = NOW()
-                    WHERE id = '{album_id_escaped}'
-                    RETURNING id, title, cover_url, price, created_at, updated_at
-                ''')
-                album = cur.fetchone()
-                conn.commit()
-                
-                return {
-                    'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps(dict(album), default=str)
-                }
-            
-            # PUT /tracks?id=... - Обновить трек
+                return ok(dict(cur.fetchone()), 201)
+
+            # PUT /tracks?id=... — обновить трек
             if method == 'PUT' and path == 'tracks':
-                track_id = event.get('queryStringParameters', {}).get('id')
-                body = json.loads(event.get('body', '{}'))
-                
+                track_id = params.get('id', '').replace("'", "''")
                 if not track_id:
-                    return {
-                        'statusCode': 400,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Track ID is required'})
-                    }
-                
-                track_id_escaped = track_id.replace("'", "''")
-                cur.execute(f"SELECT id FROM tracks WHERE id = '{track_id_escaped}' AND user_id = {int(user_id)}")
-                if not cur.fetchone():
-                    return {
-                        'statusCode': 403,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Track not found or access denied'})
-                    }
-                
+                    return err('id required')
+                body = json.loads(event.get('body', '{}'))
                 updates = []
-                if 'title' in body:
-                    title_escaped = body['title'].replace("'", "''")
-                    updates.append(f"title = '{title_escaped}'")
-                if 'duration' in body:
-                    duration_escaped = body['duration'].replace("'", "''")
-                    updates.append(f"duration = '{duration_escaped}'")
-                if 'preview_url' in body:
-                    preview_url_escaped = body['preview_url'].replace("'", "''")
-                    updates.append(f"preview_url = '{preview_url_escaped}'")
-                if 'file_url' in body:
-                    file_url_escaped = body['file_url'].replace("'", "''")
-                    updates.append(f"file_url = '{file_url_escaped}'")
+                for field, col in [('title','title'),('duration','duration'),('file','file'),('file_url','file'),('cover','cover'),('cover_url','cover'),('label','label'),('genre','genre')]:
+                    if field in body:
+                        val = str(body[field]).replace("'", "''")
+                        updates.append(f"{col} = '{val}'")
                 if 'price' in body:
                     updates.append(f"price = {float(body['price'])}")
-                if 'label' in body:
-                    label_escaped = body['label'].replace("'", "''")
-                    updates.append(f"label = '{label_escaped}'")
-                if 'genre' in body:
-                    genre_escaped = body['genre'].replace("'", "''")
-                    updates.append(f"genre = '{genre_escaped}'")
-                
+                if 'track_order' in body:
+                    updates.append(f"track_order = {int(body['track_order'])}")
                 if not updates:
-                    return {
-                        'statusCode': 400,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'No fields to update'})
-                    }
-                
+                    return err('no fields to update')
                 cur.execute(f'''
-                    UPDATE tracks SET {', '.join(updates)}, updated_at = NOW()
-                    WHERE id = '{track_id_escaped}'
-                    RETURNING id, title, duration, preview_url, file_url, price, label, album_id, created_at, updated_at
+                    UPDATE {SCHEMA}.tracks SET {', '.join(updates)}
+                    WHERE id = '{track_id}'
+                    RETURNING id, album_id, title, duration, file, cover, price, label, genre, created_at
                 ''')
-                track = cur.fetchone()
+                row = cur.fetchone()
+                if not row:
+                    return err('track not found', 404)
                 conn.commit()
-                
-                return {
-                    'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps(dict(track), default=str)
-                }
-            
-            # DELETE /tracks?id=... - Удалить трек
+                return ok(dict(row))
+
+            # DELETE /tracks?id=... — удалить трек
             if method == 'DELETE' and path == 'tracks':
-                track_id = event.get('queryStringParameters', {}).get('id')
-                
+                track_id = params.get('id', '').replace("'", "''")
                 if not track_id:
-                    return {
-                        'statusCode': 400,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Track ID is required'})
-                    }
-                
-                track_id_escaped = track_id.replace("'", "''")
-                cur.execute(f"DELETE FROM tracks WHERE id = '{track_id_escaped}' AND user_id = {int(user_id)}")
+                    return err('id required')
+                cur.execute(f"DELETE FROM {SCHEMA}.tracks WHERE id = '{track_id}'")
                 if cur.rowcount == 0:
-                    return {
-                        'statusCode': 403,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Track not found or access denied'})
-                    }
-                
+                    return err('track not found', 404)
                 conn.commit()
-                return {
-                    'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'message': 'Track deleted successfully'})
-                }
-            
-            # POST /track-play - Увеличить счётчик прослушиваний
-            if method == 'POST' and path == 'track-play':
-                body = json.loads(event.get('body', '{}'))
-                track_id = body.get('track_id')
-                
-                if not track_id:
-                    return {
-                        'statusCode': 400,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Track ID is required'})
-                    }
-                
-                # Проверяем существование трека
-                track_id_escaped = str(track_id).replace("'", "''")
-                cur.execute(f"SELECT id FROM tracks WHERE id = '{track_id_escaped}'")
-                if not cur.fetchone():
-                    return {
-                        'statusCode': 404,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Track not found'})
-                    }
-                
-                # Создаем запись статистики если её нет, или увеличиваем счётчик
-                cur.execute(f'''
-                    INSERT INTO track_stats (track_id, plays_count, last_played_at, created_at, updated_at)
-                    VALUES ('{track_id_escaped}', 1, NOW(), NOW(), NOW())
-                    ON CONFLICT (track_id) 
-                    DO UPDATE SET 
-                        plays_count = track_stats.plays_count + 1,
-                        last_played_at = NOW(),
-                        updated_at = NOW()
-                    RETURNING plays_count
-                ''')
-                result = cur.fetchone()
-                conn.commit()
-                
-                return {
-                    'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'plays_count': result['plays_count']})
-                }
-            
-            # DELETE /albums?id=... - Удалить альбом
-            if method == 'DELETE' and path == 'albums':
-                album_id = event.get('queryStringParameters', {}).get('id')
-                
-                if not album_id:
-                    return {
-                        'statusCode': 400,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Album ID is required'})
-                    }
-                
-                album_id_escaped = album_id.replace("'", "''")
-                cur.execute(f"DELETE FROM albums WHERE id = '{album_id_escaped}' AND user_id = {int(user_id)}")
-                if cur.rowcount == 0:
-                    return {
-                        'statusCode': 403,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Album not found or access denied'})
-                    }
-                
-                conn.commit()
-                return {
-                    'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'message': 'Album deleted successfully'})
-                }
-            
-            # DELETE /stats/reset - Сбросить всю статистику треков
+                return ok({'message': 'deleted'})
+
+            # DELETE /stats/reset — сбросить статистику
             if method == 'DELETE' and path == 'stats/reset':
-                if not user_id:
-                    return {
-                        'statusCode': 401,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Authentication required'})
-                    }
-                
-                cur.execute('TRUNCATE TABLE t_p39135821_musician_site_projec.track_stats')
+                cur.execute(f'TRUNCATE TABLE {SCHEMA}.track_stats')
                 conn.commit()
-                
-                return {
-                    'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'message': 'All stats reset successfully'})
-                }
-            
-            # PUT /profile - Обновить профиль пользователя
-            if method == 'PUT' and path == 'profile':
-                if not user_id:
-                    return {
-                        'statusCode': 401,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Authentication required'})
-                    }
-                
-                body = json.loads(event.get('body', '{}'))
-                
-                updates = []
-                if 'display_name' in body:
-                    display_name_escaped = body['display_name'].replace("'", "''")
-                    updates.append(f"display_name = '{display_name_escaped}'")
-                if 'bio' in body:
-                    bio_escaped = body['bio'].replace("'", "''")
-                    updates.append(f"profile_bio = '{bio_escaped}'")
-                if 'avatar_url' in body:
-                    avatar_url_escaped = body['avatar_url'].replace("'", "''")
-                    updates.append(f"avatar_url = '{avatar_url_escaped}'")
-                if 'banner_url' in body:
-                    banner_url_escaped = body['banner_url'].replace("'", "''")
-                    updates.append(f"banner_url = '{banner_url_escaped}'")
-                
-                if not updates:
-                    return {
-                        'statusCode': 400,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'No fields to update'})
-                    }
-                
-                cur.execute(f'''
-                    UPDATE t_p39135821_musician_site_projec.users 
-                    SET {', '.join(updates)}
-                    WHERE id = {int(user_id)}
-                    RETURNING id, username, display_name, avatar_url, banner_url, profile_bio
-                ''')
-                user = cur.fetchone()
-                conn.commit()
-                
-                return {
-                    'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps(dict(user), default=str)
-                }
-            
-            return {
-                'statusCode': 404,
-                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'error': 'Not found'})
-            }
+                return ok({'message': 'stats reset'})
+
+            return err('not found', 404)
     finally:
         conn.close()
