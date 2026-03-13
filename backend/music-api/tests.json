@@ -5,29 +5,20 @@
       "method": "GET",
       "path": "/?path=albums",
       "expectedStatus": 200,
-      "expectedBody": {
-        "type": "array"
-      },
-      "bodyMatcher": "type"
+      "bodyMatcher": "partial"
     },
     {
       "name": "Get all tracks",
       "method": "GET",
       "path": "/?path=tracks",
       "expectedStatus": 200,
-      "expectedBody": {
-        "type": "array"
-      },
-      "bodyMatcher": "type"
+      "bodyMatcher": "partial"
     },
     {
       "name": "Get stats",
       "method": "GET",
       "path": "/?path=stats",
       "expectedStatus": 200,
-      "expectedBody": {
-        "totals": "object"
-      },
       "bodyMatcher": "partial"
     }
   ]

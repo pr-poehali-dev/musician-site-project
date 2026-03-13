@@ -750,15 +750,18 @@ def create_track(cursor, conn, data: Dict) -> Dict:
             try:
                 req = urllib.request.Request(file_data, headers={'User-Agent': 'Mozilla/5.0'})
                 with urllib.request.urlopen(req, timeout=45) as response:
+                    content_type = response.headers.get('Content-Type', '')
                     file_content = response.read()
-                    print(f'[DEBUG] Downloaded {len(file_content)} bytes')
+                    print(f'[DEBUG] Downloaded {len(file_content)} bytes, Content-Type: {content_type}')
+                    if 'text/html' in content_type or (len(file_content) > 10 and file_content[:15].lower().startswith(b'<!doctype')):
+                        raise Exception('Ссылка ведёт на страницу, а не на аудиофайл. Используйте прямую ссылку на скачивание MP3.')
                     audio_data_b64 = base64.b64encode(file_content).decode('utf-8')
                     file_id = f"audio_{track_id}"
                     save_media_file(cursor, conn, file_id, 'audio', audio_data_b64)
                     print(f'[DEBUG] Audio cached as base64 in media_files')
             except Exception as e:
                 print(f'[ERROR] Failed to download audio during track creation: {str(e)}')
-                raise Exception(f'Не удалось загрузить аудиофайл с Яндекс.Диска: {str(e)}')
+                raise Exception(f'Не удалось загрузить аудиофайл: {str(e)}')
         elif file_data.startswith('data:'):
             file_id = f"audio_{track_id}"
             save_media_file(cursor, conn, file_id, 'audio', file_data)
@@ -838,15 +841,18 @@ def update_track(cursor, conn, track_id: str, data: Dict) -> Dict:
             try:
                 req = urllib.request.Request(file_data, headers={'User-Agent': 'Mozilla/5.0'})
                 with urllib.request.urlopen(req, timeout=45) as response:
+                    content_type = response.headers.get('Content-Type', '')
                     file_content = response.read()
-                    print(f'[DEBUG] Downloaded {len(file_content)} bytes')
+                    print(f'[DEBUG] Downloaded {len(file_content)} bytes, Content-Type: {content_type}')
+                    if 'text/html' in content_type or (len(file_content) > 10 and file_content[:15].lower().startswith(b'<!doctype')):
+                        raise Exception('Ссылка ведёт на страницу, а не на аудиофайл. Используйте прямую ссылку на скачивание MP3.')
                     audio_data_b64 = base64.b64encode(file_content).decode('utf-8')
                     file_id = f"audio_{track_id}"
                     save_media_file(cursor, conn, file_id, 'audio', audio_data_b64)
                     print(f'[DEBUG] Audio cached as base64 in media_files')
             except Exception as e:
                 print(f'[ERROR] Failed to download audio during track update: {str(e)}')
-                raise Exception(f'Не удалось загрузить аудиофайл с Яндекс.Диска: {str(e)}')
+                raise Exception(f'Не удалось загрузить аудиофайл: {str(e)}')
         elif file_data.startswith('data:'):
             file_id = f"audio_{track_id}"
             save_media_file(cursor, conn, file_id, 'audio', file_data)
