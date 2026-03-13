@@ -1,0 +1,11 @@
+{
+  "tests": [
+    {
+      "name": "Missing url param returns 400",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 400,
+      "bodyMatcher": "partial"
+    }
+  ]
+}
