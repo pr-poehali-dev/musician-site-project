@@ -78,7 +78,7 @@ const HomePage: React.FC = () => {
               <div className="relative">
                 <div className="w-80 h-80 rounded-full overflow-hidden shadow-2xl border-4 border-vintage-warm/40 bg-gradient-to-br from-vintage-brown/30 to-vintage-dark-brown/30 backdrop-blur-sm">
                   <img 
-                    src="https://cdn.poehali.dev/files/57940c73-7a29-4c84-8c4b-d402f03adc4a.png" 
+                    src="https://cdn.poehali.dev/projects/43e5d54d-0b57-4be1-b3b3-e23b086ac4cc/bucket/6ce354ae-cf28-416e-95b7-0d84737302a4.jpg" 
                     alt="Дмитрий Шмелидзэ - музыкант"
                     className="w-full h-full object-cover"
                   />
