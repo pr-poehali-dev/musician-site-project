@@ -21,8 +21,9 @@ const Analytics: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('admin_token');
-    if (!token) {
+    const token = localStorage.getItem('authToken');
+    const isAdmin = localStorage.getItem('isAdmin');
+    if (!token || isAdmin !== 'true') {
       navigate('/auth');
       return;
     }
