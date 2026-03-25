@@ -1,10 +1,1 @@
-{
-  "tests": [
-    {
-      "name": "Test analytics endpoint",
-      "method": "GET",
-      "path": "/",
-      "expectedStatus": 200
-    }
-  ]
-}
+{"tests": [{"name": "Get analytics stats", "method": "GET", "path": "/", "expectedStatus": 200, "expectedBody": {"summary": {"today": 4}}, "bodyMatcher": "partial"}]}
