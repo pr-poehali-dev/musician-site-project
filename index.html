@@ -8,7 +8,17 @@
     <meta name="keywords" content="авторские песни Дмитрий Шмелидзэ, современная музыка, композиции, ХИТы 2025, треки 2025, Дмитрий Шмелидзэ музыка, новые песни 2025, российский музыкант, авторская музыка онлайн"/>
     <meta name="author" content="Дмитрий Шмелидзэ"/>
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"/>
+    <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+    <meta name="yandex" content="index, follow"/>
+    <meta name="geo.region" content="RU"/>
+    <meta name="geo.placename" content="Россия"/>
+    <meta name="language" content="Russian"/>
+    <meta name="revisit-after" content="7 days"/>
+    <meta name="rating" content="general"/>
+    <meta name="category" content="music, entertainment"/>
     <link rel="canonical" href="https://shmelidze.ru/"/>
+    <link rel="alternate" hreflang="ru" href="https://shmelidze.ru/"/>
+    <link rel="alternate" hreflang="x-default" href="https://shmelidze.ru/"/>
     <link rel="icon" type="image/jpeg" href="https://cdn.poehali.dev/files/35bf3198-6bc5-4049-9328-baf39a81cdb5.jpg">
     
     <meta property="og:title" content="Дмитрий Шмелидзэ - Авторские песни, современная музыка и ХИТы 2025">
@@ -31,16 +41,63 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "MusicGroup",
-      "name": "Дмитрий Шмелидзэ",
-      "genre": ["Авторская песня", "Современная музыка"],
-      "url": "https://shmelidze.ru/",
-      "description": "Авторские песни Дмитрий Шмелидзэ - современная музыка, композиции и ХИТы 2025",
-      "image": "https://cdn.poehali.dev/files/35bf3198-6bc5-4049-9328-baf39a81cdb5.jpg",
-      "sameAs": [
-        "https://vk.com/dshmelidze",
-        "https://music.yandex.ru/artist/shmelidze",
-        "https://open.spotify.com/artist/shmelidze"
+      "@graph": [
+        {
+          "@type": "Person",
+          "@id": "https://shmelidze.ru/#person",
+          "name": "Дмитрий Шмелидзэ",
+          "alternateName": ["Shmelidze", "Shmelidze&Co"],
+          "jobTitle": "Музыкант, автор-исполнитель",
+          "description": "Российский музыкант и автор-исполнитель. Пишет авторские песни в жанре современной музыки.",
+          "url": "https://shmelidze.ru/",
+          "image": {
+            "@type": "ImageObject",
+            "url": "https://cdn.poehali.dev/files/35bf3198-6bc5-4049-9328-baf39a81cdb5.jpg",
+            "width": 1200,
+            "height": 1200
+          },
+          "email": "d.shmelidze@mail.ru",
+          "nationality": "Russian",
+          "sameAs": [
+            "https://vk.com/dshmelidze",
+            "https://music.yandex.ru/artist/shmelidze",
+            "https://open.spotify.com/artist/shmelidze",
+            "https://t.me/dshmelidze"
+          ]
+        },
+        {
+          "@type": "MusicGroup",
+          "@id": "https://shmelidze.ru/#musicgroup",
+          "name": "Дмитрий Шмелидзэ",
+          "genre": ["Авторская песня", "Современная музыка", "Русская музыка"],
+          "url": "https://shmelidze.ru/",
+          "description": "Авторские песни Дмитрия Шмелидзэ — современная музыка, лирика и живые выступления",
+          "image": "https://cdn.poehali.dev/files/35bf3198-6bc5-4049-9328-baf39a81cdb5.jpg",
+          "member": {
+            "@type": "OrganizationRole",
+            "member": {"@id": "https://shmelidze.ru/#person"},
+            "roleName": "Автор-исполнитель"
+          },
+          "sameAs": [
+            "https://vk.com/dshmelidze",
+            "https://music.yandex.ru/artist/shmelidze",
+            "https://open.spotify.com/artist/shmelidze"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://shmelidze.ru/#website",
+          "name": "Дмитрий Шмелидзэ — Официальный сайт",
+          "url": "https://shmelidze.ru/",
+          "description": "Официальный сайт музыканта Дмитрия Шмелидзэ",
+          "inLanguage": "ru-RU",
+          "publisher": {"@id": "https://shmelidze.ru/#person"},
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://shmelidze.ru/music?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }
       ]
     }
     </script>

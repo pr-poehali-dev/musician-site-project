@@ -13,8 +13,21 @@ const Contact = () => {
     <>
       <SEO 
         title="Контакты - Дмитрий Шмелидзэ | Связаться с музыкантом"
-        description="Свяжитесь с Дмитрием Шмелидзэ. Вопросы о музыке, заказ выступлений, сотрудничество. Email, телефон, социальные сети."
-        keywords="Дмитрий Шмелидзэ контакты, связаться с музыкантом, заказать выступление, музыкант Москва"
+        description="Свяжитесь с Дмитрием Шмелидзэ. Вопросы о музыке, заказ выступлений, сотрудничество. Email: d.shmelidze@mail.ru, Telegram: @dshmelidze."
+        keywords="Дмитрий Шмелидзэ контакты, связаться с музыкантом, заказать выступление, сотрудничество с музыкантом, Луганск"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "ContactPage",
+          "name": "Контакты — Дмитрий Шмелидзэ",
+          "url": "https://shmelidze.ru/contact",
+          "description": "Официальная страница контактов музыканта Дмитрия Шмелидзэ",
+          "mainEntity": {
+            "@type": "Person",
+            "name": "Дмитрий Шмелидзэ",
+            "email": "d.shmelidze@mail.ru",
+            "url": "https://shmelidze.ru/"
+          }
+        }}
       />
       <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-green-900 to-indigo-950">
       {/* Header */}
